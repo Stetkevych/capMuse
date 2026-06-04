@@ -8,7 +8,7 @@ import AnswerCard from './components/AnswerCard';
 import LeaderboardPage from './pages/LeaderboardPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import InsightsPage from './pages/InsightsPage';
-import { processQuery } from './hooks/useCapMuse';
+import { processQuery, initData } from './hooks/useCapMuse';
 
 export default function App() {
   const [authed, setAuthed] = useState(false);
@@ -169,7 +169,10 @@ function MainApp() {
   const [result, setResult] = useState(null);
   const [entered, setEntered] = useState(false);
 
-  useEffect(() => { setTimeout(() => setEntered(true), 100); }, []);
+  useEffect(() => {
+    setTimeout(() => setEntered(true), 100);
+    initData(); // Load data from S3 bucket
+  }, []);
 
   const handleSearch = useCallback((query) => {
     const r = processQuery(query);

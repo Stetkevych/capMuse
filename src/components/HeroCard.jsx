@@ -1,8 +1,9 @@
 import React from 'react';
 import { Crown } from 'lucide-react';
-import { DEALS, REPS } from '../data/mockData';
+import { getDeals } from '../data/store';
 
 export default function HeroCard() {
+  const DEALS = getDeals();
   const thirtyDays = Date.now() - 30 * 86400000;
   const recent = DEALS.filter(d => new Date(d.application_submitted_at).getTime() >= thirtyDays && d.approval_status === 'funded');
 

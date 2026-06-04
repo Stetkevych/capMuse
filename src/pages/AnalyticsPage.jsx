@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart3 } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { DEALS, REPS, LENDERS, LEAD_SOURCES, INDUSTRIES } from '../data/mockData';
+import { getDeals } from '../data/store';
 
 const TABS = ['Reps', 'Lenders', 'Lead Sources', 'Pipeline'];
 const COLORS = ['#0066FF', '#8DFF00', '#22C55E', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4', '#EC4899'];
@@ -35,6 +35,7 @@ export default function AnalyticsPage() {
 
 function RepAnalytics() {
   const data = useMemo(() => {
+    const DEALS = getDeals();
     const byRep = {};
     DEALS.forEach(d => {
       if (!byRep[d.rep_name]) byRep[d.rep_name] = { name: d.rep_name, total: 0, funded: 0, volume: 0 };
@@ -70,6 +71,7 @@ function RepAnalytics() {
 
 function LenderAnalytics() {
   const data = useMemo(() => {
+    const DEALS = getDeals();
     const byLender = {};
     DEALS.forEach(d => {
       if (!byLender[d.lender_name]) byLender[d.lender_name] = { name: d.lender_name, total: 0, approved: 0, funded: 0, volume: 0 };
@@ -106,6 +108,7 @@ function LenderAnalytics() {
 
 function SourceAnalytics() {
   const data = useMemo(() => {
+    const DEALS = getDeals();
     const bySource = {};
     DEALS.forEach(d => {
       const src = d.lead_source || 'Unknown';
@@ -140,6 +143,7 @@ function SourceAnalytics() {
 }
 
 function PipelineAnalytics() {
+  const DEALS = getDeals();
   const stages = ['submitted', 'docs_uploaded', 'underwriting', 'approved', 'funded', 'declined'];
   const data = stages.map(s => ({ stage: s, count: DEALS.filter(d => d.approval_status === s).length }));
   const total = DEALS.length;

@@ -1,8 +1,9 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, DollarSign, CheckCircle, Clock, Zap, FileText, Target } from 'lucide-react';
-import { DEALS } from '../data/mockData';
+import { getDeals } from '../data/store';
 
 function getKPIs() {
+  const DEALS = getDeals();
   const now = Date.now();
   const thirtyDays = now - 30 * 86400000;
   const sixtyDays = now - 60 * 86400000;

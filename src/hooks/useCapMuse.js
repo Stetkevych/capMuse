@@ -1,25 +1,28 @@
-import { DEALS, REPS, LENDERS, LEAD_SOURCES, INDUSTRIES } from '../data/mockData';
+import { getDeals, getReps, initStore } from '../data/store';
+
+// Initialize data from S3 (call once on app load)
+export async function initData() {
+  await initStore();
+}
 
 // NLP query parser - matches natural language to structured analytics
 export function processQuery(query) {
+  const DEALS = getDeals();
   const q = query.toLowerCase().trim();
 
-  // Time window detection
   const timeFilter = detectTimeWindow(q);
   let filtered = applyTimeFilter(DEALS, timeFilter);
 
-  // Entity detection
   const repMatch = detectRep(q);
   const lenderMatch = detectLender(q);
   const sourceMatch = detectSource(q);
   const industryMatch = detectIndustry(q);
 
-  if (repMatch) filtered = filtered.filter(d => d.rep_name.toLowerCase().includes(repMatch));
-  if (lenderMatch) filtered = filtered.filter(d => d.lender_name.toLowerCase().includes(lenderMatch));
-  if (sourceMatch) filtered = filtered.filter(d => d.lead_source.toLowerCase().includes(sourceMatch));
-  if (industryMatch) filtered = filtered.filter(d => d.industry.toLowerCase().includes(industryMatch));
+  if (repMatch) filtered = filtered.filter(d => (d.rep_name || '').toLowerCase().includes(repMatch));
+  if (lenderMatch) filtered = filtered.filter(d => (d.lender_name || '').toLowerCase().includes(lenderMatch));
+  if (sourceMatch) filtered = filtered.filter(d => (d.lead_source || '').toLowerCase().includes(sourceMatch));
+  if (industryMatch) filtered = filtered.filter(d => (d.industry || '').toLowerCase().includes(industryMatch));
 
-  // Intent detection
   if (/who funded the most|top funder|most funded|biggest funder/i.test(q)) return topFunderResult(filtered, timeFilter);
   if (/highest approval|best approval|approval rate/i.test(q)) return approvalRateResult(filtered, timeFilter);
   if (/approval.*(by|per) lender|lender.*approv|show approvals/i.test(q)) return lenderApprovalResult(filtered, timeFilter);
@@ -32,7 +35,6 @@ export function processQuery(query) {
   if (/commission|earn/i.test(q)) return commissionResult(filtered, timeFilter);
   if (/trend|over time|month/i.test(q)) return trendResult(filtered, timeFilter);
 
-  // Default: leaderboard
   return topFunderResult(filtered, timeFilter);
 }
 
@@ -55,29 +57,37 @@ function applyTimeFilter(deals, { days }) {
 }
 
 function detectRep(q) {
-  for (const r of REPS) {
-    const first = r.name.split(' ')[0].toLowerCase();
-    if (q.includes(first)) return first;
+  const DEALS = getDeals();
+  const repNames = [...new Set(DEALS.map(d => d.rep_name).filter(Boolean))];
+  for (const name of repNames) {
+    const first = name.split(' ')[0].toLowerCase();
+    if (first.length > 2 && q.includes(first)) return first;
   }
   return null;
 }
 
 function detectLender(q) {
-  for (const l of LENDERS) {
+  const DEALS = getDeals();
+  const lenders = [...new Set(DEALS.map(d => d.lender_name).filter(Boolean))];
+  for (const l of lenders) {
     if (q.includes(l.toLowerCase())) return l.toLowerCase();
   }
   return null;
 }
 
 function detectSource(q) {
-  for (const s of LEAD_SOURCES) {
+  const DEALS = getDeals();
+  const sources = [...new Set(DEALS.map(d => d.lead_source).filter(Boolean))];
+  for (const s of sources) {
     if (q.includes(s.toLowerCase())) return s.toLowerCase();
   }
   return null;
 }
 
 function detectIndustry(q) {
-  for (const i of INDUSTRIES) {
+  const DEALS = getDeals();
+  const industries = [...new Set(DEALS.map(d => d.industry).filter(Boolean))];
+  for (const i of industries) {
     if (q.includes(i.toLowerCase())) return i.toLowerCase();
   }
   return null;
@@ -169,19 +179,20 @@ function largestDealsResult(deals, timeFilter) {
     answer: funded[0] ? `Largest deal: $${fmt(funded[0].funded_amount)} for ${funded[0].client_name} by ${funded[0].rep_name} via ${funded[0].lender_name}.` : 'No funded deals.',
     insight: funded.length > 3 ? `Average of top 5 deals: $${fmt(Math.round(funded.slice(0, 5).reduce((s, d) => s + d.funded_amount, 0) / 5))}.` : null,
     table: { columns: ['Rank', 'Client', 'Rep', 'Lender', 'Amount'], rows: funded.slice(0, 10).map((d, i) => [i + 1, d.client_name, d.rep_name, d.lender_name, `$${fmt(d.funded_amount)}`]) },
-    chart: { type: 'bar', data: funded.slice(0, 8).map(d => ({ name: d.client_name.substring(0, 12), value: d.funded_amount })), label: 'Amount' },
+    chart: { type: 'bar', data: funded.slice(0, 8).map(d => ({ name: (d.client_name || '').substring(0, 12), value: d.funded_amount })), label: 'Amount' },
   };
 }
 
 function compareRepsResult(q, deals, timeFilter) {
-  const names = REPS.map(r => r.name.split(' ')[0].toLowerCase());
-  const found = names.filter(n => q.includes(n));
-  const repsToCompare = found.length >= 2 ? found.slice(0, 2) : [names[0], names[1]];
+  const repNames = [...new Set(deals.map(d => d.rep_name).filter(Boolean))];
+  const found = repNames.filter(n => q.includes(n.split(' ')[0].toLowerCase()));
+  const repsToCompare = found.length >= 2 ? found.slice(0, 2) : repNames.slice(0, 2);
   const results = repsToCompare.map(name => {
-    const repDeals = deals.filter(d => d.rep_name.toLowerCase().includes(name));
+    const repDeals = deals.filter(d => d.rep_name === name);
     const funded = repDeals.filter(d => d.approval_status === 'funded');
-    return { name: REPS.find(r => r.name.toLowerCase().includes(name))?.name || name, total: repDeals.length, funded: funded.length, volume: funded.reduce((s, d) => s + (d.funded_amount || 0), 0), rate: repDeals.length ? Math.round(funded.length / repDeals.length * 100) : 0 };
+    return { name, total: repDeals.length, funded: funded.length, volume: funded.reduce((s, d) => s + (d.funded_amount || 0), 0), rate: repDeals.length ? Math.round(funded.length / repDeals.length * 100) : 0 };
   });
+  if (results.length < 2) results.push({ name: 'N/A', total: 0, funded: 0, volume: 0, rate: 0 });
   return {
     type: 'comparison',
     title: `${results[0].name} vs ${results[1].name} — ${timeFilter.label}`,

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Lightbulb, TrendingUp, UserCheck, Building2, AlertTriangle } from 'lucide-react';
-import { DEALS, REPS, LENDERS, INDUSTRIES, LEAD_SOURCES } from '../data/mockData';
+import { getDeals } from '../data/store';
 
 function generateInsights() {
+  const DEALS = getDeals();
   const thirtyDays = Date.now() - 30 * 86400000;
   const recent = DEALS.filter(d => new Date(d.application_submitted_at).getTime() >= thirtyDays);
   const funded = recent.filter(d => d.approval_status === 'funded');

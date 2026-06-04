@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Trophy, ArrowUpDown } from 'lucide-react';
-import { DEALS, REPS } from '../data/mockData';
+import { getDeals, getReps } from '../data/store';
 
 const PERIODS = [
   { label: 'Today', days: 1 },
@@ -17,6 +17,8 @@ export default function Leaderboard() {
   const [sortBy, setSortBy] = useState('Funded Amount');
 
   const data = useMemo(() => {
+    const DEALS = getDeals();
+    const REPS = getReps();
     const cutoff = Date.now() - period * 86400000;
     const filtered = DEALS.filter(d => new Date(d.application_submitted_at).getTime() >= cutoff);
 
