@@ -3,14 +3,15 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm install
+        - cp -r FrontendUI/* public/
+        - cp FrontendUI/login.html public/index.html
     build:
       commands:
-        - npm run build
+        - mkdir -p build
+        - cp -r public/* build/
   artifacts:
     baseDirectory: build
     files:
       - '**/*'
   cache:
-    paths:
-      - node_modules/**/*
+    paths: []

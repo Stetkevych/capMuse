@@ -1,13 +1,1039 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#041E42" />
-  <title>CapMuse — Intelligence for MCA</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CapMuse — Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ─── Dark theme tokens ─── */
+    html[data-theme="dark"] {
+      --bg:              #0A0E11;
+      --card-bg:         #131A22;
+      --card-hover:      #1B2532;
+      --text-primary:    #F8FAFC;
+      --text-secondary:  #94A3B8;
+      --border:          #243041;
+      --input-bg:        #0D1520;
+      --input-focus-bg:  #0F1B2D;
+      --placeholder:     rgba(148,163,184,0.5);
+      --pwd-hover-bg:    rgba(255,255,255,0.06);
+      --headline-from:   #F8FAFC;
+      --headline-to:     #94A3B8;
+      --card-shadow:
+        0 0 0 1px rgba(37,99,235,.06),
+        0 4px 6px -1px rgba(0,0,0,.4),
+        0 24px 64px -8px rgba(0,0,0,.6),
+        0 0 80px -20px rgba(37,99,235,.12);
+      --card-shadow-hover:
+        0 0 0 1px rgba(37,99,235,.1),
+        0 4px 6px -1px rgba(0,0,0,.5),
+        0 32px 80px -8px rgba(0,0,0,.7),
+        0 0 100px -20px rgba(37,99,235,.2),
+        0 0 60px -30px rgba(16,185,129,.12);
+      --blob-opacity:    0.18;
+      --blob3-opacity:   0.10;
+      --grid-color:      rgba(37,99,235,0.04);
+      --toggle-bg:       rgba(255,255,255,0.06);
+      --toggle-border:   rgba(255,255,255,0.10);
+      --toggle-color:    #94A3B8;
+      --toggle-hover:    rgba(255,255,255,0.10);
+      --status-bg:       rgba(16,185,129,0.12);
+      --status-border:   rgba(16,185,129,0.25);
+      --status-color:    #34D399;
+      --social-hover-bg: #1B2532;
+      --forgot-hover:    #60A5FA;
+      --footer-link-hover:#34D399;
+      --card-before-bg:  linear-gradient(135deg,rgba(37,99,235,.35) 0%,rgba(15,76,129,.10) 40%,rgba(16,185,129,.25) 100%);
+      --card-after-bg:   linear-gradient(90deg,transparent,rgba(37,99,235,.8),rgba(16,185,129,.5),transparent);
+    }
+
+    /* ─── Light theme tokens ─── */
+    html[data-theme="light"] {
+      --bg:              #F8FAFC;
+      --card-bg:         #FFFFFF;
+      --card-hover:      #F1F5F9;
+      --text-primary:    #0F172A;
+      --text-secondary:  #475569;
+      --border:          #E2E8F0;
+      --input-bg:        #FFFFFF;
+      --input-focus-bg:  #F8FAFC;
+      --placeholder:     rgba(71,85,105,0.45);
+      --pwd-hover-bg:    rgba(15,23,42,0.05);
+      --headline-from:   #0F172A;
+      --headline-to:     #334155;
+      --card-shadow:
+        0 1px 2px rgba(0,0,0,.04),
+        0 8px 24px rgba(15,23,42,.06);
+      --card-shadow-hover:
+        0 2px 4px rgba(0,0,0,.05),
+        0 12px 30px rgba(15,23,42,.10);
+      --blob-opacity:    0.07;
+      --blob3-opacity:   0.05;
+      --grid-color:      rgba(37,99,235,0.025);
+      --toggle-bg:       rgba(15,23,42,0.05);
+      --toggle-border:   #E2E8F0;
+      --toggle-color:    #64748B;
+      --toggle-hover:    rgba(15,23,42,0.08);
+      --status-bg:       rgba(16,185,129,0.08);
+      --status-border:   rgba(16,185,129,0.20);
+      --status-color:    #059669;
+      --social-hover-bg: #F1F5F9;
+      --forgot-hover:    #1D4ED8;
+      --footer-link-hover:#059669;
+      --card-before-bg:  linear-gradient(135deg,rgba(37,99,235,.18) 0%,rgba(15,76,129,.05) 40%,rgba(16,185,129,.14) 100%);
+      --card-after-bg:   linear-gradient(90deg,transparent,rgba(37,99,235,.38),rgba(16,185,129,.28),transparent);
+    }
+
+    /* ─── Shared brand tokens ─── */
+    :root {
+      --blue-primary:   #0F4C81;
+      --blue-secondary: #2563EB;
+      --green-primary:  #10B981;
+      --green-accent:   #34D399;
+      --gradient-btn:   linear-gradient(135deg, #0F4C81 0%, #2563EB 50%, #10B981 100%);
+      --radius-card:    20px;
+      --radius-input:   13px;
+      --radius-btn:     13px;
+      --ease:           cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ─── Smooth theme transitions ─── */
+    html, body,
+    .card, .field-input, .btn-social,
+    .logo-ring::after, .status-badge,
+    .theme-toggle, .divider-line,
+    .checkbox-wrap input[type="checkbox"],
+    .field-label, .checkbox-label, .subtitle,
+    .divider-text, .footer-text {
+      transition-property: background-color, border-color, color, box-shadow;
+      transition-duration: 0.28s;
+      transition-timing-function: ease-out;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    html[data-theme="light"] body {
+      background:
+        radial-gradient(circle at top left,     rgba(37,99,235,0.05), transparent 40%),
+        radial-gradient(circle at bottom right, rgba(16,185,129,0.05), transparent 40%),
+        #F8FAFC;
+    }
+
+    /* ─── Background layer ─── */
+    .bg-scene {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: var(--blob-opacity);
+      animation: blobFloat 14s ease-in-out infinite alternate;
+    }
+
+    .blob-1 {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, #2563EB 0%, #0F4C81 60%, transparent 100%);
+      top: -200px; left: -200px;
+      animation-duration: 16s;
+    }
+
+    .blob-2 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #10B981 0%, #0F4C81 60%, transparent 100%);
+      bottom: -150px; right: -150px;
+      animation-duration: 20s;
+      animation-delay: -6s;
+    }
+
+    .blob-3 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #34D399 0%, #2563EB 70%, transparent 100%);
+      top: 40%; right: 15%;
+      opacity: var(--blob3-opacity);
+      animation-duration: 12s;
+      animation-delay: -3s;
+    }
+
+    @keyframes blobFloat {
+      0%   { transform: translate(0px, 0px) scale(1); }
+      33%  { transform: translate(30px, -40px) scale(1.04); }
+      66%  { transform: translate(-20px, 30px) scale(0.97); }
+      100% { transform: translate(15px, -15px) scale(1.02); }
+    }
+
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .scanline {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(52,211,153,0.3), transparent);
+      top: -2px;
+      animation: scanline 8s linear infinite;
+    }
+
+    html[data-theme="light"] .scanline { display: none; }
+
+    @keyframes scanline {
+      0%   { top: -2px; opacity: 0; }
+      5%   { opacity: 1; }
+      95%  { opacity: 0.6; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    #particleCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ─── Theme toggle ─── */
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--toggle-bg);
+      border: 1px solid var(--toggle-border);
+      border-radius: 100px;
+      padding: 7px 14px 7px 10px;
+      cursor: pointer;
+      color: var(--toggle-color);
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition:
+        background-color 0.28s ease-out,
+        border-color 0.28s ease-out,
+        color 0.28s ease-out,
+        box-shadow 0.28s ease-out,
+        transform 0.16s ease-out;
+    }
+
+    .theme-toggle:hover {
+      background: var(--toggle-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px -4px rgba(37,99,235,0.22);
+    }
+
+    .theme-toggle:active { transform: scale(0.97); }
+
+    .toggle-icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* Icon + label visibility by theme */
+    .label-light, .icon-sun  { display: none; }
+    .label-dark,  .icon-moon { display: block; }
+
+    html[data-theme="light"] .label-dark,
+    html[data-theme="light"] .icon-moon { display: none; }
+    html[data-theme="light"] .label-light,
+    html[data-theme="light"] .icon-sun  { display: block; }
+
+    /* ─── Page layout ─── */
+    .page-wrapper {
+      position: relative;
+      z-index: 2;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    /* ─── Card ─── */
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 48px 44px 40px;
+      position: relative;
+      box-shadow: var(--card-shadow);
+      animation: cardEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+      transition:
+        background-color 0.28s ease-out,
+        border-color 0.28s ease-out,
+        box-shadow 0.3s ease,
+        transform 0.3s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    /* Gradient border */
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-card);
+      padding: 1px;
+      background: var(--card-before-bg);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Top accent line */
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 1px;
+      background: var(--card-after-bg);
+      border-radius: 1px;
+    }
+
+    @keyframes cardEntrance {
+      from { opacity: 0; transform: translateY(32px) scale(0.97); filter: blur(4px); }
+      to   { opacity: 1; transform: translateY(0) scale(1);       filter: blur(0); }
+    }
+
+    /* ─── Logo ─── */
+    .logo-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 36px;
+      animation: fadeSlideDown 0.6s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+    }
+
+    .logo-ring {
+      position: relative;
+      width: 88px;
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .logo-ring::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 22px;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0%,
+        rgba(37,99,235,0.6) 20%,
+        rgba(16,185,129,0.6) 50%,
+        rgba(37,99,235,0.3) 80%,
+        transparent 100%
+      );
+      animation: spinRing 6s linear infinite;
+    }
+
+    .logo-ring::after {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      border-radius: 20px;
+      background: var(--card-bg);
+    }
+
+    @keyframes spinRing { to { transform: rotate(360deg); } }
+
+    .logo-img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      position: relative;
+      z-index: 1;
+      border-radius: 16px;
+      filter:
+        drop-shadow(0 0 12px rgba(37,99,235,0.5))
+        drop-shadow(0 0 24px rgba(16,185,129,0.25));
+      transition: filter 0.35s ease;
+    }
+
+    html[data-theme="light"] .logo-img {
+      filter:
+        drop-shadow(0 0 8px rgba(37,99,235,0.3))
+        drop-shadow(0 0 16px rgba(16,185,129,0.15));
+    }
+
+    .logo-ring:hover .logo-img {
+      filter:
+        drop-shadow(0 0 20px rgba(37,99,235,0.7))
+        drop-shadow(0 0 36px rgba(16,185,129,0.4));
+    }
+
+    /* ─── Headline ─── */
+    .headline-wrap {
+      font-family: 'Orbitron', sans-serif;
+      text-align: center;
+      margin-bottom: 32px;
+      animation: fadeSlideDown 0.6s cubic-bezier(0.16,1,0.3,1) 0.22s both;
+    }
+
+    .headline {
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+
+    html[data-theme="dark"] .headline {
+      background: linear-gradient(135deg, #F8FAFC 0%, #94A3B8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    html[data-theme="light"] .headline {
+      color: #0F172A;
+    }
+
+    .headline span {
+      background: linear-gradient(135deg, #2563EB 0%, #34D399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    /* ─── Form ─── */
+    .form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeSlideDown 0.6s cubic-bezier(0.16,1,0.3,1) 0.3s both;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: 0.01em;
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 17px;
+      height: 17px;
+      color: var(--text-secondary);
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+
+    .field-input {
+      width: 100%;
+      height: 50px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-input);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 400;
+      padding: 0 44px 0 42px;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .field-input::placeholder { color: var(--placeholder); font-weight: 400; }
+
+    .field-input:focus {
+      border-color: rgba(37,99,235,0.7);
+      background: var(--input-focus-bg);
+      box-shadow:
+        0 0 0 3px rgba(37,99,235,0.12),
+        0 0 20px -5px rgba(37,99,235,0.15);
+    }
+
+    html[data-theme="light"] .field-input:focus {
+      border-color: #2563EB;
+      box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+    }
+
+    .input-wrap:focus-within .input-icon { color: var(--blue-secondary); }
+
+    /* Password toggle */
+    .pwd-toggle {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .pwd-toggle:hover {
+      color: var(--text-primary);
+      background: var(--pwd-hover-bg);
+    }
+
+    /* Remember / forgot row */
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 17px;
+      height: 17px;
+      border: 1.5px solid var(--border);
+      border-radius: 5px;
+      background: var(--input-bg);
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked {
+      background: var(--blue-secondary);
+      border-color: var(--blue-secondary);
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 4px; top: 1.5px;
+      width: 6px; height: 10px;
+      border: 2px solid white;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .checkbox-label {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .forgot-link {
+      font-size: 13.5px;
+      color: var(--blue-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .forgot-link:hover { color: var(--forgot-hover); }
+
+    /* ─── Primary Button ─── */
+    .btn-primary {
+      width: 100%;
+      height: 52px;
+      background: var(--gradient-btn);
+      border: none;
+      border-radius: var(--radius-btn);
+      color: #fff;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition:
+        transform 0.18s var(--ease),
+        box-shadow 0.18s ease;
+      box-shadow:
+        0 4px 20px -4px rgba(37,99,235,0.45),
+        0 2px 8px  -2px rgba(16,185,129,0.25);
+      margin-top: 4px;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 32px -4px rgba(37,99,235,0.55),
+        0 4px 16px -4px rgba(16,185,129,0.35),
+        0 0 0 1px rgba(255,255,255,0.06);
+    }
+
+    .btn-primary:hover::before { opacity: 1; }
+
+    .btn-primary:active {
+      transform: translateY(0) scale(0.985);
+      box-shadow:
+        0 2px 12px -4px rgba(37,99,235,0.4),
+        0 1px 6px  -2px rgba(16,185,129,0.2);
+    }
+
+    /* Shimmer sweep */
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: skewX(-20deg);
+      animation: shimmer 3.5s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%   { left: -100%; }
+      40%  { left: 160%; }
+      100% { left: 160%; }
+    }
+
+    /* ─── Divider ─── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 4px 0;
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .divider-text {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      white-space: nowrap;
+      letter-spacing: 0.03em;
+    }
+
+    /* ─── Social Buttons ─── */
+    .social-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn-social {
+      height: 48px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-input);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-social:hover {
+      background: var(--social-hover-bg);
+      border-color: rgba(37,99,235,0.4);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px -6px rgba(37,99,235,0.25);
+    }
+
+    .btn-social:active { transform: translateY(0); }
+
+    .btn-social svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* ─── Footer ─── */
+    .card-footer {
+      text-align: center;
+      margin-top: 4px;
+      animation: fadeSlideDown 0.6s cubic-bezier(0.16,1,0.3,1) 0.5s both;
+    }
+
+    .footer-text { font-size: 13.5px; color: var(--text-secondary); }
+
+    .footer-link {
+      color: var(--green-primary);
+      text-decoration: none;
+      font-weight: 600;
+      margin-left: 4px;
+      transition: color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .footer-link:hover { color: var(--footer-link-hover); }
+
+    /* ─── Animations ─── */
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Status badge ─── */
+    .status-badge {
+      position: absolute;
+      top: -10px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--status-bg);
+      border: 1px solid var(--status-border);
+      border-radius: 100px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--status-color);
+      letter-spacing: 0.05em;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--status-color);
+      animation: statusPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 520px) {
+      .card { padding: 36px 24px 32px; border-radius: 16px; }
+      .headline { font-size: 26px; }
+      .logo-ring { width: 76px; height: 76px; }
+      .logo-img  { width: 60px; height: 60px; }
+      .theme-toggle { top: 12px; right: 12px; padding: 6px 10px 6px 8px; }
+      .theme-toggle .label-dark,
+      .theme-toggle .label-light { display: none !important; }
+    }
+
+    @media (max-width: 360px) {
+      .card { padding: 28px 18px 26px; }
+      .social-row { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Reduced motion ─── */
+    @media (prefers-reduced-motion: reduce) {
+      .blob, .logo-ring::before, .scanline,
+      .btn-primary::after, .status-dot {
+        animation: none !important;
+      }
+      .card, .btn-primary, .btn-social, .theme-toggle,
+      .field-input, .logo-ring::after, .status-badge {
+        transition: none !important;
+      }
+    }
+  </style>
 </head>
-<body class="bg-[#F8FAFC]">
-  <div id="root"></div>
+<body>
+
+  <!-- Background -->
+  <div class="bg-scene" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <div class="grid-overlay"></div>
+    <div class="scanline"></div>
+  </div>
+
+  <!-- Particle canvas -->
+  <canvas id="particleCanvas" aria-hidden="true"></canvas>
+
+  <!-- Theme toggle -->
+  <button
+    class="theme-toggle"
+    id="themeToggle"
+    aria-label="Toggle light/dark mode"
+    title="Toggle theme"
+  >
+    <svg class="toggle-icon icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <path d="M17.293 13.293A8 8 0 0 1 6.707 2.707a8.001 8.001 0 1 0 10.586 10.586z" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <svg class="toggle-icon icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <circle cx="10" cy="10" r="4"/>
+      <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke-linecap="round"/>
+    </svg>
+    <span class="label-dark">Light</span>
+    <span class="label-light">Dark</span>
+  </button>
+
+  <!-- Main layout -->
+  <main class="page-wrapper" role="main">
+    <div class="card" role="region" aria-label="Sign in to CapMuse">
+
+      <!-- Status badge -->
+      <div class="status-badge" aria-hidden="true">
+        <span class="status-dot"></span>
+        It's Secure Don't Worry
+      </div>
+
+      <!-- Logo -->
+      <div class="logo-wrap">
+        <div class="logo-ring">
+          <img
+            src="Assets/LogoUpdates.png"
+            alt="CapMuse Logo"
+            class="logo-img"
+          />
+        </div>
+      </div>
+
+      <!-- Headline -->
+      <div class="headline-wrap">
+        <h1 class="headline"><span>Sign-in</span></h1>
+      </div>
+
+      <!-- Form -->
+      <form class="form" novalidate onsubmit="return false;">
+
+        <!-- Email -->
+        <div class="field">
+          <label class="field-label" for="email">Email address</label>
+          <div class="input-wrap">
+            <input
+              id="email"
+              class="field-input"
+              type="email"
+              placeholder="example@capital-infusion.com"
+              autocomplete="email"
+              spellcheck="false"
+            />
+            <svg class="input-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <path d="M2.5 6.667 10 11.25l7.5-4.583" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="1.667" y="4.167" width="16.667" height="11.667" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="field">
+          <label class="field-label" for="password">Password</label>
+          <div class="input-wrap">
+            <input
+              id="password"
+              class="field-input"
+              type="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+            />
+            <svg class="input-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+              <rect x="3.333" y="9.167" width="13.333" height="8.333" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6.667 9.167V6.667a3.333 3.333 0 0 1 6.666 0v2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="10" cy="13.333" r="1" fill="currentColor" stroke="none"/>
+            </svg>
+            <button
+              type="button"
+              class="pwd-toggle"
+              aria-label="Toggle password visibility"
+              onclick="togglePassword(this)"
+            >
+              <svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M1.667 10S4.167 4.167 10 4.167 18.333 10 18.333 10 15.833 15.833 10 15.833 1.667 10 1.667 10z" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="10" cy="10" r="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sign In Button -->
+        <button type="submit" class="btn-primary" aria-label="Sign in to CapMuse">
+          Submit
+        </button>
+
+        <!-- Divider -->
+        <div class="divider" role="separator" aria-hidden="true">
+          <span class="divider-line"></span>
+        </div>
+
+      </form>
+
+    </div>
+  </main>
+
+  <script>
+    /* ─── Theme toggle ─── */
+    (function () {
+      const html = document.documentElement;
+      const btn  = document.getElementById('themeToggle');
+      const KEY  = 'capmuse-theme';
+
+      const saved       = localStorage.getItem(KEY);
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      html.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+
+      btn.addEventListener('click', () => {
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        localStorage.setItem(KEY, next);
+      });
+    })();
+
+    /* ─── Password toggle ─── */
+    function togglePassword(btn) {
+      const input    = document.getElementById('password');
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.innerHTML = isHidden
+        ? `<svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+             <path d="M3.333 3.333 16.667 16.667M8.82 8.82A2.5 2.5 0 0 0 12.18 12.18M6.154 6.154C4.36 7.213 2.5 10 2.5 10s2.5 5.833 7.5 5.833c1.556 0 2.904-.527 4.012-1.32M11.667 4.288A7.4 7.4 0 0 0 10 4.167c-5 0-7.5 5.833-7.5 5.833s.77 1.793 2.5 3.198" stroke-linecap="round" stroke-linejoin="round"/>
+           </svg>`
+        : `<svg viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+             <path d="M1.667 10S4.167 4.167 10 4.167 18.333 10 18.333 10 15.833 15.833 10 15.833 1.667 10 1.667 10z" stroke-linecap="round" stroke-linejoin="round"/>
+             <circle cx="10" cy="10" r="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+           </svg>`;
+      btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    }
+
+    /* ─── Particle system ─── */
+    (function () {
+      const canvas = document.getElementById('particleCanvas');
+      const ctx    = canvas.getContext('2d');
+      let W, H, particles;
+
+      const DARK_COLORS  = ['rgba(37,99,235,',  'rgba(16,185,129,', 'rgba(52,211,153,', 'rgba(96,165,250,'];
+      const LIGHT_COLORS = ['rgba(37,99,235,',  'rgba(16,185,129,', 'rgba(15,76,129,',  'rgba(52,211,153,'];
+
+      const isLight     = () => document.documentElement.getAttribute('data-theme') === 'light';
+      const getMaxAlpha = () => isLight() ? 0.10 : 0.35;
+      const getMinAlpha = () => isLight() ? 0.02 : 0.04;
+
+      function rand(a, b) { return a + Math.random() * (b - a); }
+
+      function createParticle() {
+        const pool = isLight() ? LIGHT_COLORS : DARK_COLORS;
+        return {
+          x: rand(0, W), y: rand(0, H),
+          r: rand(0.6, 2.2),
+          color: pool[Math.floor(Math.random() * pool.length)],
+          alpha: rand(getMinAlpha(), getMaxAlpha()),
+          vx: rand(-0.12, 0.12),
+          vy: rand(-0.18, -0.06),
+          blink: rand(0.004, 0.014),
+          blinkDir: 1,
+        };
+      }
+
+      function init() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        const count = Math.min(Math.floor((W * H) / 14000), 90);
+        particles = Array.from({ length: count }, createParticle);
+      }
+
+      function tick() {
+        ctx.clearRect(0, 0, W, H);
+        const maxA = getMaxAlpha();
+        const minA = getMinAlpha();
+
+        particles.forEach(p => {
+          p.alpha += p.blink * p.blinkDir;
+          if (p.alpha > maxA || p.alpha < minA) p.blinkDir *= -1;
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < -4) p.x = W + 4;
+          if (p.x > W + 4) p.x = -4;
+          if (p.y < -4) { p.y = H + 4; p.x = rand(0, W); }
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color + p.alpha + ')';
+          ctx.fill();
+
+          if (p.r > 1.5) {
+            const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
+            g.addColorStop(0, p.color + (p.alpha * 0.3) + ')');
+            g.addColorStop(1, p.color + '0)');
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+            ctx.fillStyle = g;
+            ctx.fill();
+          }
+        });
+
+        requestAnimationFrame(tick);
+      }
+
+      window.addEventListener('resize', init);
+      init();
+
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) tick();
+    })();
+  </script>
+
 </body>
 </html>
