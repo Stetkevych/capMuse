@@ -911,7 +911,7 @@
         </div>
 
         <!-- Sign In Button -->
-        <button type="submit" class="btn-primary" aria-label="Sign in to CapMuse">
+        <button type="submit" class="btn-primary" aria-label="Sign in to CapMuse" onclick="handleLogin(event)">
           Submit
         </button>
 
@@ -926,6 +926,24 @@
   </main>
 
   <script>
+    /* ─── Login handler ─── */
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const pass = document.getElementById('password').value;
+      if (email === 'TheCapMuse123' && pass === 'Inc5000DataAnalytics!') {
+        window.location.href = 'dashboard.html';
+      } else {
+        const btn = document.querySelector('.btn-primary');
+        btn.style.background = 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)';
+        btn.textContent = 'Invalid Credentials';
+        setTimeout(() => {
+          btn.style.background = 'var(--gradient-btn)';
+          btn.textContent = 'Submit';
+        }, 2000);
+      }
+    }
+
     /* ─── Theme toggle ─── */
     (function () {
       const html = document.documentElement;
