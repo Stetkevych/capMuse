@@ -1749,7 +1749,7 @@
   let DEALS = [];
   let mainContent, originalHTML;
 
-  window.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 
   function init() {
     mainContent = document.getElementById('mainContent');
@@ -1850,7 +1850,7 @@
 
   function chip(stage) {
     const s = (stage||'').toLowerCase();
-    if (s.includes('won') || (s.includes('fund') && !s.includes('decline'))) return ['chip-green','Funded'];
+    if (s.includes('won') || s.includes('closed') || (s.includes('fund') && !s.includes('decline'))) return ['chip-green','Funded'];
     if (s.includes('approv') || s.includes('qualified')) return ['chip-blue','Approved'];
     if (s.includes('review') || s.includes('uw') || s.includes('submitted')) return ['chip-blue','Review'];
     if (s.includes('decline') || s.includes('lost')) return ['chip-gray','Declined'];
@@ -1875,7 +1875,7 @@
     if (!mainContent) return;
 
     // Funded deals from funding book
-    const fundedDeals = DEALS.filter(d => d.stage.toLowerCase().includes('won') || d.stage.toLowerCase().includes('fund'));
+    const fundedDeals = DEALS.filter(d => { const s=d.stage.toLowerCase(); return s.includes('won') || s.includes('closed') || s.includes('fund'); });
     const totalFundedVol = fundedDeals.reduce((s,d) => s + d.amount, 0);
 
     // Accounts stats
@@ -1886,7 +1886,7 @@
       case 'dashboard':
         mainContent.innerHTML = originalHTML;
         // Populate featured card
-        const fm = document.querySelector('.featured-metric');
+        const fm = document.querySelector('.featured-metric'); console.log('[CapMuse] featured-metric found:', !!fm);
         if (fm) fm.textContent = '
 </html>
  + fmt(totalFundedVol || acctVol);
