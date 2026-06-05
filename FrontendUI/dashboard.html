@@ -1751,6 +1751,22 @@
 
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 
+  // Bind nav clicks immediately on script load (don't wait for CSV)
+  setTimeout(function() {
+    document.querySelectorAll('.nav-sub-item, .nav-item, .nav-box-item, [data-page]').forEach(function(el) {
+      el.style.cursor = 'pointer';
+      el.onclick = function(e) {
+        e.preventDefault();
+        var page = this.getAttribute('data-page') || this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();
+        document.querySelectorAll('.nav-sub-item, .nav-item').forEach(function(n) { n.classList.remove('active'); n.removeAttribute('aria-current'); });
+        this.classList.add('active');
+        if (typeof renderPage === 'function') renderPage(page);
+        console.log('[CapMuse] Nav clicked:', page);
+      };
+    });
+    console.log('[CapMuse] Nav bound:', document.querySelectorAll('.nav-sub-item, .nav-item, .nav-box-item').length, 'items');
+  }, 500);
+
   function init() {
     mainContent = document.getElementById('mainContent');
     originalHTML = mainContent ? mainContent.innerHTML : '';
