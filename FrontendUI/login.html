@@ -1382,7 +1382,8 @@
       const email = document.getElementById('email').value;
       const pass = document.getElementById('password').value;
       if (email === 'TheCapMuse123' && pass === 'Inc5000DataAnalytics!') {
-        window.location.href = 'dashboard.html';
+        localStorage.setItem('capmuse-user', 'anderson');
+        window.location.href = 'home.html';
       } else {
         const btn = document.querySelector('.btn-primary');
         btn.style.background = 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)';

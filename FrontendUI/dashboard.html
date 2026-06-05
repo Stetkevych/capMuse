@@ -502,6 +502,14 @@
       flex-shrink: 0;
     }
 
+    .avatar-wrap { position: relative; }
+    .avatar-menu { position: absolute; top: calc(100% + 8px); right: 0; min-width: 160px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease; z-index: 200; }
+    .avatar-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .avatar-menu-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--text-primary); cursor: pointer; text-decoration: none; transition: background 0.12s ease; }
+    .avatar-menu-item:hover { background: var(--nav-hover-bg); }
+    .avatar-menu-item.danger { color: #EF4444; }
+    .avatar-menu-item.danger:hover { background: rgba(239,68,68,0.1); }
+
     /* Theme toggle */
     .icon-moon { display: block; }
     .icon-sun  { display: none; }
@@ -1209,7 +1217,9 @@
     .rep-row.r-silver .rep-amt   { color: rgba(226,232,240,0.62); }
     .rep-row.r-bronze .rep-name  { color: #FCA044; font-weight: 600; }
     .rep-row.r-bronze .rep-amt   { color: rgba(252,160,68,0.62); }
+
   </style>
+  <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
 <body>
 <div class="layout">
@@ -1228,6 +1238,14 @@
     </div>
 
     <nav class="sidebar-nav">
+
+      <a class="nav-item" href="home.html">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M3 9.5L10 3l7 6.5V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 18v-5h4v5" stroke-linecap="round"/>
+        </svg>
+        Home
+      </a>
 
       <!-- Expandable: Overview (like "Home" in StatMuse) -->
       <div class="nav-section-toggle open active" id="overviewToggle" role="button" tabindex="0" aria-expanded="true">
@@ -1251,19 +1269,6 @@
             <path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/>
           </svg>
           Dashboard
-        </a>
-        <a class="nav-sub-item" href="#">
-          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M5 2h7l4 4v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke-linecap="round"/>
-            <path d="M12 2v4h4" stroke-linecap="round"/>
-          </svg>
-          Applications
-        </a>
-        <a class="nav-sub-item" href="#">
-          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M3 17V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" stroke-linecap="round"/>
-          </svg>
-          Businesses
         </a>
         <a class="nav-sub-item" href="#">
           <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
@@ -1327,23 +1332,6 @@
         </a>
       </div>
 
-      <!-- Standalone items -->
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-          <circle cx="10" cy="10" r="7.5"/>
-          <path d="m7 10 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Funding
-      </a>
-
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-          <path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke-linecap="round"/>
-          <path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke-linecap="round"/>
-        </svg>
-        Alerts
-      </a>
-
       <!-- Expandable: Trending (collapsed) -->
       <div class="nav-section-toggle" id="trendingToggle" role="button" tabindex="0" aria-expanded="false">
         <div class="toggle-left">
@@ -1361,7 +1349,6 @@
       <div class="nav-sub" id="trendingSub">
         <a class="nav-sub-item" href="#">Top Funded</a>
         <a class="nav-sub-item" href="#">Fastest Growing</a>
-        <a class="nav-sub-item" href="#">Most Applications</a>
       </div>
 
       <!-- Divider -->
@@ -1369,20 +1356,6 @@
 
       <!-- Rounded secondary box (like Examples/Data&Glossary/Gallery) -->
       <div class="nav-box">
-        <a class="nav-box-item" href="#">
-          <svg class="nav-box-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <circle cx="9" cy="9" r="5.5"/>
-            <path d="m13.5 13.5 3 3" stroke-linecap="round"/>
-          </svg>
-          Deal Calculator
-        </a>
-        <a class="nav-box-item" href="#">
-          <svg class="nav-box-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <rect x="3" y="3" width="14" height="14" rx="2"/>
-            <path d="M7 7h6M7 10h6M7 13h4" stroke-linecap="round"/>
-          </svg>
-          Templates
-        </a>
         <a class="nav-box-item" href="#">
           <svg class="nav-box-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
             <circle cx="10" cy="10" r="7.5"/>
@@ -1397,13 +1370,6 @@
 
       <!-- Bottom standalone -->
       <div class="nav-bottom">
-        <a class="nav-item" href="#">
-          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <circle cx="10" cy="10" r="2.5"/>
-            <path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18M4.05 4.05l1.06 1.06M14.9 14.9l1.06 1.06M4.05 15.95l1.06-1.06M14.9 5.1l1.06-1.06" stroke-linecap="round"/>
-          </svg>
-          Settings
-        </a>
         <a class="nav-item" href="#">
           <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
             <path d="M3 5h14M5 10h10M7 15h6" stroke-linecap="round"/>
@@ -1481,7 +1447,15 @@
           </svg>
         </button>
 
-        <div class="top-avatar" role="button" tabindex="0" aria-label="User menu">GP</div>
+        <div class="avatar-wrap">
+          <div class="top-avatar" id="avatarBtn" role="button" tabindex="0" aria-label="User menu">GP</div>
+          <div class="avatar-menu" id="avatarMenu">
+            <a href="login.html" class="avatar-menu-item danger">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" width="16" height="16" aria-hidden="true"><path d="M13 15l4-5-4-5M17 10H7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 19H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h4" stroke-linecap="round"/></svg>
+              Log out
+            </a>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -1508,8 +1482,8 @@
           <!-- Tile 1: Rep of the Month Leaderboard — full width, top -->
           <div class="stat-card rep-leader-card">
 
-            <!-- Left: Anderson hero -->
-            <div class="rep-hero">
+            <!-- Left: Anderson hero — click to open stats card -->
+            <div class="rep-hero" data-person-id="anderson">
               <div class="rep-crown">🥇</div>
               <div class="rep-photo-wrap">
                 <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Anderson" class="rep-photo" />
@@ -1523,76 +1497,20 @@
             <div class="rep-board">
               <div class="rep-board-head">Monthly Rep Leaderboard</div>
               <div class="rep-grid">
-                <div class="rep-row r-gold">
-                  <span class="rep-pos medal">🥇</span>
-                  <span class="rep-name">Anderson</span>
-                  <span class="rep-amt">$4.2M</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">8</span>
-                  <span class="rep-name">Matthew</span>
-                  <span class="rep-amt">$1.7M</span>
-                </div>
-                <div class="rep-row r-silver">
-                  <span class="rep-pos medal">🥈</span>
-                  <span class="rep-name">Frank</span>
-                  <span class="rep-amt">$3.8M</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">9</span>
-                  <span class="rep-name">Santi</span>
-                  <span class="rep-amt">$1.5M</span>
-                </div>
-                <div class="rep-row r-bronze">
-                  <span class="rep-pos medal">🥉</span>
-                  <span class="rep-name">Blake</span>
-                  <span class="rep-amt">$3.1M</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">10</span>
-                  <span class="rep-name">Rondon</span>
-                  <span class="rep-amt">$1.3M</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">4</span>
-                  <span class="rep-name">Colin</span>
-                  <span class="rep-amt">$2.7M</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">11</span>
-                  <span class="rep-name">Ray</span>
-                  <span class="rep-amt">$1.1M</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">5</span>
-                  <span class="rep-name">Kip</span>
-                  <span class="rep-amt">$2.4M</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">12</span>
-                  <span class="rep-name">Pina</span>
-                  <span class="rep-amt">$950K</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">6</span>
-                  <span class="rep-name">Juan</span>
-                  <span class="rep-amt">$2.1M</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">13</span>
-                  <span class="rep-name">Dominic</span>
-                  <span class="rep-amt">$820K</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">7</span>
-                  <span class="rep-name">Rio</span>
-                  <span class="rep-amt">$1.9M</span>
-                </div>
-                <div class="rep-row">
-                  <span class="rep-pos num">14</span>
-                  <span class="rep-name">Gabriel</span>
-                  <span class="rep-amt">$680K</span>
-                </div>
+                <div class="rep-row r-gold"   data-person-id="anderson"><span class="rep-pos medal">🥇</span><span class="rep-name">Anderson</span><span class="rep-amt">$4.2M</span></div>
+                <div class="rep-row"           data-person-id="matthew"> <span class="rep-pos num">8</span><span class="rep-name">Matthew</span><span class="rep-amt">$1.7M</span></div>
+                <div class="rep-row r-silver"  data-person-id="frank">   <span class="rep-pos medal">🥈</span><span class="rep-name">Frank</span><span class="rep-amt">$3.8M</span></div>
+                <div class="rep-row"           data-person-id="santi">   <span class="rep-pos num">9</span><span class="rep-name">Santi</span><span class="rep-amt">$1.5M</span></div>
+                <div class="rep-row r-bronze"  data-person-id="blake">   <span class="rep-pos medal">🥉</span><span class="rep-name">Blake</span><span class="rep-amt">$3.1M</span></div>
+                <div class="rep-row"           data-person-id="rondon">  <span class="rep-pos num">10</span><span class="rep-name">Rondon</span><span class="rep-amt">$1.3M</span></div>
+                <div class="rep-row"           data-person-id="colin">   <span class="rep-pos num">4</span><span class="rep-name">Colin</span><span class="rep-amt">$2.7M</span></div>
+                <div class="rep-row"           data-person-id="ray">     <span class="rep-pos num">11</span><span class="rep-name">Ray</span><span class="rep-amt">$1.1M</span></div>
+                <div class="rep-row"           data-person-id="kip">     <span class="rep-pos num">5</span><span class="rep-name">Kip</span><span class="rep-amt">$2.4M</span></div>
+                <div class="rep-row"           data-person-id="pina">    <span class="rep-pos num">12</span><span class="rep-name">Pina</span><span class="rep-amt">$950K</span></div>
+                <div class="rep-row"           data-person-id="juan">    <span class="rep-pos num">6</span><span class="rep-name">Juan</span><span class="rep-amt">$2.1M</span></div>
+                <div class="rep-row"           data-person-id="dominic"> <span class="rep-pos num">13</span><span class="rep-name">Dominic</span><span class="rep-amt">$820K</span></div>
+                <div class="rep-row"           data-person-id="rio">     <span class="rep-pos num">7</span><span class="rep-name">Rio</span><span class="rep-amt">$1.9M</span></div>
+                <div class="rep-row"           data-person-id="gabriel"> <span class="rep-pos num">14</span><span class="rep-name">Gabriel</span><span class="rep-amt">$680K</span></div>
               </div>
             </div>
 
@@ -1606,7 +1524,7 @@
 
 
           <!-- Tile 2: Cipriani — biggest avg deal (right next to Anderson leaderboard) -->
-          <div class="stat-card plum">
+          <div class="stat-card plum" data-person-id="cipriani">
             <div class="card-left">
               <p class="card-headline">Biggest avg deal<br />size this month:</p>
               <div class="card-names">
@@ -1660,7 +1578,7 @@
           </div>
 
           <!-- Tile 5: Ivan — wide spotlight -->
-          <div class="stat-card crimson">
+          <div class="stat-card crimson" data-person-id="ivan">
             <div class="card-left">
               <p class="card-headline" style="color:rgba(252,165,165,0.85);font-size:13.5px;max-width:280px">
                 Highest close rate on the team<br />this quarter:
@@ -1798,6 +1716,8 @@
 </div>
 <!-- END LAYOUT -->
 
+<!-- Profile stats modal is injected by Assets/profile-stats.js -->
+
 <script>
   /* ─── Theme ─── */
   (function () {
@@ -1843,7 +1763,9 @@
     overlay.addEventListener('click', close);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   })();
+
 </script>
+<script src="Assets/profile-stats.js"></script>
 
 <script>
 /* ─── Load real data from S3 ─── */
@@ -1943,6 +1865,16 @@
     return n.toString();
   }
 })();
+</script>
+<script>
+  (function () {
+    var btn  = document.getElementById('avatarBtn');
+    var menu = document.getElementById('avatarMenu');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', function () { menu.classList.remove('open'); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.classList.remove('open'); });
+  })();
 </script>
 </body>
 </html>

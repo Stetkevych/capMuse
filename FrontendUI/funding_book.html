@@ -86,6 +86,13 @@
     .top-btn svg { width:18px; height:18px; }
     .notif-pip { position:absolute; top:4px; right:4px; width:7px; height:7px; border-radius:50%; background:var(--green); border:2px solid var(--surface); }
     .top-avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#0F4C81,#10B981); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; cursor:pointer; flex-shrink:0; }
+    .avatar-wrap { position:relative; }
+    .avatar-menu { position:absolute; top:calc(100% + 8px); right:0; min-width:160px; padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.2); opacity:0; transform:translateY(-6px) scale(0.97); pointer-events:none; transition:opacity 0.15s ease,transform 0.15s ease; z-index:200; }
+    .avatar-menu.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+    .avatar-menu-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:7px; font-size:13px; font-weight:500; color:var(--text-primary); cursor:pointer; text-decoration:none; transition:background 0.12s ease; }
+    .avatar-menu-item:hover { background:var(--nav-hover-bg); }
+    .avatar-menu-item.danger { color:#EF4444; }
+    .avatar-menu-item.danger:hover { background:rgba(239,68,68,0.1); }
     .icon-moon { display:block; } .icon-sun { display:none; }
     html[data-theme="light"] .icon-moon { display:none; }
     html[data-theme="light"] .icon-sun  { display:block; }
@@ -250,6 +257,7 @@
     .photo-wrap-crimson { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#FCA5A5,#EF4444); padding:3px; box-shadow:0 0 18px rgba(239,68,68,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
     .photo-wrap-gold { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#FCD34D,#F59E0B); padding:3px; box-shadow:0 0 18px rgba(245,158,11,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
   </style>
+  <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
 <body>
 <div class="layout">
@@ -263,6 +271,14 @@
     </div>
     <nav class="sidebar-nav">
 
+      <a class="nav-item" href="home.html">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M3 9.5L10 3l7 6.5V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 18v-5h4v5" stroke-linecap="round"/>
+        </svg>
+        Home
+      </a>
+
       <div class="nav-section-toggle" id="overviewToggle" role="button" tabindex="0" aria-expanded="false">
         <div class="toggle-left">
           <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
@@ -272,8 +288,6 @@
       </div>
       <div class="nav-sub" id="overviewSub">
         <a class="nav-sub-item" href="dashboard.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/></svg>Dashboard</a>
-        <a class="nav-sub-item" href="#"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 2h7l4 4v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/><path d="M12 2v4h4" stroke-linecap="round"/></svg>Applications</a>
-        <a class="nav-sub-item" href="#"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/></svg>Businesses</a>
       </div>
 
       <!-- CRM — open, Funding Book active -->
@@ -291,17 +305,6 @@
         <a class="nav-sub-item" href="lender_recommendation.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="5" width="16" height="11" rx="2"/><path d="M2 9h16" stroke-linecap="round"/><path d="M6 13h2M10 13h2" stroke-linecap="round"/></svg>Lender Match</a>
       </div>
 
-      <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="m7 10 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>Funding</a>
-      <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke-linecap="round"/><path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke-linecap="round"/></svg>Alerts</a>
-      <div class="nav-divider"></div>
-      <div class="nav-box">
-        <a class="nav-box-item" href="#"><svg class="nav-box-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>Deal Calculator</a>
-        <a class="nav-box-item" href="#"><svg class="nav-box-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 7h6M7 10h6M7 13h4" stroke-linecap="round"/></svg>Templates</a>
-      </div>
-      <div class="nav-divider"></div>
-      <div class="nav-bottom">
-        <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="2.5"/><path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18M4.05 4.05l1.06 1.06M14.9 14.9l1.06 1.06M4.05 15.95l1.06-1.06M14.9 5.1l1.06-1.06" stroke-linecap="round"/></svg>Settings</a>
-      </div>
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user" role="button" tabindex="0">
@@ -326,7 +329,15 @@
           <svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M17.293 13.293A8 8 0 0 1 6.707 2.707a8.001 8.001 0 1 0 10.586 10.586z" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke-linecap="round"/></svg>
         </button>
-        <div class="top-avatar" role="button" tabindex="0" aria-label="User menu">GP</div>
+        <div class="avatar-wrap">
+          <div class="top-avatar" id="avatarBtn" role="button" tabindex="0" aria-label="User menu">GP</div>
+          <div class="avatar-menu" id="avatarMenu">
+            <a href="login.html" class="avatar-menu-item danger">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" width="16" height="16" aria-hidden="true"><path d="M13 15l4-5-4-5M17 10H7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 19H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h4" stroke-linecap="round"/></svg>
+              Log out
+            </a>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -386,7 +397,7 @@
 
         <!-- Card 1: Most Funded All Time — full-width leaderboard -->
         <div class="stat-card rep-leader-card">
-          <div class="rep-hero">
+          <div class="rep-hero" data-person-id="matthew">
             <div class="rep-crown">🥇</div>
             <div class="rep-photo-wrap">
               <img src="Assets/reps/matthew.png" alt="Matthew" class="rep-photo" />
@@ -398,28 +409,28 @@
           <div class="rep-board">
             <div class="rep-board-head">All-Time Funding Leaderboard</div>
             <div class="rep-grid">
-              <div class="rep-row r-gold">
+              <div class="rep-row r-gold" data-person-id="matthew">
                 <span class="rep-pos medal">🥇</span><span class="rep-name">Matthew</span><span class="rep-amt">$10.0M</span>
               </div>
-              <div class="rep-row r-silver">
+              <div class="rep-row r-silver" data-person-id="anderson">
                 <span class="rep-pos medal">🥈</span><span class="rep-name">Anderson</span><span class="rep-amt">$8.4M</span>
               </div>
-              <div class="rep-row r-bronze">
+              <div class="rep-row r-bronze" data-person-id="ivan">
                 <span class="rep-pos medal">🥉</span><span class="rep-name">Ivan</span><span class="rep-amt">$6.9M</span>
               </div>
-              <div class="rep-row">
+              <div class="rep-row" data-person-id="blake">
                 <span class="rep-pos num">4</span><span class="rep-name">Blake</span><span class="rep-amt">$5.2M</span>
               </div>
-              <div class="rep-row">
+              <div class="rep-row" data-person-id="colin">
                 <span class="rep-pos num">5</span><span class="rep-name">Colin</span><span class="rep-amt">$4.1M</span>
               </div>
-              <div class="rep-row">
+              <div class="rep-row" data-person-id="gabriel">
                 <span class="rep-pos num">6</span><span class="rep-name">Gabriel</span><span class="rep-amt">$3.7M</span>
               </div>
-              <div class="rep-row">
+              <div class="rep-row" data-person-id="cipriani">
                 <span class="rep-pos num">7</span><span class="rep-name">Cipriani</span><span class="rep-amt">$3.3M</span>
               </div>
-              <div class="rep-row">
+              <div class="rep-row" data-person-id="dominic">
                 <span class="rep-pos num">8</span><span class="rep-name">Dominic</span><span class="rep-amt">$2.9M</span>
               </div>
             </div>
@@ -427,7 +438,7 @@
         </div>
 
         <!-- Card 2: Most Funded Today -->
-        <div class="stat-card plum" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
+        <div class="stat-card plum" data-person-id="matthew" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
           <div class="card-left">
             <p class="card-headline" style="font-size:12px;margin-bottom:8px;">Most funded today:</p>
             <div class="card-names"><span class="card-name" style="color:#C084FC;font-size:14px">Matthew</span></div>
@@ -441,7 +452,7 @@
         </div>
 
         <!-- Card 3: Most Funded This Week -->
-        <div class="stat-card teal" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
+        <div class="stat-card teal" data-person-id="anderson" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
           <div class="card-left">
             <p class="card-headline" style="font-size:12px;margin-bottom:8px;color:rgba(110,231,183,0.85)">Most funded this week:</p>
             <div class="card-names"><span class="card-name" style="color:#34D399;font-size:14px">Anderson</span></div>
@@ -455,7 +466,7 @@
         </div>
 
         <!-- Card 4: Most Funded This Month -->
-        <div class="stat-card blue-1" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
+        <div class="stat-card blue-1" data-person-id="ivan" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
           <div class="card-left">
             <p class="card-headline" style="font-size:12px;margin-bottom:8px;">Most funded this month:</p>
             <div class="card-names"><span class="card-name" style="font-size:14px">Ivan</span></div>
@@ -755,5 +766,16 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   })();
 </script>
+<script>
+  (function () {
+    var btn  = document.getElementById('avatarBtn');
+    var menu = document.getElementById('avatarMenu');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', function () { menu.classList.remove('open'); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.classList.remove('open'); });
+  })();
+</script>
+<script src="Assets/profile-stats.js"></script>
 </body>
 </html>
