@@ -1246,7 +1246,7 @@
       </div>
 
       <div class="nav-sub open" id="overviewSub">
-        <a class="nav-sub-item active" href="#" aria-current="page">
+        <a class="nav-sub-item active" href="dashboard.html" aria-current="page">
           <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
             <path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/>
           </svg>
@@ -1278,6 +1278,52 @@
           </svg>
           Reports
           <span class="nav-tag" style="margin-left:auto">New</span>
+        </a>
+      </div>
+
+      <!-- CRM Section -->
+      <div class="nav-section-toggle" id="crmToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="10" cy="6.5" r="3"/>
+            <path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/>
+          </svg>
+          CRM
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="nav-sub" id="crmSub">
+        <a class="nav-sub-item" href="lead.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="10" cy="6.5" r="3"/>
+            <path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/>
+          </svg>
+          Leads
+        </a>
+        <a class="nav-sub-item" href="pipeline.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 5h14M3 9.5h10M3 14h6" stroke-linecap="round"/>
+            <circle cx="15" cy="14" r="2.5"/>
+          </svg>
+          Pipeline
+        </a>
+        <a class="nav-sub-item" href="funding_book.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M4 3h9l4 4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>
+            <path d="M13 3v4h4" stroke-linecap="round"/>
+            <path d="M7 9h6M7 12h6M7 15h3" stroke-linecap="round"/>
+          </svg>
+          Funding Book
+        </a>
+        <a class="nav-sub-item" href="lender_recommendation.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <rect x="2" y="5" width="16" height="11" rx="2"/>
+            <path d="M2 9h16" stroke-linecap="round"/>
+            <path d="M6 13h2M10 13h2" stroke-linecap="round"/>
+          </svg>
+          Lender Match
         </a>
       </div>
 
@@ -1466,7 +1512,7 @@
             <div class="rep-hero">
               <div class="rep-crown">🥇</div>
               <div class="rep-photo-wrap">
-                <img src="Assets/reps/AndersonCartoon.png" alt="Anderson" class="rep-photo" />
+                <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Anderson" class="rep-photo" />
               </div>
               <div class="rep-hero-name">Anderson</div>
               <div class="rep-hero-label">Most Funded · June</div>
@@ -1570,7 +1616,7 @@
             </div>
             <div class="card-right">
               <div class="card-rep-photo-wrap">
-                <img src="Assets/reps/cipriani.png" alt="Cipriani" class="card-rep-photo" />
+                <img src="Assets/reps/Cartoon/cipriani.png" alt="Cipriani" class="card-rep-photo" />
               </div>
             </div>
           </div>
@@ -1627,7 +1673,7 @@
             </div>
             <div class="card-right">
               <div class="ivan-photo-wrap">
-                <img src="Assets/reps/IvanCartoon.png" alt="Ivan" class="card-rep-photo" style="object-position:center 8%" />
+                <img src="Assets/reps/Cartoon/IvanCartoon.png" alt="Ivan" class="card-rep-photo" style="object-position:center 8%" />
               </div>
             </div>
           </div>
@@ -1783,6 +1829,7 @@
     }
     bindToggle('overviewToggle', 'overviewSub');
     bindToggle('trendingToggle', 'trendingSub');
+    bindToggle('crmToggle', 'crmSub');
   })();
 
   /* ─── Mobile sidebar ─── */
