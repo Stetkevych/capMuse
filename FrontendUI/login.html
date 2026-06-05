@@ -798,9 +798,324 @@
         transition: none !important;
       }
     }
+
+    /* ═══════════════════════════════════════════════════════════════
+       INTRO OVERLAY — futuristic cinematic entrance
+    ═══════════════════════════════════════════════════════════════ */
+
+    /* Theme toggle hidden during intro */
+    #themeToggle {
+      opacity: 0;
+      transition:
+        opacity 0.6s ease,
+        background-color 0.28s ease-out,
+        border-color 0.28s ease-out,
+        color 0.28s ease-out,
+        box-shadow 0.28s ease-out,
+        transform 0.16s ease-out;
+    }
+    #themeToggle.intro-done { opacity: 1; }
+
+    /* Login wrapper hidden until intro completes */
+    #loginWrapper {
+      position: relative;
+      z-index: 2;
+      opacity: 0;
+      transform: translateY(52px);
+      transition:
+        opacity  0.85s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #loginWrapper.visible { opacity: 1; transform: none; }
+    #loginWrapper .card   { animation: none !important; }
+
+    /* Full-screen dark cover */
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      background: #060A0F;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Neon hex grid */
+    #intro::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(57,255,20,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(57,255,20,.022) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Radial vignette */
+    #intro::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 85% 85% at 50% 50%, transparent 35%, rgba(6,10,15,.95) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #introCanvas {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* CRT scanlines */
+    .intro-scan {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent, transparent 2px,
+        rgba(0,0,0,.13) 2px, rgba(0,0,0,.13) 4px
+      );
+    }
+
+    /* ─── Badge stage ─── */
+    .badge-stage {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+      transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .badge-stage.move-up { transform: translateY(-22vh) scale(0.46); }
+
+    .hex-container {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
+
+    .hex-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* Hex rings — drawn via stroke-dashoffset */
+    .hex-outer {
+      fill: none;
+      stroke: #39FF14;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: url(#hexGlow);
+      stroke-dasharray: 720;
+      stroke-dashoffset: 720;
+    }
+
+    .hex-inner {
+      fill: none;
+      stroke: rgba(57,255,20,.58);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: url(#hexGlow);
+      stroke-dasharray: 540;
+      stroke-dashoffset: 540;
+    }
+
+    @keyframes drawOuter {
+      from { stroke-dashoffset: 720; }
+      to   { stroke-dashoffset: 0; }
+    }
+    @keyframes drawInner {
+      from { stroke-dashoffset: 540; }
+      to   { stroke-dashoffset: 0; }
+    }
+    @keyframes hexPulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .65; }
+    }
+
+    .hex-outer.draw {
+      animation:
+        drawOuter 1.3s cubic-bezier(0.4, 0, 0.2, 1) forwards,
+        hexPulse  2.8s ease-in-out 1.3s infinite;
+    }
+    .hex-inner.draw {
+      animation:
+        drawInner 1.3s cubic-bezier(0.4, 0, 0.2, 1) .18s forwards,
+        hexPulse  2.8s ease-in-out 1.5s infinite;
+    }
+
+    /* Corner accent brackets */
+    .corner-accent {
+      fill: none;
+      stroke: #39FF14;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: url(#softGlow);
+      opacity: 0;
+      transition: opacity .55s ease;
+    }
+    .corner-accent.show { opacity: 1; }
+
+    /* ─── Intro logo spring-in ─── */
+    .intro-logo {
+      position: absolute;
+      width: 132px;
+      height: 132px;
+      object-fit: contain;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(.55);
+      opacity: 0;
+      border-radius: 22px;
+      pointer-events: none;
+      filter:
+        drop-shadow(0 0 18px rgba(57,255,20,.5))
+        drop-shadow(0 0 36px rgba(37,99,235,.4));
+    }
+
+    @keyframes logoSpring {
+      from {
+        transform: translate(-50%,-50%) scale(.55);
+        opacity: 0;
+        filter: drop-shadow(0 0 4px rgba(57,255,20,.1)) brightness(.25);
+      }
+      52% {
+        filter:
+          drop-shadow(0 0 34px rgba(57,255,20,1))
+          drop-shadow(0 0 68px rgba(37,99,235,.75))
+          brightness(1.5);
+      }
+      to {
+        transform: translate(-50%,-50%) scale(1);
+        opacity: 1;
+        filter:
+          drop-shadow(0 0 18px rgba(57,255,20,.5))
+          drop-shadow(0 0 36px rgba(37,99,235,.4));
+      }
+    }
+    .intro-logo.reveal {
+      animation: logoSpring .92s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* ─── Tagline ─── */
+    .intro-tagline {
+      margin: 0;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: rgba(57,255,20,.88);
+      text-shadow:
+        0 0 10px rgba(57,255,20,.6),
+        0 0 26px rgba(57,255,20,.28),
+        0 0 50px rgba(57,255,20,.12);
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .9s ease, transform .9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .intro-tagline.show { opacity: 1; transform: none; }
+
+    /* ─── Horizon glow ─── */
+    .horizon-glow {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      height: 340px;
+      pointer-events: none;
+      z-index: 2;
+      background: radial-gradient(
+        ellipse 75% 100% at 50% 100%,
+        rgba(57,255,20,.14) 0%,
+        rgba(37,99,235,.09) 32%,
+        transparent 62%
+      );
+      opacity: 0;
+      transition: opacity 1.1s ease;
+    }
+    .horizon-glow.pulse { opacity: 1; }
+
+    /* Intro fade-out */
+    #intro.fade-out {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .95s cubic-bezier(0.4, 0, 1, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #intro        { display: none !important; }
+      #loginWrapper { opacity: 1 !important; transform: none !important; }
+      #themeToggle  { opacity: 1 !important; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- ═══ INTRO OVERLAY ═══ -->
+  <div id="intro" aria-hidden="true" role="presentation">
+    <canvas id="introCanvas"></canvas>
+    <div class="intro-scan"></div>
+
+    <div class="badge-stage">
+      <div class="hex-container">
+        <svg class="hex-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="hexGlow" x="-35%" y="-35%" width="170%" height="170%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur1"/>
+              <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur2"/>
+              <feMerge>
+                <feMergeNode in="blur2"/>
+                <feMergeNode in="blur1"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <filter id="softGlow" x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- Outer hex ring (perimeter ≈ 720) -->
+          <polygon class="hex-outer"
+            points="150,30 253.92,90 253.92,210 150,270 46.08,210 46.08,90"/>
+
+          <!-- Inner hex ring (perimeter ≈ 540) -->
+          <polygon class="hex-inner"
+            points="150,60 227.94,105 227.94,195 150,240 72.06,195 72.06,105"/>
+
+          <!-- Corner accent brackets -->
+          <polyline class="corner-accent" points="58,26 26,26 26,58"/>
+          <polyline class="corner-accent" points="242,26 274,26 274,58"/>
+          <polyline class="corner-accent" points="274,242 274,274 242,274"/>
+          <polyline class="corner-accent" points="26,242 26,274 58,274"/>
+        </svg>
+
+        <img class="intro-logo" src="Assets/LogoUpdates.png" alt="" aria-hidden="true"/>
+      </div>
+
+      <p class="intro-tagline">Where Capital Meets Its Inspiration</p>
+    </div>
+
+    <div class="horizon-glow"></div>
+  </div>
 
   <!-- Background -->
   <div class="bg-scene" aria-hidden="true">
@@ -833,6 +1148,7 @@
   </button>
 
   <!-- Main layout -->
+  <div id="loginWrapper">
   <main class="page-wrapper" role="main">
     <div class="card" role="region" aria-label="Sign in to CapMuse">
 
@@ -924,8 +1240,142 @@
 
     </div>
   </main>
+  </div>
 
   <script>
+    /* ─── Intro sequence ─────────────────────────────────────────── */
+    (function () {
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduced) {
+        document.getElementById('loginWrapper').classList.add('visible');
+        document.getElementById('themeToggle').classList.add('intro-done');
+        return;
+      }
+
+      var intro     = document.getElementById('intro');
+      var iCanvas   = document.getElementById('introCanvas');
+      var bStage    = document.querySelector('.badge-stage');
+      var hexOut    = document.querySelector('.hex-outer');
+      var hexIn     = document.querySelector('.hex-inner');
+      var accents   = document.querySelectorAll('.corner-accent');
+      var iLogo     = document.querySelector('.intro-logo');
+      var iTag      = document.querySelector('.intro-tagline');
+      var hGlow     = document.querySelector('.horizon-glow');
+      var lWrap     = document.getElementById('loginWrapper');
+      var toggle    = document.getElementById('themeToggle');
+
+      /* ── 3-phase particle system ── */
+      var ictx = iCanvas.getContext('2d');
+      var iW, iH, pts = [], phase = 0, p2t = 0, raf;
+      var COLS = [
+        'rgba(57,255,20,',
+        'rgba(37,99,235,',
+        'rgba(16,185,129,',
+        'rgba(96,165,250,'
+      ];
+
+      function resize() {
+        iW = iCanvas.width  = window.innerWidth;
+        iH = iCanvas.height = window.innerHeight;
+      }
+
+      function spawn() {
+        var n = Math.min(Math.floor((iW * iH) / 6500), 200);
+        pts = [];
+        for (var i = 0; i < n; i++) {
+          pts.push({
+            x:   Math.random() * iW,
+            y:   Math.random() * iH,
+            vx:  (Math.random() - .5) * .55,
+            vy:  (Math.random() - .5) * .55,
+            r:   .5 + Math.random() * 1.9,
+            a:   .07 + Math.random() * .38,
+            c:   COLS[Math.floor(Math.random() * COLS.length)],
+            ang: Math.random() * Math.PI * 2,
+            spd: .35 + Math.random() * .85,
+          });
+        }
+      }
+
+      function draw() {
+        ictx.clearRect(0, 0, iW, iH);
+        var cx = iW / 2, cy = iH / 2;
+
+        for (var i = 0; i < pts.length; i++) {
+          var p = pts[i];
+
+          if (phase === 0) {
+            /* Phase 1 — free drift */
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = iW;  if (p.x > iW) p.x = 0;
+            if (p.y < 0) p.y = iH;  if (p.y > iH) p.y = 0;
+
+          } else if (phase === 1) {
+            /* Phase 2 — converge to centre */
+            var dx = cx - p.x, dy = cy - p.y;
+            var d  = Math.sqrt(dx * dx + dy * dy) || 1;
+            var s  = Math.min(p.spd * 2.8, d);
+            p.x += dx / d * s;
+            p.y += dy / d * s;
+
+          } else {
+            /* Phase 3 — scatter / orbit outward */
+            p.ang += .013 + p.spd * .004;
+            var elapsed = Date.now() - p2t;
+            var orb = Math.min(p.spd * 220, 55 + elapsed * .13 + p.spd * 90);
+            p.x = cx + Math.cos(p.ang) * orb;
+            p.y = cy + Math.sin(p.ang) * orb;
+          }
+
+          /* Core dot */
+          ictx.beginPath();
+          ictx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ictx.fillStyle = p.c + p.a + ')';
+          ictx.fill();
+
+          /* Glow halo for larger dots */
+          if (p.r > 1.15) {
+            var g = ictx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4.5);
+            g.addColorStop(0, p.c + (p.a * .38) + ')');
+            g.addColorStop(1, p.c + '0)');
+            ictx.beginPath();
+            ictx.arc(p.x, p.y, p.r * 4.5, 0, Math.PI * 2);
+            ictx.fillStyle = g;
+            ictx.fill();
+          }
+        }
+
+        raf = requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', function () { resize(); spawn(); });
+      resize(); spawn(); draw();
+
+      /* ── Timed sequence ── */
+      setTimeout(function () { phase = 1; },                              1000);
+      setTimeout(function () {
+        hexOut.classList.add('draw');
+        hexIn.classList.add('draw');
+      },                                                                   2000);
+      setTimeout(function () {
+        accents.forEach(function (a) { a.classList.add('show'); });
+      },                                                                   2700);
+      setTimeout(function () { iLogo.classList.add('reveal'); },          3300);
+      setTimeout(function () { iTag.classList.add('show'); },             5100);
+      setTimeout(function () {
+        phase = 2; p2t = Date.now();
+        bStage.classList.add('move-up');
+        hGlow.classList.add('pulse');
+      },                                                                   6300);
+      setTimeout(function () { lWrap.classList.add('visible'); },         7300);
+      setTimeout(function () { intro.classList.add('fade-out'); },        8400);
+      setTimeout(function () {
+        cancelAnimationFrame(raf);
+        if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
+        toggle.classList.add('intro-done');
+      },                                                                   9300);
+    })();
+
     /* ─── Login handler ─── */
     function handleLogin(e) {
       e.preventDefault();
