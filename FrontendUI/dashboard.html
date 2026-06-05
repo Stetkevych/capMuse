@@ -1474,7 +1474,7 @@
       </div>
 
       <!-- Main grid: stat cards (left) + right panel -->
-      <div class="content-grid">
+      <div class="content-grid" id="mainContent">
 
         <!-- ── Left: Colored stat cards (StatMuse style) ── -->
         <div class="cards-col">
@@ -1866,15 +1866,32 @@
   }
 })();
 </script>
+
 <script>
-  (function () {
-    var btn  = document.getElementById('avatarBtn');
+(function () {
+    var btn = document.getElementById('avatarBtn');
     var menu = document.getElementById('avatarMenu');
+
     if (!btn || !menu) return;
-    btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
-    document.addEventListener('click', function () { menu.classList.remove('open'); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.classList.remove('open'); });
-  })();
+
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        menu.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function () {
+        menu.classList.remove('open');
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            menu.classList.remove('open');
+        }
+    });
+})();
 </script>
+
+<script src="capmuse-engine.js"></script>
+
 </body>
 </html>

@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CapMuse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ─── Dark tokens ─── */
+    html[data-theme="dark"] {
+      --page-bg:        #0C0F14;
+      --sidebar-bg:     #111720;
+      --sidebar-border: #1A2435;
+      --topbar-bg:      rgba(17,23,32,0.96);
+      --topbar-border:  #1A2435;
+      --surface:        #141C28;
+      --surface-2:      #1A2435;
+      --text-primary:   #F1F5F9;
+      --text-secondary: #7A8FA8;
+      --text-muted:     #4A5F78;
+      --nav-item-color: #8A9EBB;
+      --nav-sub-color:  #7A8FA8;
+      --nav-active:     #60A5FA;
+      --nav-hover-bg:   rgba(255,255,255,0.04);
+      --nav-box-bg:     rgba(255,255,255,0.04);
+      --nav-box-border: rgba(255,255,255,0.07);
+      --border:         #1A2435;
+      --search-bg:      #141C28;
+      --search-border:  #1A2435;
+      --ticker-bg:      #141C28;
+      --ticker-border:  #1A2435;
+      --table-head:     #0C0F14;
+      --table-border:   #1A2435;
+      --table-hover:    rgba(96,165,250,0.04);
+      --card-shadow:    0 1px 3px rgba(0,0,0,.5), 0 4px 16px rgba(0,0,0,.4);
+      --right-card-bg:  #141C28;
+    }
+
+    /* ─── Light tokens ─── */
+    html[data-theme="light"] {
+      --page-bg:        #EBEBEB;
+      --sidebar-bg:     #FFFFFF;
+      --sidebar-border: #E8E8E8;
+      --topbar-bg:      rgba(255,255,255,0.97);
+      --topbar-border:  #E8E8E8;
+      --surface:        #FFFFFF;
+      --surface-2:      #F4F4F4;
+      --text-primary:   #111111;
+      --text-secondary: #555555;
+      --text-muted:     #999999;
+      --nav-item-color: #333333;
+      --nav-sub-color:  #444444;
+      --nav-active:     #2563EB;
+      --nav-hover-bg:   rgba(0,0,0,0.04);
+      --nav-box-bg:     #F4F4F4;
+      --nav-box-border: transparent;
+      --border:         #E8E8E8;
+      --search-bg:      #F4F4F4;
+      --search-border:  #E0E0E0;
+      --ticker-bg:      #FFFFFF;
+      --ticker-border:  #E8E8E8;
+      --table-head:     #F8F8F8;
+      --table-border:   #EEEEEE;
+      --table-hover:    rgba(37,99,235,0.03);
+      --card-shadow:    0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.07);
+      --right-card-bg:  #FFFFFF;
+    }
+
+    :root {
+      --blue:     #2563EB;
+      --green:    #10B981;
+      --sidebar-w: 215px;
+      --sidebar-gap: 16px;
+      --topbar-h:  56px;
+      --ease:      cubic-bezier(0.4,0,0.2,1);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--page-bg);
+      color: var(--text-primary);
+    }
+
+    /* ══════════════════════════════
+       LAYOUT
+    ══════════════════════════════ */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ══════════════════════════════
+       SIDEBAR
+    ══════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      position: fixed;
+      left: var(--sidebar-gap);
+      top: var(--sidebar-gap);
+      bottom: var(--sidebar-gap);
+      background: var(--sidebar-bg);
+      border: 1px solid var(--sidebar-border);
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12), 0 3px 12px rgba(15, 23, 42, 0.08);
+      display: flex;
+      flex-direction: column;
+      z-index: 300;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      transition: transform 0.3s var(--ease), background-color 0.2s ease;
+    }
+
+    .sidebar::-webkit-scrollbar { display: none; }
+
+    /* ── Logo ── */
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 18px 18px 14px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo img {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
+    }
+
+    .sidebar-wordmark {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Nav wrapper ── */
+    .sidebar-nav {
+      flex: 1;
+      padding: 6px 0 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top-level expandable item (like "Home" in StatMuse) ── */
+    .nav-section-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 18px;
+      cursor: pointer;
+      color: var(--nav-item-color);
+      font-size: 14px;
+      font-weight: 500;
+      user-select: none;
+      transition: color 0.15s ease;
+    }
+
+    .nav-section-toggle:hover { color: var(--text-primary); }
+
+    .nav-section-toggle.active { color: var(--nav-active); font-weight: 600; }
+
+    .toggle-left { display: flex; align-items: center; gap: 10px; }
+
+    .toggle-icon { width: 17px; height: 17px; opacity: 0.7; flex-shrink: 0; }
+
+    .toggle-chevron {
+      width: 14px; height: 14px;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .nav-section-toggle.open .toggle-chevron { transform: rotate(180deg); }
+
+    /* ── Sub-items (like NBA, NHL under Home) ── */
+    .nav-sub {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.25s var(--ease);
+    }
+
+    .nav-sub.open { max-height: 400px; }
+
+    .nav-sub-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 18px 7px 42px;
+      color: var(--nav-sub-color);
+      font-size: 13.5px;
+      font-weight: 400;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.12s ease, background-color 0.12s ease;
+    }
+
+    .nav-sub-item:hover {
+      background: var(--nav-hover-bg);
+      color: var(--text-primary);
+    }
+
+    .nav-sub-item.active {
+      color: var(--nav-active);
+      font-weight: 600;
+    }
+
+    .sub-icon {
+      width: 15px; height: 15px;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+
+    .nav-sub-item.active .sub-icon { opacity: 1; }
+
+    /* Beta/pill tag */
+    .nav-tag {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(37,99,235,0.12);
+      color: var(--blue);
+      border-radius: 4px;
+      padding: 1px 5px;
+      margin-left: 4px;
+    }
+
+    /* ── Standalone nav items (like Scores, News) ── */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      color: var(--nav-item-color);
+      font-size: 14px;
+      font-weight: 400;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.12s ease, background-color 0.12s ease;
+    }
+
+    .nav-item:hover {
+      background: var(--nav-hover-bg);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      color: var(--nav-active);
+      font-weight: 600;
+    }
+
+    .nav-icon { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.65; }
+    .nav-item.active .nav-icon { opacity: 1; }
+
+    /* ── Nav divider ── */
+    .nav-divider {
+      height: 1px;
+      background: var(--sidebar-border);
+      margin: 10px 0;
+    }
+
+    /* ── Secondary rounded box (Examples/Data&Glossary equivalent) ── */
+    .nav-box {
+      margin: 0 10px;
+      background: var(--nav-box-bg);
+      border: 1px solid var(--nav-box-border);
+      border-radius: 10px;
+      padding: 4px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-box-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      color: var(--nav-sub-color);
+      font-size: 13px;
+      font-weight: 400;
+      cursor: pointer;
+      text-decoration: none;
+      border-radius: 7px;
+      transition: color 0.12s ease, background-color 0.12s ease;
+    }
+
+    .nav-box-item:hover {
+      background: var(--nav-hover-bg);
+      color: var(--text-primary);
+    }
+
+    .nav-box-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.55; }
+
+    /* ── Bottom standalone links (About, Blog, Shop) ── */
+    .nav-bottom {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Sidebar user ── */
+    .sidebar-footer {
+      padding: 10px;
+      border-top: 1px solid var(--sidebar-border);
+      flex-shrink: 0;
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .sidebar-user:hover { background: var(--nav-hover-bg); }
+
+    .user-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0F4C81, #10B981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .user-info { flex: 1; min-width: 0; }
+
+    .user-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .user-role {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    /* ══════════════════════════════
+       MAIN WRAPPER
+    ══════════════════════════════ */
+    .main-wrapper {
+      margin-left: calc(var(--sidebar-w) + 32px);
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ══════════════════════════════
+       TOPBAR (StatMuse-style: full-width search)
+    ══════════════════════════════ */
+    .topbar {
+      position: sticky;
+      top: 0;
+      height: 72px;
+      background: transparent;
+      border-bottom: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 28px 0;
+      gap: 14px;
+    }
+
+    /* Mobile burger */
+    .burger {
+      display: none;
+      width: 32px; height: 32px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    /* Search — dominant, pill, fills center like StatMuse */
+    .search-wrap {
+      flex: 0 1 640px;
+      position: relative;
+      max-width: 640px;
+      min-width: 320px;
+    }
+
+    .search-icon-l {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-icon-r {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 17px; height: 17px;
+      color: var(--blue);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 42px;
+      background: var(--surface);
+      border: 1px solid var(--search-border);
+      border-radius: 100px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13.5px;
+      padding: 0 42px 0 40px;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+    }
+
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+    }
+
+    /* Right actions */
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: var(--surface);
+      border: 1px solid var(--topbar-border);
+      border-radius: 100px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+      flex-shrink: 0;
+    }
+
+    .top-btn {
+      width: 32px; height: 32px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 7px;
+      position: relative;
+      transition: background 0.13s ease, color 0.13s ease;
+    }
+
+    .top-btn:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .top-btn svg { width: 18px; height: 18px; }
+
+    .notif-pip {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid var(--surface);
+    }
+
+    .top-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0F4C81, #10B981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Theme toggle */
+    .icon-moon { display: block; }
+    .icon-sun  { display: none; }
+    html[data-theme="light"] .icon-moon { display: none; }
+    html[data-theme="light"] .icon-sun  { display: block; }
+
+    /* ══════════════════════════════
+       PAGE CONTENT
+    ══════════════════════════════ */
+    .page-content {
+      flex: 1;
+      padding: 8px 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Ticker bar (StatMuse score ticker equivalent) ── */
+    .ticker-bar {
+      background: var(--ticker-bg);
+      border: 1px solid var(--ticker-border);
+      border-radius: 14px;
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      box-shadow: var(--card-shadow);
+      flex-shrink: 0;
+    }
+
+    .ticker-msg {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .ticker-link {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .ticker-link:hover { color: var(--text-primary); }
+    .ticker-link svg { width: 14px; height: 14px; }
+
+    /* ── Main content grid ── */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 16px;
+    }
+
+    /* ── Left: stat cards bento grid ── */
+    .cards-col {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-auto-rows: minmax(120px, auto);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    /* ── StatMuse-style colored stat card ── */
+    .stat-card {
+      border-radius: 16px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    /* ── Bento tile positions ── */
+
+    /* Tile 1: Rep leaderboard — full width (handled by .rep-leader-card class) */
+
+    /* Tiles 2-4: three equal columns beneath the leaderboard */
+    .cards-col .stat-card:nth-child(2) {
+      grid-column: span 4;
+      grid-row: span 1;
+      padding: 18px 20px;
+      align-items: flex-start;
+    }
+
+    .cards-col .stat-card:nth-child(3) {
+      grid-column: span 4;
+      grid-row: span 1;
+      padding: 18px 20px;
+      align-items: flex-start;
+    }
+
+    .cards-col .stat-card:nth-child(4) {
+      grid-column: span 4;
+      grid-row: span 1;
+      padding: 18px 20px;
+      align-items: flex-start;
+    }
+
+    /* Tile 5: Ivan — wide spotlight card */
+    .cards-col .stat-card:nth-child(5) {
+      grid-column: span 8;
+      grid-row: span 1;
+      padding: 22px 28px;
+      align-items: flex-start;
+      min-height: 160px;
+    }
+
+    /* Shared compact styles */
+    .cards-col .stat-card:nth-child(2) .card-headline,
+    .cards-col .stat-card:nth-child(3) .card-headline,
+    .cards-col .stat-card:nth-child(4) .card-headline {
+      font-size: 12.5px;
+      margin-bottom: 8px;
+      max-width: 200px;
+    }
+
+    .cards-col .stat-card:nth-child(3) .card-name,
+    .cards-col .stat-card:nth-child(4) .card-name {
+      font-size: 12.5px;
+    }
+
+    .cards-col .stat-card:nth-child(3) .card-icon-decor,
+    .cards-col .stat-card:nth-child(4) .card-icon-decor {
+      width: 44px;
+      height: 44px;
+      opacity: 0.75;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px -4px rgba(0,0,0,0.25);
+    }
+
+    .stat-card.blue-1 {
+      background: linear-gradient(135deg, #1a3f9e 0%, #1D4ED8 100%);
+    }
+
+    .stat-card.blue-2 {
+      background: linear-gradient(135deg, #1D4ED8 0%, #1a5fb4 100%);
+    }
+
+    .stat-card.navy {
+      background: linear-gradient(135deg, #0F1F3D 0%, #162848 100%);
+    }
+
+    .stat-card.teal {
+      background: linear-gradient(135deg, #064E3B 0%, #0D9488 100%);
+    }
+
+    .stat-card.plum {
+      background: linear-gradient(135deg, #2D0F5E 0%, #4A1272 100%);
+    }
+
+    .stat-card.crimson {
+      background: linear-gradient(135deg, #2A0505 0%, #7C1212 60%, #2A0A05 100%);
+    }
+
+    .ivan-photo-wrap {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FCA5A5, #EF4444, #991B1B);
+      padding: 3.5px;
+      box-shadow:
+        0 0 0 1px rgba(252,165,165,0.22),
+        0 0 20px rgba(239,68,68,0.65),
+        0 0 48px rgba(185,28,28,0.45),
+        0 8px 24px rgba(0,0,0,0.65);
+      flex-shrink: 0;
+    }
+
+    .card-rep-photo-wrap {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #E879F9, #A855F7, #7C3AED);
+      padding: 3.5px;
+      box-shadow:
+        0 0 0 1px rgba(232,121,249,0.25),
+        0 0 18px rgba(232,121,249,0.55),
+        0 0 40px rgba(168,85,247,0.40),
+        0 6px 20px rgba(0,0,0,0.60);
+      flex-shrink: 0;
+    }
+
+    .card-rep-photo {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center 5%;
+      display: block;
+    }
+
+    .stat-card.indigo {
+      background: linear-gradient(135deg, #1E1B4B 0%, #3730A3 100%);
+    }
+
+    /* Big single stat (used in small tiles) */
+    .card-big-single {
+      display: block;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      margin-top: 8px;
+      line-height: 1;
+    }
+
+    /* Decorative circle inside card */
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      right: -30px;
+      bottom: -30px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      pointer-events: none;
+    }
+
+    .cards-col .stat-card:nth-child(2)::after,
+    .cards-col .stat-card:nth-child(3)::after,
+    .cards-col .stat-card:nth-child(4)::after {
+      right: -28px;
+      bottom: -28px;
+      width: 118px;
+      height: 118px;
+    }
+
+    .card-left { flex: 1; position: relative; z-index: 1; }
+
+    .card-headline {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: rgba(255,221,80,0.88);
+      margin-bottom: 14px;
+      max-width: 320px;
+    }
+
+    .stat-card.navy .card-headline { color: rgba(255,255,255,0.75); }
+
+    .card-names {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .card-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FCD34D;
+      line-height: 1.3;
+    }
+
+    .stat-card.navy .card-name { color: #FFFFFF; }
+
+    .card-sub-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .card-sub-row {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: rgba(252,211,77,0.9);
+    }
+
+    .stat-card.navy .card-sub-row { color: rgba(255,255,255,0.85); }
+
+    .card-gap { height: 10px; }
+
+    .card-footer-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: #FCD34D;
+      margin-top: 2px;
+    }
+
+    .stat-card.navy .card-footer-text { color: rgba(255,255,255,0.9); }
+
+    /* Right: decorative number or icon */
+    .card-right {
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-big-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 52px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.12);
+      line-height: 1;
+      user-select: none;
+    }
+
+    .card-icon-decor {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.25);
+    }
+
+    .card-icon-decor svg { width: 28px; height: 28px; }
+
+    /* ── Right column ── */
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Featured card (like StatMuse's video player area) */
+    .featured-card {
+      background: linear-gradient(145deg, #0F2040 0%, #1A3560 50%, #0B4D3B 100%);
+      border-radius: 16px;
+      padding: 0;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .featured-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 10px;
+    }
+
+    .featured-header-left {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.05em;
+    }
+
+    .featured-header-left strong {
+      color: rgba(255,255,255,0.85);
+      font-weight: 700;
+    }
+
+    .featured-body {
+      padding: 0 16px 18px;
+    }
+
+    .featured-metric {
+      font-size: 36px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .featured-label {
+      font-size: 12.5px;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 16px;
+    }
+
+    .featured-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .featured-tag {
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+      border-radius: 100px;
+      padding: 4px 10px;
+    }
+
+    .featured-progress {
+      margin-top: 14px;
+      height: 3px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .featured-progress-bar {
+      height: 100%;
+      width: 68%;
+      background: linear-gradient(90deg, #34D399, #2563EB);
+      border-radius: 2px;
+    }
+
+    /* ── Pipeline table (like Premier League table) ── */
+    .pipeline-card {
+      background: var(--right-card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      flex: 1;
+    }
+
+    .pipeline-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--table-border);
+    }
+
+    .pipeline-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .pipeline-dropdown {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .pipeline-dropdown svg { width: 13px; height: 13px; }
+
+    .pipeline-table { width: 100%; border-collapse: collapse; }
+
+    .pipeline-table thead tr { background: var(--table-head); }
+
+    .pipeline-table th {
+      padding: 7px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-align: right;
+      border-bottom: 1px solid var(--table-border);
+      white-space: nowrap;
+    }
+
+    .pipeline-table th:first-child { text-align: center; padding-left: 14px; width: 26px; }
+    .pipeline-table th:nth-child(2) { text-align: left; }
+    .pipeline-table th:last-child  { padding-right: 14px; }
+
+    .pipeline-table td {
+      padding: 9px 6px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--table-border);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .pipeline-table td:first-child { text-align: center; padding-left: 14px; color: var(--text-muted); font-size: 12px; width: 26px; }
+    .pipeline-table td:nth-child(2) { text-align: left; }
+    .pipeline-table td:last-child   { padding-right: 14px; }
+
+    .pipeline-table tbody tr:last-child td { border-bottom: none; }
+    .pipeline-table tbody tr:hover td { background: var(--table-hover); }
+
+    .biz-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .biz-dot {
+      width: 20px; height: 20px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 800;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .biz-cell-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 12.5px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 100px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+
+    .chip-green { background: rgba(16,185,129,0.10); color: #059669; }
+    .chip-blue  { background: rgba(37,99,235,0.10);  color: #2563EB; }
+    .chip-gray  { background: rgba(0,0,0,0.06);       color: #888; }
+
+    html[data-theme="dark"] .chip-green { background: rgba(16,185,129,0.15); color: #34D399; }
+    html[data-theme="dark"] .chip-blue  { background: rgba(37,99,235,0.15);  color: #60A5FA; }
+    html[data-theme="dark"] .chip-gray  { background: rgba(255,255,255,0.06); color: #7A8FA8; }
+
+    /* ── Overlay for mobile ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 250;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .content-grid { grid-template-columns: 1fr; }
+      .right-col { display: none; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: min(var(--sidebar-w), calc(100vw - 32px));
+        transform: translateX(calc(-100% - 24px));
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.visible { display: block; }
+      .main-wrapper { margin-left: 0; }
+      .topbar {
+        height: 66px;
+        justify-content: flex-start;
+        padding: 10px 16px 0;
+        gap: 10px;
+      }
+      .search-wrap {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .search-input { height: 40px; }
+      .topbar-right { padding: 3px; }
+      .burger { display: flex; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0ms !important; }
+    }
+
+    /* ── Rep Leaderboard Card ── */
+    .stat-card.rep-leader-card {
+      grid-column: span 12;
+      grid-row: span 1;
+      background: linear-gradient(135deg, #0D1520 0%, #111D2E 55%, #0C1A0F 100%);
+      padding: 0;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 0;
+      min-height: 210px;
+    }
+
+    .rep-hero {
+      width: 210px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 22px 20px;
+      background: rgba(245, 158, 11, 0.07);
+      border-right: 1px solid rgba(245, 158, 11, 0.18);
+      gap: 7px;
+    }
+
+    .rep-crown {
+      font-size: 26px;
+      line-height: 1;
+      filter: drop-shadow(0 0 10px rgba(245,158,11,0.7));
+    }
+
+    .rep-photo-wrap {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F59E0B, #D97706);
+      padding: 3px;
+      box-shadow: 0 0 28px rgba(245,158,11,0.5), 0 4px 16px rgba(0,0,0,0.55);
+    }
+
+    .rep-photo {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center 8%;
+      display: block;
+    }
+
+    .rep-hero-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.01em;
+      margin-top: 2px;
+    }
+
+    .rep-hero-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: rgba(245, 158, 11, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    .rep-hero-amount {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 21px;
+      font-weight: 800;
+      color: #F59E0B;
+      letter-spacing: -0.01em;
+      line-height: 1;
+    }
+
+    .rep-board {
+      flex: 1;
+      padding: 16px 22px 16px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .rep-board-head {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.28);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 3px;
+    }
+
+    .rep-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 14px;
+      row-gap: 0;
+    }
+
+    .rep-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 7px;
+      border-radius: 6px;
+      transition: background 0.12s ease;
+    }
+
+    .rep-row:hover { background: rgba(255,255,255,0.05); }
+
+    .rep-pos { width: 18px; text-align: center; flex-shrink: 0; }
+    .rep-pos.medal { font-size: 15px; line-height: 1; }
+    .rep-pos.num { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.2); }
+
+    .rep-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.62);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .rep-amt {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.32);
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .rep-row.r-gold   .rep-name  { color: #FCD34D; font-weight: 700; }
+    .rep-row.r-gold   .rep-amt   { color: rgba(252,211,77,0.78); }
+    .rep-row.r-silver .rep-name  { color: #E2E8F0; font-weight: 600; }
+    .rep-row.r-silver .rep-amt   { color: rgba(226,232,240,0.62); }
+    .rep-row.r-bronze .rep-name  { color: #FCA044; font-weight: 600; }
+    .rep-row.r-bronze .rep-amt   { color: rgba(252,160,68,0.62); }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ═══════════════════════════════
+       SIDEBAR
+  ═══════════════════════════════ -->
+  <aside class="sidebar" id="sidebar" aria-label="Navigation">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <img src="Assets/LogoUpdates.png" alt="CapMuse" />
+      <span class="sidebar-wordmark">CapMuse</span>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <!-- Expandable: Overview (like "Home" in StatMuse) -->
+      <div class="nav-section-toggle open active" id="overviewToggle" role="button" tabindex="0" aria-expanded="true">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <rect x="2" y="2" width="7" height="7" rx="1.5"/>
+            <rect x="11" y="2" width="7" height="7" rx="1.5"/>
+            <rect x="2" y="11" width="7" height="7" rx="1.5"/>
+            <rect x="11" y="11" width="7" height="7" rx="1.5"/>
+          </svg>
+          Overview
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="nav-sub open" id="overviewSub">
+        <a class="nav-sub-item active" href="#" aria-current="page">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/>
+          </svg>
+          Dashboard
+        </a>
+        <a class="nav-sub-item" href="#">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M5 2h7l4 4v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke-linecap="round"/>
+            <path d="M12 2v4h4" stroke-linecap="round"/>
+          </svg>
+          Applications
+        </a>
+        <a class="nav-sub-item" href="#">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 17V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" stroke-linecap="round"/>
+          </svg>
+          Businesses
+        </a>
+        <a class="nav-sub-item" href="#">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M2 14l4-6 3 4 3-5 4 7H2z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Statements
+        </a>
+        <a class="nav-sub-item" href="#">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <rect x="3" y="3" width="14" height="14" rx="2" stroke-linecap="round"/>
+            <path d="M7 7h6M7 10h6M7 13h4" stroke-linecap="round"/>
+          </svg>
+          Reports
+          <span class="nav-tag" style="margin-left:auto">New</span>
+        </a>
+      </div>
+
+      <!-- Standalone items -->
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <circle cx="10" cy="10" r="7.5"/>
+          <path d="m7 10 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Funding
+      </a>
+
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke-linecap="round"/>
+          <path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke-linecap="round"/>
+        </svg>
+        Alerts
+      </a>
+
+      <!-- Expandable: Trending (collapsed) -->
+      <div class="nav-section-toggle" id="trendingToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 15l5-5 3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 7h3v3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Trending
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="nav-sub" id="trendingSub">
+        <a class="nav-sub-item" href="#">Top Funded</a>
+        <a class="nav-sub-item" href="#">Fastest Growing</a>
+        <a class="nav-sub-item" href="#">Most Applications</a>
+      </div>
+
+      <!-- Divider -->
+      <div class="nav-divider"></div>
+
+      <!-- Rounded secondary box (like Examples/Data&Glossary/Gallery) -->
+      <div class="nav-box">
+        <a class="nav-box-item" href="#">
+          <svg class="nav-box-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="9" cy="9" r="5.5"/>
+            <path d="m13.5 13.5 3 3" stroke-linecap="round"/>
+          </svg>
+          Deal Calculator
+        </a>
+        <a class="nav-box-item" href="#">
+          <svg class="nav-box-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <rect x="3" y="3" width="14" height="14" rx="2"/>
+            <path d="M7 7h6M7 10h6M7 13h4" stroke-linecap="round"/>
+          </svg>
+          Templates
+        </a>
+        <a class="nav-box-item" href="#">
+          <svg class="nav-box-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="10" cy="10" r="7.5"/>
+            <path d="M10 9v.5a1 1 0 0 0 1 1v1M10 6.5v.01" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Resources
+        </a>
+      </div>
+
+      <!-- Divider -->
+      <div class="nav-divider"></div>
+
+      <!-- Bottom standalone -->
+      <div class="nav-bottom">
+        <a class="nav-item" href="#">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="10" cy="10" r="2.5"/>
+            <path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18M4.05 4.05l1.06 1.06M14.9 14.9l1.06 1.06M4.05 15.95l1.06-1.06M14.9 5.1l1.06-1.06" stroke-linecap="round"/>
+          </svg>
+          Settings
+        </a>
+        <a class="nav-item" href="#">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 5h14M5 10h10M7 15h6" stroke-linecap="round"/>
+          </svg>
+          Blog
+        </a>
+        <a class="nav-item" href="#">
+          <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M10 2a6 6 0 1 0 6 6H10V2z" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 10a6 6 0 0 0-6-6" stroke-linecap="round"/>
+          </svg>
+          About
+        </a>
+      </div>
+
+    </nav>
+
+    <!-- User strip -->
+    <div class="sidebar-footer">
+      <div class="sidebar-user" role="button" tabindex="0" aria-label="User menu">
+        <div class="user-avatar">GP</div>
+        <div class="user-info">
+          <div class="user-name">Gustavo Prieto</div>
+          <div class="user-role">Software Engineer</div>
+        </div>
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0" aria-hidden="true">
+          <path d="M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+  </aside>
+  <!-- END SIDEBAR -->
+
+  <!-- ═══════════════════════════════
+       MAIN
+  ═══════════════════════════════ -->
+  <div class="main-wrapper">
+
+    <!-- Topbar -->
+    <header class="topbar" role="banner">
+      <button class="burger" id="burgerBtn" aria-label="Open navigation">
+        <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M3 5h14M3 10h14M3 15h14" stroke-linecap="round"/>
+        </svg>
+      </button>
+
+      <!-- Prominent pill search — StatMuse style -->
+      <div class="search-wrap">
+        <svg class="search-icon-l" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/>
+        </svg>
+        <input class="search-input" type="search" placeholder="Search oddly specific or unspecific things" aria-label="Search" readonly />
+        <svg class="search-icon-r" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+          <circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="topbar-right">
+        <button class="top-btn" aria-label="Notifications">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke-linecap="round"/>
+            <path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke-linecap="round"/>
+          </svg>
+          <span class="notif-pip" aria-hidden="true"></span>
+        </button>
+
+        <button class="top-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M17.293 13.293A8 8 0 0 1 6.707 2.707a8.001 8.001 0 1 0 10.586 10.586z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="10" cy="10" r="4"/>
+            <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        <div class="top-avatar" role="button" tabindex="0" aria-label="User menu">GP</div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="page-content" role="main">
+
+      <!-- Ticker bar (StatMuse score bar) -->
+      <div class="ticker-bar">
+        <span class="ticker-msg">No new applications today</span>
+        <a class="ticker-link" href="#" tabindex="0">
+          View Pipeline
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+            <path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Main grid: stat cards (left) + right panel -->
+      <div class="content-grid">
+
+        <!-- ── Left: Colored stat cards (StatMuse style) ── -->
+        <div class="cards-col">
+
+          <!-- Tile 1: Rep of the Month Leaderboard — full width, top -->
+          <div class="stat-card rep-leader-card">
+
+            <!-- Left: Anderson hero -->
+            <div class="rep-hero">
+              <div class="rep-crown">🥇</div>
+              <div class="rep-photo-wrap">
+                <img src="Assets/reps/AndersonCartoon.png" alt="Anderson" class="rep-photo" />
+              </div>
+              <div class="rep-hero-name">Anderson</div>
+              <div class="rep-hero-label">Most Funded · June</div>
+              <div class="rep-hero-amount">$4.2M</div>
+            </div>
+
+            <!-- Right: leaderboard -->
+            <div class="rep-board">
+              <div class="rep-board-head">Monthly Rep Leaderboard</div>
+              <div class="rep-grid">
+                <div class="rep-row r-gold">
+                  <span class="rep-pos medal">🥇</span>
+                  <span class="rep-name">Anderson</span>
+                  <span class="rep-amt">$4.2M</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">8</span>
+                  <span class="rep-name">Matthew</span>
+                  <span class="rep-amt">$1.7M</span>
+                </div>
+                <div class="rep-row r-silver">
+                  <span class="rep-pos medal">🥈</span>
+                  <span class="rep-name">Frank</span>
+                  <span class="rep-amt">$3.8M</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">9</span>
+                  <span class="rep-name">Santi</span>
+                  <span class="rep-amt">$1.5M</span>
+                </div>
+                <div class="rep-row r-bronze">
+                  <span class="rep-pos medal">🥉</span>
+                  <span class="rep-name">Blake</span>
+                  <span class="rep-amt">$3.1M</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">10</span>
+                  <span class="rep-name">Rondon</span>
+                  <span class="rep-amt">$1.3M</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">4</span>
+                  <span class="rep-name">Colin</span>
+                  <span class="rep-amt">$2.7M</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">11</span>
+                  <span class="rep-name">Ray</span>
+                  <span class="rep-amt">$1.1M</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">5</span>
+                  <span class="rep-name">Kip</span>
+                  <span class="rep-amt">$2.4M</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">12</span>
+                  <span class="rep-name">Pina</span>
+                  <span class="rep-amt">$950K</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">6</span>
+                  <span class="rep-name">Juan</span>
+                  <span class="rep-amt">$2.1M</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">13</span>
+                  <span class="rep-name">Dominic</span>
+                  <span class="rep-amt">$820K</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">7</span>
+                  <span class="rep-name">Rio</span>
+                  <span class="rep-amt">$1.9M</span>
+                </div>
+                <div class="rep-row">
+                  <span class="rep-pos num">14</span>
+                  <span class="rep-name">Gabriel</span>
+                  <span class="rep-amt">$680K</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+
+
+
+
+
+
+
+          <!-- Tile 2: Cipriani — biggest avg deal (right next to Anderson leaderboard) -->
+          <div class="stat-card plum">
+            <div class="card-left">
+              <p class="card-headline">Biggest avg deal<br />size this month:</p>
+              <div class="card-names">
+                <span class="card-name" style="color:#C084FC">Cipriani</span>
+              </div>
+              <span class="card-big-single" style="font-size:28px;background:linear-gradient(135deg,#F0ABFC,#C084FC,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(232,121,249,0.55));letter-spacing:-0.02em">$6.7M avg</span>
+            </div>
+            <div class="card-right">
+              <div class="card-rep-photo-wrap">
+                <img src="Assets/reps/cipriani.png" alt="Cipriani" class="card-rep-photo" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Tile 3: Navy — narrow, short (middle right) -->
+          <div class="stat-card navy">
+            <div class="card-left">
+              <p class="card-headline">
+                Only 2 businesses funded<br />over $7M with A+ credit:
+              </p>
+              <div class="card-names">
+                <span class="card-name">Metro Holdings</span>
+                <span class="card-name">BlueStar Capital</span>
+              </div>
+            </div>
+            <div class="card-right">
+              <div class="card-icon-decor" style="background:rgba(255,255,255,0.05)">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" style="color:rgba(255,255,255,0.2)" aria-hidden="true">
+                  <circle cx="10" cy="10" r="7.5"/>
+                  <path d="m7 10 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tile 4: Teal — narrow, big number (bottom left) -->
+          <div class="stat-card teal">
+            <div class="card-left">
+              <p class="card-headline">Average deal size<br />funded this year:</p>
+              <span class="card-big-single">$3.8M</span>
+            </div>
+            <div class="card-right">
+              <div class="card-icon-decor" style="background:rgba(255,255,255,0.08)">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" style="color:rgba(255,255,255,0.3)" aria-hidden="true">
+                  <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke-linecap="round"/>
+                  <circle cx="10" cy="10" r="4"/>
+                  <path d="M10 8v2l1.5 1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tile 5: Ivan — wide spotlight -->
+          <div class="stat-card crimson">
+            <div class="card-left">
+              <p class="card-headline" style="color:rgba(252,165,165,0.85);font-size:13.5px;max-width:280px">
+                Highest close rate on the team<br />this quarter:
+              </p>
+              <div class="card-names" style="margin-bottom:10px">
+                <span class="card-name" style="color:#FCA5A5;font-size:18px">Ivan</span>
+              </div>
+              <span class="card-big-single" style="font-size:42px;background:linear-gradient(135deg,#FCA5A5,#F87171,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 10px rgba(239,68,68,0.6));letter-spacing:-0.03em">94%</span>
+              <p class="card-footer-text" style="color:rgba(252,165,165,0.75);font-size:13px;margin-top:6px">16 of 17 leads closed — no one's close.</p>
+            </div>
+            <div class="card-right">
+              <div class="ivan-photo-wrap">
+                <img src="Assets/reps/IvanCartoon.png" alt="Ivan" class="card-rep-photo" style="object-position:center 8%" />
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- END cards-col -->
+
+        <!-- ── Right column ── -->
+        <div class="right-col">
+
+          <!-- Featured card (like StatMuse's video panel) -->
+          <div class="featured-card" role="region" aria-label="Featured metric">
+            <div class="featured-header">
+              <span class="featured-header-left">Up Next — <strong>Business Review</strong></span>
+            </div>
+            <div class="featured-body">
+              <div class="featured-metric">$8.1M</div>
+              <div class="featured-label">Metro Holdings — Approved Credit Line</div>
+              <div class="featured-tags">
+                <span class="featured-tag">Real Estate</span>
+                <span class="featured-tag">A+ Rating</span>
+                <span class="featured-tag">Funded</span>
+              </div>
+              <div class="featured-progress">
+                <div class="featured-progress-bar"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pipeline table (like Premier League Table) -->
+          <div class="pipeline-card" role="region" aria-label="Funding pipeline">
+            <div class="pipeline-header">
+              <span class="pipeline-title">Funding Pipeline</span>
+              <div class="pipeline-dropdown" role="button" tabindex="0">
+                All Deals
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                  <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <table class="pipeline-table" aria-label="Funding pipeline table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Business</th>
+                  <th>Amt</th>
+                  <th>Score</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#34D399)">MH</div><span class="biz-cell-name">Metro Holdings</span></div></td>
+                  <td>$8.1M</td>
+                  <td>A+</td>
+                  <td><span class="status-chip chip-green">Funded</span></td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#2563EB)">AF</div><span class="biz-cell-name">Apex Financial</span></div></td>
+                  <td>$4.2M</td>
+                  <td>A</td>
+                  <td><span class="status-chip chip-green">Active</span></td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#34D399,#2563EB)">BC</div><span class="biz-cell-name">BlueStar Capital</span></div></td>
+                  <td>$7.8M</td>
+                  <td>A</td>
+                  <td><span class="status-chip chip-green">Active</span></td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#6366F1,#2563EB)">NT</div><span class="biz-cell-name">NovaTech LLC</span></div></td>
+                  <td>$1.8M</td>
+                  <td>B+</td>
+                  <td><span class="status-chip chip-blue">Review</span></td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#10B981)">SD</div><span class="biz-cell-name">Sierra Dynamics</span></div></td>
+                  <td>$3.1M</td>
+                  <td>B</td>
+                  <td><span class="status-chip chip-gray">Pending</span></td>
+                </tr>
+                <tr>
+                  <td>6</td>
+                  <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#10B981,#0F4C81)">CP</div><span class="biz-cell-name">Capital Partners</span></div></td>
+                  <td>$5.5M</td>
+                  <td>A-</td>
+                  <td><span class="status-chip chip-blue">Review</span></td>
+                </tr>
+                <tr>
+                  <td>7</td>
+                  <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#6366F1)">VS</div><span class="biz-cell-name">Vertex Solutions</span></div></td>
+                  <td>$2.4M</td>
+                  <td>B+</td>
+                  <td><span class="status-chip chip-gray">Pending</span></td>
+                </tr>
+                <tr>
+                  <td>8</td>
+                  <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#34D399)">PV</div><span class="biz-cell-name">Pacific Ventures</span></div></td>
+                  <td>$2.1M</td>
+                  <td>B</td>
+                  <td><span class="status-chip chip-gray">Pending</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+        <!-- END right-col -->
+
+      </div>
+      <!-- END content-grid -->
+
+    </main>
+  </div>
+  <!-- END MAIN -->
+
+</div>
+<!-- END LAYOUT -->
+
+<script>
+  /* ─── Theme ─── */
+  (function () {
+    const html = document.documentElement;
+    const btn  = document.getElementById('themeBtn');
+    const KEY  = 'capmuse-theme';
+    const saved = localStorage.getItem(KEY);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    html.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+    btn.addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem(KEY, next);
+    });
+  })();
+
+  /* ─── Expandable sidebar sections ─── */
+  (function () {
+    function bindToggle(toggleId, subId) {
+      const toggle = document.getElementById(toggleId);
+      const sub    = document.getElementById(subId);
+      if (!toggle || !sub) return;
+      toggle.addEventListener('click', () => {
+        const isOpen = sub.classList.contains('open');
+        sub.classList.toggle('open', !isOpen);
+        toggle.classList.toggle('open', !isOpen);
+        toggle.setAttribute('aria-expanded', String(!isOpen));
+      });
+    }
+    bindToggle('overviewToggle', 'overviewSub');
+    bindToggle('trendingToggle', 'trendingSub');
+  })();
+
+  /* ─── Mobile sidebar ─── */
+  (function () {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const burger  = document.getElementById('burgerBtn');
+    const open  = () => { sidebar.classList.add('open'); overlay.classList.add('visible'); document.body.style.overflow = 'hidden'; };
+    const close = () => { sidebar.classList.remove('open'); overlay.classList.remove('visible'); document.body.style.overflow = ''; };
+    burger.addEventListener('click', open);
+    overlay.addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  })();
+</script>
+
+<script>
+/* ─── Load real data from S3 ─── */
+(async function() {
+  const BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
+  try {
+    const res = await fetch(`${BUCKET}/Accounts.csv`);
+    if (!res.ok) return;
+    const text = await res.text();
+    const data = parseCSV(text);
+    if (data.length > 0) populateDashboard(data);
+  } catch(e) { console.log('[CapMuse] S3 fetch failed, using static data'); }
+
+  function parseCSV(text) {
+    const lines = []; let cur = '', inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '"') inQ = !inQ;
+      else if (ch === '\n' && !inQ) { lines.push(cur.replace(/\r$/,'')); cur = ''; }
+      else cur += ch;
+    }
+    if (cur.trim()) lines.push(cur.replace(/\r$/,''));
+    if (lines.length < 2) return [];
+    const headers = splitRow(lines[0]);
+    return lines.slice(1).filter(l => l.trim()).map(line => {
+      const vals = splitRow(line); const obj = {};
+      headers.forEach((h,i) => { obj[h] = vals[i] || ''; });
+      return obj;
+    });
+  }
+
+  function splitRow(line) {
+    const res = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') inQ = !inQ;
+      else if (ch === ',' && !inQ) { res.push(cur.trim()); cur = ''; }
+      else cur += ch;
+    }
+    res.push(cur.trim()); return res;
+  }
+
+  function populateDashboard(rows) {
+    // Map rows
+    const deals = rows.map(r => ({
+      name: r.Account_Name || r.DBA || r.Business_Legal_Name || '',
+      stage: r.Stage_of_Package || '',
+      amount: parseFloat(String(r.Amount||'').replace(/[$,]/g,'')) || 0,
+      funded: r.Date_Funded || '',
+      applied: r.Date_Applied || r.Created_Time || '',
+      rep: r.Bizz_Owner_Name || '',
+      lender: r.Funder_2 || '',
+      source: r.Lead_Source || r.Original_Lead_Source || '',
+      industry: r.Industry || r.I_Stated_Industry || '',
+      state: r.State || r.Business_State || '',
+      revenue: parseFloat(String(r.Monthly_Revenue||r.Monthly_Revenue1||'').replace(/[$,]/g,'')) || 0,
+    })).filter(d => d.name);
+
+    const funded = deals.filter(d => d.stage && d.stage.toLowerCase().includes('fund') && !d.stage.toLowerCase().includes('decline'));
+    const totalFunded = funded.reduce((s,d) => s + d.amount, 0);
+    const totalDeals = deals.length;
+    const approvalRate = totalDeals ? Math.round((funded.length / totalDeals) * 100) : 0;
+
+    // Update ticker/KPI numbers if elements exist
+    const tickers = document.querySelectorAll('.ticker-value');
+    if (tickers.length >= 3) {
+      tickers[0].textContent = '$' + fmt(totalFunded);
+      tickers[1].textContent = totalDeals.toLocaleString();
+      tickers[2].textContent = approvalRate + '%';
+    }
+
+    // Update pipeline table
+    const tbody = document.querySelector('.pipeline-table tbody');
+    if (tbody) {
+      const top10 = deals.slice(0, 10);
+      tbody.innerHTML = top10.map((d, i) => {
+        const initials = d.name.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
+        const chipClass = d.stage.toLowerCase().includes('fund') ? 'chip-green' : d.stage.toLowerCase().includes('review') || d.stage.toLowerCase().includes('approv') ? 'chip-blue' : 'chip-gray';
+        const stageLabel = d.stage.toLowerCase().includes('fund') ? 'Funded' : d.stage.toLowerCase().includes('approv') ? 'Approved' : d.stage.toLowerCase().includes('review') || d.stage.toLowerCase().includes('underw') ? 'Review' : 'Pending';
+        const amt = d.amount ? '$' + fmt(d.amount) : '—';
+        return `<tr>
+          <td>${i+1}</td>
+          <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#10B981)">${initials}</div><span class="biz-cell-name">${d.name.substring(0,20)}</span></div></td>
+          <td>${amt}</td>
+          <td>${d.rep ? d.rep.split(' ')[0] : '—'}</td>
+          <td><span class="status-chip ${chipClass}">${stageLabel}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    console.log(`[CapMuse] Dashboard loaded: ${deals.length} deals, ${funded.length} funded, $${fmt(totalFunded)} volume`);
+  }
+
+  function fmt(n) {
+    if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n/1000).toFixed(0) + 'K';
+    return n.toString();
+  }
+})();
+</script>
+</body>
+</html>
