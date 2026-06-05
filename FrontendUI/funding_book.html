@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Funding Book — CapMuse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html[data-theme="dark"] {
+      --page-bg:#0C0F14; --sidebar-bg:#111720; --sidebar-border:#1A2435; --topbar-border:#1A2435;
+      --surface:#141C28; --surface-2:#1A2435; --text-primary:#F1F5F9; --text-secondary:#7A8FA8;
+      --text-muted:#4A5F78; --nav-item-color:#8A9EBB; --nav-sub-color:#7A8FA8; --nav-active:#60A5FA;
+      --nav-hover-bg:rgba(255,255,255,0.04); --nav-box-bg:rgba(255,255,255,0.04); --nav-box-border:rgba(255,255,255,0.07);
+      --border:#1A2435; --search-border:#1A2435; --ticker-bg:#141C28; --ticker-border:#1A2435;
+      --table-head:#0C0F14; --table-border:#1A2435; --table-hover:rgba(96,165,250,0.04);
+      --card-shadow:0 1px 3px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.4);
+    }
+    html[data-theme="light"] {
+      --page-bg:#EBEBEB; --sidebar-bg:#FFFFFF; --sidebar-border:#E8E8E8; --topbar-border:#E8E8E8;
+      --surface:#FFFFFF; --surface-2:#F4F4F4; --text-primary:#111111; --text-secondary:#555555;
+      --text-muted:#999999; --nav-item-color:#333333; --nav-sub-color:#444444; --nav-active:#2563EB;
+      --nav-hover-bg:rgba(0,0,0,0.04); --nav-box-bg:#F4F4F4; --nav-box-border:transparent;
+      --border:#E8E8E8; --search-border:#E0E0E0; --ticker-bg:#FFFFFF; --ticker-border:#E8E8E8;
+      --table-head:#F8F8F8; --table-border:#EEEEEE; --table-hover:rgba(37,99,235,0.03);
+      --card-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);
+    }
+    :root { --blue:#2563EB; --green:#10B981; --sidebar-w:215px; --sidebar-gap:16px; --ease:cubic-bezier(0.4,0,0.2,1); }
+
+    html, body { height:100%; font-family:'Inter',system-ui,sans-serif; background:var(--page-bg); color:var(--text-primary); }
+    .layout { display:flex; min-height:100vh; }
+
+    .sidebar { width:var(--sidebar-w); position:fixed; left:var(--sidebar-gap); top:var(--sidebar-gap); bottom:var(--sidebar-gap); background:var(--sidebar-bg); border:1px solid var(--sidebar-border); border-radius:18px; box-shadow:0 18px 45px rgba(15,23,42,0.12),0 3px 12px rgba(15,23,42,0.08); display:flex; flex-direction:column; z-index:300; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; transition:transform 0.3s var(--ease); }
+    .sidebar::-webkit-scrollbar { display:none; }
+    .sidebar-logo { display:flex; align-items:center; gap:9px; padding:18px 18px 14px; flex-shrink:0; }
+    .sidebar-logo img { width:30px; height:30px; object-fit:contain; }
+    .sidebar-wordmark { font-family:'Orbitron',sans-serif; font-size:14.5px; font-weight:700; letter-spacing:0.04em; background:linear-gradient(135deg,var(--blue),var(--green)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .sidebar-nav { flex:1; padding:6px 0 8px; display:flex; flex-direction:column; }
+    .nav-section-toggle { display:flex; align-items:center; justify-content:space-between; padding:8px 18px; cursor:pointer; color:var(--nav-item-color); font-size:14px; font-weight:500; user-select:none; transition:color 0.15s ease; }
+    .nav-section-toggle:hover { color:var(--text-primary); }
+    .nav-section-toggle.active { color:var(--nav-active); font-weight:600; }
+    .toggle-left { display:flex; align-items:center; gap:10px; }
+    .toggle-icon { width:17px; height:17px; opacity:0.7; flex-shrink:0; }
+    .toggle-chevron { width:14px; height:14px; color:var(--text-muted); transition:transform 0.2s ease; flex-shrink:0; }
+    .nav-section-toggle.open .toggle-chevron { transform:rotate(180deg); }
+    .nav-sub { display:flex; flex-direction:column; overflow:hidden; max-height:0; transition:max-height 0.25s var(--ease); }
+    .nav-sub.open { max-height:400px; }
+    .nav-sub-item { display:flex; align-items:center; gap:10px; padding:7px 18px 7px 42px; color:var(--nav-sub-color); font-size:13.5px; font-weight:400; cursor:pointer; text-decoration:none; transition:color 0.12s ease,background-color 0.12s ease; }
+    .nav-sub-item:hover { background:var(--nav-hover-bg); color:var(--text-primary); }
+    .nav-sub-item.active { color:var(--nav-active); font-weight:600; }
+    .sub-icon { width:15px; height:15px; flex-shrink:0; opacity:0.6; }
+    .nav-sub-item.active .sub-icon { opacity:1; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:8px 18px; color:var(--nav-item-color); font-size:14px; font-weight:400; cursor:pointer; text-decoration:none; transition:color 0.12s ease,background-color 0.12s ease; }
+    .nav-item:hover { background:var(--nav-hover-bg); color:var(--text-primary); }
+    .nav-icon { width:17px; height:17px; flex-shrink:0; opacity:0.65; }
+    .nav-divider { height:1px; background:var(--sidebar-border); margin:10px 0; }
+    .nav-box { margin:0 10px; background:var(--nav-box-bg); border:1px solid var(--nav-box-border); border-radius:10px; padding:4px 0; display:flex; flex-direction:column; }
+    .nav-box-item { display:flex; align-items:center; gap:10px; padding:7px 12px; color:var(--nav-sub-color); font-size:13px; font-weight:400; cursor:pointer; text-decoration:none; border-radius:7px; transition:color 0.12s ease,background-color 0.12s ease; }
+    .nav-box-item:hover { background:var(--nav-hover-bg); color:var(--text-primary); }
+    .nav-box-icon { width:15px; height:15px; flex-shrink:0; opacity:0.55; }
+    .nav-bottom { padding:0; display:flex; flex-direction:column; }
+    .sidebar-footer { padding:10px; border-top:1px solid var(--sidebar-border); flex-shrink:0; }
+    .sidebar-user { display:flex; align-items:center; gap:8px; padding:8px; border-radius:8px; cursor:pointer; transition:background 0.15s ease; }
+    .sidebar-user:hover { background:var(--nav-hover-bg); }
+    .user-avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#0F4C81,#10B981); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; flex-shrink:0; }
+    .user-info { flex:1; min-width:0; }
+    .user-name { font-size:12px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .user-role { font-size:10.5px; color:var(--text-muted); }
+
+    .main-wrapper { margin-left:calc(var(--sidebar-w) + 32px); flex:1; min-height:100vh; display:flex; flex-direction:column; }
+
+    .topbar { position:sticky; top:0; height:72px; background:transparent; z-index:200; display:flex; align-items:center; justify-content:center; padding:14px 28px 0; gap:14px; }
+    .burger { display:none; width:32px; height:32px; border:none; background:transparent; color:var(--text-secondary); cursor:pointer; align-items:center; justify-content:center; border-radius:6px; flex-shrink:0; }
+    .search-wrap { flex:0 1 640px; position:relative; max-width:640px; min-width:320px; }
+    .search-icon-l { position:absolute; left:14px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-muted); pointer-events:none; }
+    .search-icon-r { position:absolute; right:13px; top:50%; transform:translateY(-50%); width:17px; height:17px; color:var(--blue); pointer-events:none; }
+    .search-input { width:100%; height:42px; background:var(--surface); border:1px solid var(--search-border); border-radius:100px; color:var(--text-primary); font-family:inherit; font-size:13.5px; padding:0 42px 0 40px; outline:none; box-shadow:0 10px 30px rgba(15,23,42,0.08),0 1px 2px rgba(15,23,42,0.04); transition:border-color 0.18s ease; }
+    .search-input::placeholder { color:var(--text-muted); }
+    .search-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,0.10); }
+    .topbar-right { display:flex; align-items:center; gap:4px; padding:4px; background:var(--surface); border:1px solid var(--topbar-border); border-radius:100px; box-shadow:0 10px 30px rgba(15,23,42,0.08),0 1px 2px rgba(15,23,42,0.04); flex-shrink:0; }
+    .top-btn { width:32px; height:32px; border:none; background:transparent; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; border-radius:7px; position:relative; transition:background 0.13s ease,color 0.13s ease; }
+    .top-btn:hover { background:var(--nav-hover-bg); color:var(--text-primary); }
+    .top-btn svg { width:18px; height:18px; }
+    .notif-pip { position:absolute; top:4px; right:4px; width:7px; height:7px; border-radius:50%; background:var(--green); border:2px solid var(--surface); }
+    .top-avatar { width:30px; height:30px; border-radius:50%; background:linear-gradient(135deg,#0F4C81,#10B981); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; cursor:pointer; flex-shrink:0; }
+    .avatar-wrap { position:relative; }
+    .avatar-menu { position:absolute; top:calc(100% + 8px); right:0; min-width:160px; padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.2); opacity:0; transform:translateY(-6px) scale(0.97); pointer-events:none; transition:opacity 0.15s ease,transform 0.15s ease; z-index:200; }
+    .avatar-menu.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+    .avatar-menu-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:7px; font-size:13px; font-weight:500; color:var(--text-primary); cursor:pointer; text-decoration:none; transition:background 0.12s ease; }
+    .avatar-menu-item:hover { background:var(--nav-hover-bg); }
+    .avatar-menu-item.danger { color:#EF4444; }
+    .avatar-menu-item.danger:hover { background:rgba(239,68,68,0.1); }
+    .icon-moon { display:block; } .icon-sun { display:none; }
+    html[data-theme="light"] .icon-moon { display:none; }
+    html[data-theme="light"] .icon-sun  { display:block; }
+
+    .page-content { flex:1; padding:8px 28px 32px; display:flex; flex-direction:column; gap:16px; }
+    .ticker-bar { background:var(--ticker-bg); border:1px solid var(--ticker-border); border-radius:14px; height:46px; display:flex; align-items:center; justify-content:space-between; padding:0 18px; box-shadow:var(--card-shadow); flex-shrink:0; }
+    .ticker-msg { font-size:13.5px; color:var(--text-secondary); }
+    .ticker-link { display:flex; align-items:center; gap:5px; font-size:13.5px; font-weight:600; color:var(--text-secondary); cursor:pointer; text-decoration:none; transition:color 0.15s ease; }
+    .ticker-link:hover { color:var(--text-primary); }
+    .ticker-link svg { width:14px; height:14px; }
+
+    .status-chip { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:600; border-radius:100px; padding:2px 7px; white-space:nowrap; }
+    .chip-green { background:rgba(16,185,129,0.10); color:#059669; }
+    .chip-blue  { background:rgba(37,99,235,0.10);  color:#2563EB; }
+    .chip-amber { background:rgba(245,158,11,0.10); color:#B45309; }
+    .chip-gray  { background:rgba(0,0,0,0.06);      color:#888; }
+    html[data-theme="dark"] .chip-green { background:rgba(16,185,129,0.15); color:#34D399; }
+    html[data-theme="dark"] .chip-blue  { background:rgba(37,99,235,0.15);  color:#60A5FA; }
+    html[data-theme="dark"] .chip-amber { background:rgba(245,158,11,0.15); color:#FCD34D; }
+    html[data-theme="dark"] .chip-gray  { background:rgba(255,255,255,0.06); color:#7A8FA8; }
+
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:250; }
+
+    /* ══════════════════════════
+       FUNDING BOOK PAGE SPECIFIC
+    ══════════════════════════ */
+    .page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; padding-bottom:4px; }
+    .page-title { font-size:22px; font-weight:700; color:var(--text-primary); letter-spacing:-0.02em; }
+    .page-subtitle { font-size:13px; color:var(--text-muted); margin-top:2px; }
+    .page-header-actions { display:flex; align-items:center; gap:8px; }
+    .btn-primary { display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 16px; border-radius:8px; border:none; background:var(--blue); color:#fff; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:opacity 0.15s ease,transform 0.15s ease; text-decoration:none; }
+    .btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+    .btn-primary svg { width:14px; height:14px; }
+    .btn-secondary { display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text-secondary); font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:background 0.15s ease; text-decoration:none; }
+    .btn-secondary:hover { background:var(--surface-2); color:var(--text-primary); }
+    .btn-secondary svg { width:14px; height:14px; }
+
+    .kpi-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .kpi-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 20px; box-shadow:var(--card-shadow); border-top:3px solid transparent; }
+    .kpi-card.kc-blue   { border-top-color:#2563EB; }
+    .kpi-card.kc-green  { border-top-color:#10B981; }
+    .kpi-card.kc-amber  { border-top-color:#F59E0B; }
+    .kpi-card.kc-purple { border-top-color:#8B5CF6; }
+    .kpi-label { font-size:11.5px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+    .kpi-value { font-size:26px; font-weight:700; color:var(--text-primary); letter-spacing:-0.02em; line-height:1; }
+    .kpi-delta { display:inline-flex; align-items:center; gap:3px; margin-top:6px; font-size:12px; font-weight:500; }
+    .kpi-delta.up   { color:#10B981; }
+    .kpi-delta.down { color:#EF4444; }
+    .kpi-delta.neu  { color:var(--text-muted); }
+
+    /* Lender breakdown bar */
+    .lender-breakdown {
+      background:var(--surface); border:1px solid var(--border); border-radius:14px;
+      padding:18px 20px; box-shadow:var(--card-shadow);
+    }
+    .lender-breakdown-title { font-size:13px; font-weight:700; color:var(--text-primary); margin-bottom:14px; }
+    .lender-bars { display:flex; flex-direction:column; gap:10px; }
+    .lender-bar-row { display:flex; align-items:center; gap:12px; }
+    .lender-bar-name { font-size:12.5px; font-weight:500; color:var(--text-secondary); width:100px; flex-shrink:0; }
+    .lender-bar-track { flex:1; height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden; }
+    .lender-bar-fill { height:100%; border-radius:4px; }
+    .lender-bar-amt { font-size:12px; font-weight:600; color:var(--text-primary); width:54px; text-align:right; flex-shrink:0; }
+    .lender-bar-pct { font-size:11px; color:var(--text-muted); width:32px; text-align:right; flex-shrink:0; }
+
+    .controls-row { background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--card-shadow); overflow:hidden; }
+    .tab-bar { display:flex; align-items:center; gap:2px; padding:10px 14px 0; border-bottom:1px solid var(--border); }
+    .tab { display:flex; align-items:center; gap:5px; padding:7px 13px 9px; font-size:13px; font-weight:500; color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; text-decoration:none; transition:color 0.15s ease,border-color 0.15s ease; white-space:nowrap; }
+    .tab:hover { color:var(--text-primary); }
+    .tab.active { color:var(--blue); border-bottom-color:var(--blue); font-weight:600; }
+    .tab-count { font-size:10px; font-weight:700; background:var(--surface-2); color:var(--text-muted); border-radius:20px; padding:1px 6px; min-width:20px; text-align:center; }
+    .tab.active .tab-count { background:rgba(37,99,235,0.10); color:var(--blue); }
+
+    .filter-bar { display:flex; align-items:center; gap:8px; padding:12px 14px; flex-wrap:wrap; }
+    .filter-search-wrap { position:relative; flex:1; min-width:200px; max-width:280px; }
+    .filter-search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--text-muted); pointer-events:none; }
+    .filter-search { width:100%; height:34px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; color:var(--text-primary); font-family:inherit; font-size:12.5px; padding:0 10px 0 32px; outline:none; transition:border-color 0.18s ease; }
+    .filter-search:focus { border-color:var(--blue); }
+    .filter-select { height:34px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; color:var(--text-secondary); font-family:inherit; font-size:12.5px; padding:0 28px 0 10px; outline:none; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M5 8l5 5 5-5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; }
+    .filter-select:focus { border-color:var(--blue); }
+    .filter-spacer { flex:1; }
+    .filter-export { display:inline-flex; align-items:center; gap:5px; height:34px; padding:0 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2); color:var(--text-secondary); font-family:inherit; font-size:12.5px; font-weight:500; cursor:pointer; transition:background 0.15s ease; }
+    .filter-export:hover { background:var(--border); color:var(--text-primary); }
+    .filter-export svg { width:13px; height:13px; }
+
+    .data-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:var(--card-shadow); }
+    .data-table { width:100%; border-collapse:collapse; }
+    .data-table thead tr { background:var(--table-head); }
+    .data-table th { padding:10px 12px; font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.06em; text-transform:uppercase; text-align:left; border-bottom:1px solid var(--table-border); white-space:nowrap; }
+    .data-table th:first-child { padding-left:18px; width:40px; text-align:center; }
+    .data-table th:last-child { padding-right:18px; }
+    .data-table td { padding:11px 12px; font-size:13px; color:var(--text-secondary); border-bottom:1px solid var(--table-border); vertical-align:middle; }
+    .data-table td:first-child { padding-left:18px; text-align:center; color:var(--text-muted); font-size:12px; }
+    .data-table td:last-child { padding-right:18px; }
+    .data-table tbody tr:last-child td { border-bottom:none; }
+    .data-table tbody tr:hover td { background:var(--table-hover); }
+
+    .biz-cell { display:flex; align-items:center; gap:8px; }
+    .biz-dot { width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:800; color:#fff; flex-shrink:0; }
+    .biz-cell-name { font-weight:600; color:var(--text-primary); font-size:13px; }
+    .amount-cell { font-family:'Orbitron',monospace; font-size:12px; font-weight:700; color:var(--text-primary); }
+    .factor-rate { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; color:var(--text-secondary); }
+
+    @media (max-width:768px) {
+      .sidebar { width:min(var(--sidebar-w),calc(100vw - 32px)); transform:translateX(calc(-100% - 24px)); }
+      .sidebar.open { transform:translateX(0); }
+      .sidebar-overlay.visible { display:block; }
+      .main-wrapper { margin-left:0; }
+      .topbar { height:66px; justify-content:flex-start; padding:10px 16px 0; gap:10px; }
+      .search-wrap { flex:1 1 auto; min-width:0; }
+      .burger { display:flex; }
+      .kpi-strip { grid-template-columns:repeat(2,1fr); }
+      .cards-col { grid-template-columns:repeat(2,1fr); }
+    }
+
+    /* ── Stat Cards Bento Grid ── */
+    .cards-col { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); grid-auto-rows:minmax(110px,auto); gap:12px; align-items:stretch; margin:8px 0 4px; }
+    .stat-card { border-radius:16px; padding:24px 28px; display:flex; align-items:center; justify-content:space-between; gap:16px; position:relative; overflow:hidden; cursor:pointer; transition:transform 0.18s ease,box-shadow 0.18s ease; }
+    .stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 32px -4px rgba(0,0,0,0.25); }
+    .stat-card.blue-1 { background:linear-gradient(135deg,#1a3f9e 0%,#1D4ED8 100%); }
+    .stat-card.navy   { background:linear-gradient(135deg,#0F1F3D 0%,#162848 100%); }
+    .stat-card.teal   { background:linear-gradient(135deg,#064E3B 0%,#0D9488 100%); }
+    .stat-card.plum   { background:linear-gradient(135deg,#2D0F5E 0%,#4A1272 100%); }
+    .stat-card.crimson{ background:linear-gradient(135deg,#2A0505 0%,#7C1212 60%,#2A0A05 100%); }
+    .stat-card.indigo { background:linear-gradient(135deg,#1E1B4B 0%,#3730A3 100%); }
+    .stat-card::after { content:''; position:absolute; right:-30px; bottom:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.06); pointer-events:none; }
+    .stat-card.rep-leader-card { grid-column:span 12; background:linear-gradient(135deg,#0D1520 0%,#111D2E 55%,#0C1A0F 100%); padding:0; align-items:stretch; justify-content:flex-start; gap:0; min-height:210px; }
+    .rep-hero { width:210px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px 20px; background:rgba(245,158,11,0.07); border-right:1px solid rgba(245,158,11,0.18); gap:7px; }
+    .rep-crown { font-size:26px; line-height:1; filter:drop-shadow(0 0 10px rgba(245,158,11,0.7)); }
+    .rep-photo-wrap { width:90px; height:90px; border-radius:50%; background:linear-gradient(135deg,#F59E0B,#D97706); padding:3px; box-shadow:0 0 28px rgba(245,158,11,0.5),0 4px 16px rgba(0,0,0,0.55); }
+    .rep-photo { width:100%; height:100%; border-radius:50%; object-fit:cover; object-position:center 8%; display:block; }
+    .rep-hero-name { font-size:16px; font-weight:700; color:#fff; letter-spacing:0.01em; margin-top:2px; }
+    .rep-hero-label { font-size:10px; font-weight:600; color:rgba(245,158,11,0.7); text-transform:uppercase; letter-spacing:0.09em; }
+    .rep-hero-amount { font-family:'Orbitron',sans-serif; font-size:21px; font-weight:800; color:#F59E0B; letter-spacing:-0.01em; line-height:1; }
+    .rep-board { flex:1; padding:16px 22px 16px 26px; display:flex; flex-direction:column; gap:7px; overflow:hidden; min-width:0; }
+    .rep-board-head { font-size:10px; font-weight:700; color:rgba(255,255,255,0.28); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:3px; }
+    .rep-grid { display:grid; grid-template-columns:1fr 1fr; column-gap:14px; row-gap:0; }
+    .rep-row { display:flex; align-items:center; gap:7px; padding:4px 7px; border-radius:6px; transition:background 0.12s ease; }
+    .rep-row:hover { background:rgba(255,255,255,0.05); }
+    .rep-pos { width:18px; text-align:center; flex-shrink:0; }
+    .rep-pos.medal { font-size:15px; line-height:1; }
+    .rep-pos.num { font-size:11px; font-weight:600; color:rgba(255,255,255,0.2); }
+    .rep-name { flex:1; font-size:13px; font-weight:500; color:rgba(255,255,255,0.62); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rep-amt { font-size:12px; font-weight:600; color:rgba(255,255,255,0.32); flex-shrink:0; font-variant-numeric:tabular-nums; }
+    .rep-row.r-gold .rep-name   { color:#FCD34D; font-weight:700; }
+    .rep-row.r-gold .rep-amt    { color:rgba(252,211,77,0.78); }
+    .rep-row.r-silver .rep-name { color:#E2E8F0; font-weight:600; }
+    .rep-row.r-silver .rep-amt  { color:rgba(226,232,240,0.62); }
+    .rep-row.r-bronze .rep-name { color:#FCA044; font-weight:600; }
+    .rep-row.r-bronze .rep-amt  { color:rgba(252,160,68,0.62); }
+    .card-left { flex:1; position:relative; z-index:1; }
+    .card-right { flex-shrink:0; position:relative; z-index:1; }
+    .card-headline { font-size:14px; font-weight:500; line-height:1.45; color:rgba(255,221,80,0.88); margin-bottom:14px; max-width:320px; }
+    .stat-card.navy .card-headline { color:rgba(255,255,255,0.75); }
+    .card-names { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+    .card-name { font-size:16px; font-weight:700; color:#FCD34D; line-height:1.3; }
+    .stat-card.navy .card-name { color:#FFFFFF; }
+    .card-big-single { display:block; font-family:'Orbitron',sans-serif; font-size:26px; font-weight:800; color:#fff; letter-spacing:-0.02em; margin-top:8px; line-height:1; }
+    .card-rep-photo-wrap { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#E879F9,#A855F7,#7C3AED); padding:3.5px; box-shadow:0 0 0 1px rgba(232,121,249,0.25),0 0 18px rgba(232,121,249,0.55),0 0 40px rgba(168,85,247,0.40),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
+    .card-rep-photo { width:100%; height:100%; border-radius:50%; object-fit:cover; object-position:center 5%; display:block; }
+    .photo-wrap-teal { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#34D399,#0D9488); padding:3px; box-shadow:0 0 18px rgba(16,185,129,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
+    .photo-wrap-blue { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#60A5FA,#2563EB); padding:3px; box-shadow:0 0 18px rgba(96,165,250,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
+    .photo-wrap-crimson { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#FCA5A5,#EF4444); padding:3px; box-shadow:0 0 18px rgba(239,68,68,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
+    .photo-wrap-gold { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#FCD34D,#F59E0B); padding:3px; box-shadow:0 0 18px rgba(245,158,11,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
+  </style>
+  <link rel="stylesheet" href="Assets/profile-stats.css" />
+</head>
+<body>
+<div class="layout">
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <aside class="sidebar" id="sidebar" aria-label="Navigation">
+    <div class="sidebar-logo">
+      <img src="Assets/LogoUpdates.png" alt="CapMuse" />
+      <span class="sidebar-wordmark">CapMuse</span>
+    </div>
+    <nav class="sidebar-nav">
+
+      <a class="nav-item" href="home.html">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M3 9.5L10 3l7 6.5V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 18v-5h4v5" stroke-linecap="round"/>
+        </svg>
+        Home
+      </a>
+
+      <div class="nav-section-toggle" id="overviewToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
+          Overview
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="nav-sub" id="overviewSub">
+        <a class="nav-sub-item" href="dashboard.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/></svg>Dashboard</a>
+      </div>
+
+      <!-- CRM — open, Funding Book active -->
+      <div class="nav-section-toggle open active" id="crmToggle" role="button" tabindex="0" aria-expanded="true">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="6.5" r="3"/><path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/></svg>
+          CRM
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="nav-sub open" id="crmSub">
+        <a class="nav-sub-item" href="lead.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="6.5" r="3"/><path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/></svg>Leads</a>
+        <a class="nav-sub-item" href="pipeline.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h14M3 9.5h10M3 14h6" stroke-linecap="round"/><circle cx="15" cy="14" r="2.5"/></svg>Pipeline</a>
+        <a class="nav-sub-item active" href="funding_book.html" aria-current="page"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 3h9l4 4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M13 3v4h4" stroke-linecap="round"/><path d="M7 9h6M7 12h6M7 15h3" stroke-linecap="round"/></svg>Funding Book</a>
+        <a class="nav-sub-item" href="lender_recommendation.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="5" width="16" height="11" rx="2"/><path d="M2 9h16" stroke-linecap="round"/><path d="M6 13h2M10 13h2" stroke-linecap="round"/></svg>Lender Match</a>
+      </div>
+
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user" role="button" tabindex="0">
+        <div class="user-avatar">GP</div>
+        <div class="user-info"><div class="user-name">Gustavo Prieto</div><div class="user-role">Software Engineer</div></div>
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0" aria-hidden="true"><path d="M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="topbar" role="banner">
+      <button class="burger" id="burgerBtn" aria-label="Open navigation"><svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke-linecap="round"/></svg></button>
+      <div class="search-wrap">
+        <svg class="search-icon-l" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
+        <input class="search-input" type="search" placeholder="Search funded deals by business, lender, or rep…" aria-label="Search" />
+        <svg class="search-icon-r" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="topbar-right">
+        <button class="top-btn" aria-label="Notifications"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke-linecap="round"/><path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke-linecap="round"/></svg><span class="notif-pip" aria-hidden="true"></span></button>
+        <button class="top-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M17.293 13.293A8 8 0 0 1 6.707 2.707a8.001 8.001 0 1 0 10.586 10.586z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke-linecap="round"/></svg>
+        </button>
+        <div class="avatar-wrap">
+          <div class="top-avatar" id="avatarBtn" role="button" tabindex="0" aria-label="User menu">GP</div>
+          <div class="avatar-menu" id="avatarMenu">
+            <a href="login.html" class="avatar-menu-item danger">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" width="16" height="16" aria-hidden="true"><path d="M13 15l4-5-4-5M17 10H7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 19H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h4" stroke-linecap="round"/></svg>
+              Log out
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content" role="main">
+
+      <div class="ticker-bar">
+        <span class="ticker-msg">YTD Funded: $48.7M &nbsp;·&nbsp; 234 deals closed &nbsp;·&nbsp; Best month: March $6.2M &nbsp;·&nbsp; Avg factor rate: 1.33</span>
+        <a class="ticker-link" href="lender_recommendation.html">
+          Lender Match
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Funding Book</h1>
+          <p class="page-subtitle">Complete record of all funded deals pulled from Zoho CRM</p>
+        </div>
+        <div class="page-header-actions">
+          <button class="btn-secondary">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2M10 3v10M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Export
+          </button>
+          <button class="btn-primary">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2M10 3v10M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Download PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI strip -->
+      <div class="kpi-strip">
+        <div class="kpi-card kc-blue">
+          <div class="kpi-label">YTD Funded</div>
+          <div class="kpi-value">$48.7M</div>
+          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>+22% vs 2025</div>
+        </div>
+        <div class="kpi-card kc-green">
+          <div class="kpi-label">MTD Funded</div>
+          <div class="kpi-value">$3.1M</div>
+          <div class="kpi-delta down"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 5v10M5 10l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>-8% vs May</div>
+        </div>
+        <div class="kpi-card kc-amber">
+          <div class="kpi-label">Deals Closed</div>
+          <div class="kpi-value">234</div>
+          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>+31 vs 2025</div>
+        </div>
+        <div class="kpi-card kc-purple">
+          <div class="kpi-label">Avg Deal Size</div>
+          <div class="kpi-value">$208K</div>
+          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>+$14K vs 2025</div>
+        </div>
+      </div>
+
+      <!-- ── Stat Cards ── -->
+      <div class="cards-col" id="statCards">
+
+        <!-- Card 1: Most Funded All Time — full-width leaderboard -->
+        <div class="stat-card rep-leader-card">
+          <div class="rep-hero" data-person-id="matthew">
+            <div class="rep-crown">🥇</div>
+            <div class="rep-photo-wrap">
+              <img src="Assets/reps/matthew.png" alt="Matthew" class="rep-photo" />
+            </div>
+            <div class="rep-hero-name">Matthew</div>
+            <div class="rep-hero-label">Most Funded · All Time</div>
+            <div class="rep-hero-amount">$10M</div>
+          </div>
+          <div class="rep-board">
+            <div class="rep-board-head">All-Time Funding Leaderboard</div>
+            <div class="rep-grid">
+              <div class="rep-row r-gold" data-person-id="matthew">
+                <span class="rep-pos medal">🥇</span><span class="rep-name">Matthew</span><span class="rep-amt">$10.0M</span>
+              </div>
+              <div class="rep-row r-silver" data-person-id="anderson">
+                <span class="rep-pos medal">🥈</span><span class="rep-name">Anderson</span><span class="rep-amt">$8.4M</span>
+              </div>
+              <div class="rep-row r-bronze" data-person-id="ivan">
+                <span class="rep-pos medal">🥉</span><span class="rep-name">Ivan</span><span class="rep-amt">$6.9M</span>
+              </div>
+              <div class="rep-row" data-person-id="blake">
+                <span class="rep-pos num">4</span><span class="rep-name">Blake</span><span class="rep-amt">$5.2M</span>
+              </div>
+              <div class="rep-row" data-person-id="colin">
+                <span class="rep-pos num">5</span><span class="rep-name">Colin</span><span class="rep-amt">$4.1M</span>
+              </div>
+              <div class="rep-row" data-person-id="gabriel">
+                <span class="rep-pos num">6</span><span class="rep-name">Gabriel</span><span class="rep-amt">$3.7M</span>
+              </div>
+              <div class="rep-row" data-person-id="cipriani">
+                <span class="rep-pos num">7</span><span class="rep-name">Cipriani</span><span class="rep-amt">$3.3M</span>
+              </div>
+              <div class="rep-row" data-person-id="dominic">
+                <span class="rep-pos num">8</span><span class="rep-name">Dominic</span><span class="rep-amt">$2.9M</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Most Funded Today -->
+        <div class="stat-card plum" data-person-id="matthew" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
+          <div class="card-left">
+            <p class="card-headline" style="font-size:12px;margin-bottom:8px;">Most funded today:</p>
+            <div class="card-names"><span class="card-name" style="color:#C084FC;font-size:14px">Matthew</span></div>
+            <span class="card-big-single" style="font-size:20px;background:linear-gradient(135deg,#F0ABFC,#C084FC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">$340K</span>
+          </div>
+          <div class="card-right">
+            <div class="card-rep-photo-wrap" style="width:60px;height:60px;">
+              <img src="Assets/reps/matthew.png" alt="Matthew" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Most Funded This Week -->
+        <div class="stat-card teal" data-person-id="anderson" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
+          <div class="card-left">
+            <p class="card-headline" style="font-size:12px;margin-bottom:8px;color:rgba(110,231,183,0.85)">Most funded this week:</p>
+            <div class="card-names"><span class="card-name" style="color:#34D399;font-size:14px">Anderson</span></div>
+            <span class="card-big-single" style="font-size:20px;background:linear-gradient(135deg,#6EE7B7,#34D399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">$1.2M</span>
+          </div>
+          <div class="card-right">
+            <div class="photo-wrap-teal" style="width:60px;height:60px;">
+              <img src="Assets/reps/anderson.png" alt="Anderson" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Most Funded This Month -->
+        <div class="stat-card blue-1" data-person-id="ivan" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
+          <div class="card-left">
+            <p class="card-headline" style="font-size:12px;margin-bottom:8px;">Most funded this month:</p>
+            <div class="card-names"><span class="card-name" style="font-size:14px">Ivan</span></div>
+            <span class="card-big-single" style="font-size:20px;">$2.8M</span>
+          </div>
+          <div class="card-right">
+            <div class="photo-wrap-blue" style="width:60px;height:60px;">
+              <img src="Assets/reps/ivan.png" alt="Ivan" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5: Most Companies Funded -->
+        <div class="stat-card indigo" style="grid-column:span 3;align-items:flex-start;padding:18px 20px;">
+          <div class="card-left">
+            <p class="card-headline" style="font-size:12px;margin-bottom:8px;color:rgba(165,180,252,0.85)">Most companies funded:</p>
+            <div class="card-names"><span class="card-name" style="color:#A5B4FC;font-size:14px">Facebook Inc.</span></div>
+            <span class="card-big-single" style="font-size:20px;background:linear-gradient(135deg,#A5B4FC,#6366F1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">4 deals</span>
+          </div>
+          <div class="card-right">
+            <div class="photo-wrap-blue" style="width:60px;height:60px;background:linear-gradient(135deg,#A5B4FC,#6366F1);">
+              <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Top Company" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6: Biggest Funder All Time -->
+        <div class="stat-card navy" style="grid-column:span 4;align-items:flex-start;padding:22px 26px;">
+          <div class="card-left">
+            <p class="card-headline">Biggest funder<br />all time:</p>
+            <div class="card-names"><span class="card-name">Credibly</span></div>
+            <span class="card-big-single">$14.2M</span>
+          </div>
+          <div class="card-right">
+            <div class="photo-wrap-blue" style="width:72px;height:72px;background:linear-gradient(135deg,#94A3B8,#475569);">
+              <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Credibly" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 7: Biggest Funder This Month -->
+        <div class="stat-card crimson" style="grid-column:span 4;align-items:flex-start;padding:22px 26px;">
+          <div class="card-left">
+            <p class="card-headline" style="color:rgba(252,165,165,0.85)">Biggest funder<br />this month:</p>
+            <div class="card-names"><span class="card-name" style="color:#FCA5A5">BlueVine</span></div>
+            <span class="card-big-single" style="background:linear-gradient(135deg,#FCA5A5,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(239,68,68,0.5))">$1.4M</span>
+          </div>
+          <div class="card-right">
+            <div class="photo-wrap-crimson" style="width:72px;height:72px;">
+              <img src="Assets/reps/Cartoon/IvanCartoon.png" alt="BlueVine" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 8: Biggest Funder This Week -->
+        <div class="stat-card" style="grid-column:span 4;align-items:flex-start;padding:22px 26px;background:linear-gradient(135deg,#451A03 0%,#92400E 100%);">
+          <div class="card-left">
+            <p class="card-headline" style="color:rgba(253,186,116,0.88)">Biggest funder<br />this week:</p>
+            <div class="card-names"><span class="card-name" style="color:#FCD34D">OnDeck</span></div>
+            <span class="card-big-single" style="background:linear-gradient(135deg,#FDE68A,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(245,158,11,0.5))">$720K</span>
+          </div>
+          <div class="card-right">
+            <div class="photo-wrap-gold" style="width:72px;height:72px;">
+              <img src="Assets/reps/blake.png" alt="OnDeck Rep" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- END Stat Cards -->
+
+      <!-- Lender breakdown -->
+      <div class="lender-breakdown">
+        <div class="lender-breakdown-title">Volume by Lender (YTD)</div>
+        <div class="lender-bars">
+          <div class="lender-bar-row">
+            <span class="lender-bar-name">Credibly</span>
+            <div class="lender-bar-track"><div class="lender-bar-fill" style="width:78%;background:linear-gradient(90deg,#2563EB,#34D399)"></div></div>
+            <span class="lender-bar-amt">$14.2M</span>
+            <span class="lender-bar-pct">29%</span>
+          </div>
+          <div class="lender-bar-row">
+            <span class="lender-bar-name">BlueVine</span>
+            <div class="lender-bar-track"><div class="lender-bar-fill" style="width:61%;background:linear-gradient(90deg,#0F4C81,#2563EB)"></div></div>
+            <span class="lender-bar-amt">$11.1M</span>
+            <span class="lender-bar-pct">23%</span>
+          </div>
+          <div class="lender-bar-row">
+            <span class="lender-bar-name">OnDeck</span>
+            <div class="lender-bar-track"><div class="lender-bar-fill" style="width:48%;background:linear-gradient(90deg,#10B981,#0F4C81)"></div></div>
+            <span class="lender-bar-amt">$8.8M</span>
+            <span class="lender-bar-pct">18%</span>
+          </div>
+          <div class="lender-bar-row">
+            <span class="lender-bar-name">Rapid Finance</span>
+            <div class="lender-bar-track"><div class="lender-bar-fill" style="width:37%;background:linear-gradient(90deg,#F59E0B,#EF4444)"></div></div>
+            <span class="lender-bar-amt">$6.8M</span>
+            <span class="lender-bar-pct">14%</span>
+          </div>
+          <div class="lender-bar-row">
+            <span class="lender-bar-name">Kabbage</span>
+            <div class="lender-bar-track"><div class="lender-bar-fill" style="width:22%;background:linear-gradient(90deg,#8B5CF6,#2563EB)"></div></div>
+            <span class="lender-bar-amt">$4.1M</span>
+            <span class="lender-bar-pct">8%</span>
+          </div>
+          <div class="lender-bar-row">
+            <span class="lender-bar-name">Fundbox</span>
+            <div class="lender-bar-track"><div class="lender-bar-fill" style="width:20%;background:linear-gradient(90deg,#6366F1,#8B5CF6)"></div></div>
+            <span class="lender-bar-amt">$3.7M</span>
+            <span class="lender-bar-pct">8%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-row">
+        <div class="tab-bar" role="tablist">
+          <a class="tab active" href="#" role="tab">All Time <span class="tab-count">234</span></a>
+          <a class="tab" href="#" role="tab">This Month <span class="tab-count">12</span></a>
+          <a class="tab" href="#" role="tab">Q2 2026 <span class="tab-count">38</span></a>
+          <a class="tab" href="#" role="tab">2026 <span class="tab-count">113</span></a>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-search-wrap">
+            <svg class="filter-search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
+            <input class="filter-search" type="search" placeholder="Search funded deals…" aria-label="Search deals" />
+          </div>
+          <select class="filter-select" aria-label="Filter by rep"><option value="">All Reps</option><option>Anderson</option><option>Frank</option><option>Blake</option><option>Ivan</option><option>Kip</option></select>
+          <select class="filter-select" aria-label="Filter by lender"><option value="">All Lenders</option><option>Credibly</option><option>BlueVine</option><option>OnDeck</option><option>Kabbage</option><option>Fundbox</option><option>Rapid Finance</option></select>
+          <select class="filter-select" aria-label="Filter by industry"><option value="">All Industries</option><option>Real Estate</option><option>Finance</option><option>Retail</option><option>Healthcare</option><option>Technology</option><option>Construction</option></select>
+          <select class="filter-select" aria-label="Filter by state"><option value="">All States</option><option>FL</option><option>TX</option><option>NY</option><option>CA</option><option>AZ</option><option>WA</option></select>
+          <div class="filter-spacer"></div>
+          <button class="filter-export"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2M10 3v10M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>Export</button>
+        </div>
+      </div>
+
+      <div class="data-card">
+        <table class="data-table" aria-label="Funding book table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Business</th>
+              <th>Amount Funded</th>
+              <th>Date Funded</th>
+              <th>Lender</th>
+              <th>Rep</th>
+              <th>Factor Rate</th>
+              <th>Industry</th>
+              <th>State</th>
+              <th>Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#34D399)">MH</div><span class="biz-cell-name">Metro Holdings</span></div></td>
+              <td><span class="amount-cell">$8.1M</span></td>
+              <td>May 15, 2026</td>
+              <td>Credibly</td>
+              <td>Anderson</td>
+              <td><span class="factor-rate">1.28</span></td>
+              <td>Real Estate</td>
+              <td>FL</td>
+              <td><span class="status-chip chip-green">1st</span></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">SH</div><span class="biz-cell-name">Summit Holdings</span></div></td>
+              <td><span class="amount-cell">$6.2M</span></td>
+              <td>Apr 30, 2026</td>
+              <td>BlueVine</td>
+              <td>Anderson</td>
+              <td><span class="factor-rate">1.31</span></td>
+              <td>Finance</td>
+              <td>TX</td>
+              <td><span class="status-chip chip-green">1st</span></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#34D399,#0F4C81)">BC</div><span class="biz-cell-name">BlueStar Capital</span></div></td>
+              <td><span class="amount-cell">$7.8M</span></td>
+              <td>Apr 12, 2026</td>
+              <td>OnDeck</td>
+              <td>Blake</td>
+              <td><span class="factor-rate">1.33</span></td>
+              <td>Finance</td>
+              <td>NY</td>
+              <td><span class="status-chip chip-green">1st</span></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#10B981,#0F4C81)">CP</div><span class="biz-cell-name">Capital Partners</span></div></td>
+              <td><span class="amount-cell">$5.5M</span></td>
+              <td>Mar 28, 2026</td>
+              <td>Credibly</td>
+              <td>Kip</td>
+              <td><span class="factor-rate">1.42</span></td>
+              <td>Business Svc</td>
+              <td>CA</td>
+              <td><span class="status-chip chip-amber">2nd</span></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#2563EB)">AF</div><span class="biz-cell-name">Apex Financial</span></div></td>
+              <td><span class="amount-cell">$4.2M</span></td>
+              <td>May 22, 2026</td>
+              <td>BlueVine</td>
+              <td>Frank</td>
+              <td><span class="factor-rate">1.35</span></td>
+              <td>Finance</td>
+              <td>FL</td>
+              <td><span class="status-chip chip-green">1st</span></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#6366F1,#10B981)">PC</div><span class="biz-cell-name">Pacific Coast Inc</span></div></td>
+              <td><span class="amount-cell">$3.8M</span></td>
+              <td>Feb 14, 2026</td>
+              <td>Rapid Finance</td>
+              <td>Colin</td>
+              <td><span class="factor-rate">1.38</span></td>
+              <td>Retail</td>
+              <td>CA</td>
+              <td><span class="status-chip chip-green">1st</span></td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#F59E0B,#0F4C81)">DS</div><span class="biz-cell-name">Desert Star LLC</span></div></td>
+              <td><span class="amount-cell">$3.1M</span></td>
+              <td>Jan 22, 2026</td>
+              <td>Fundbox</td>
+              <td>Ivan</td>
+              <td><span class="factor-rate">1.29</span></td>
+              <td>Construction</td>
+              <td>AZ</td>
+              <td><span class="status-chip chip-green">1st</span></td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#6366F1)">HT</div><span class="biz-cell-name">Harbor Technologies</span></div></td>
+              <td><span class="amount-cell">$2.8M</span></td>
+              <td>Mar 5, 2026</td>
+              <td>OnDeck</td>
+              <td>Matthew</td>
+              <td><span class="factor-rate">1.44</span></td>
+              <td>Technology</td>
+              <td>WA</td>
+              <td><span class="status-chip chip-amber">2nd</span></td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#10B981,#F59E0B)">VM</div><span class="biz-cell-name">Valley Medical</span></div></td>
+              <td><span class="amount-cell">$2.6M</span></td>
+              <td>Apr 18, 2026</td>
+              <td>Kabbage</td>
+              <td>Santi</td>
+              <td><span class="factor-rate">1.36</span></td>
+              <td>Healthcare</td>
+              <td>CA</td>
+              <td><span class="status-chip chip-green">1st</span></td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#34D399,#2563EB)">CS</div><span class="biz-cell-name">Coastal Supply Co</span></div></td>
+              <td><span class="amount-cell">$2.4M</span></td>
+              <td>May 3, 2026</td>
+              <td>BlueVine</td>
+              <td>Rio</td>
+              <td><span class="factor-rate">1.31</span></td>
+              <td>Wholesale</td>
+              <td>FL</td>
+              <td><span class="status-chip chip-green">1st</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const html = document.documentElement, btn = document.getElementById('themeBtn'), KEY = 'capmuse-theme';
+    html.setAttribute('data-theme', localStorage.getItem(KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    btn.addEventListener('click', () => { const n = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; html.setAttribute('data-theme', n); localStorage.setItem(KEY, n); });
+  })();
+  (function () {
+    function bindToggle(tid, sid) { const t = document.getElementById(tid), s = document.getElementById(sid); if (!t || !s) return; t.addEventListener('click', () => { const o = s.classList.contains('open'); s.classList.toggle('open', !o); t.classList.toggle('open', !o); t.setAttribute('aria-expanded', String(!o)); }); }
+    bindToggle('overviewToggle', 'overviewSub'); bindToggle('crmToggle', 'crmSub');
+  })();
+  (function () {
+    const sidebar = document.getElementById('sidebar'), overlay = document.getElementById('sidebarOverlay'), burger = document.getElementById('burgerBtn');
+    const open = () => { sidebar.classList.add('open'); overlay.classList.add('visible'); document.body.style.overflow = 'hidden'; };
+    const close = () => { sidebar.classList.remove('open'); overlay.classList.remove('visible'); document.body.style.overflow = ''; };
+    burger.addEventListener('click', open); overlay.addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  })();
+</script>
+<script>
+  (function () {
+    var btn  = document.getElementById('avatarBtn');
+    var menu = document.getElementById('avatarMenu');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', function () { menu.classList.remove('open'); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.classList.remove('open'); });
+  })();
+</script>
+<script src="Assets/profile-stats.js"></script>
+</body>
+</html>
