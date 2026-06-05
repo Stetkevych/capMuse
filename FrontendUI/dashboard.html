@@ -1751,25 +1751,24 @@
 
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
 
-  // Bind nav clicks immediately on script load (don't wait for CSV)
-  setTimeout(function() {
-    document.querySelectorAll('.nav-sub-item, .nav-item, .nav-box-item, [data-page]').forEach(function(el) {
-      el.style.cursor = 'pointer';
-      el.onclick = function(e) {
-        e.preventDefault();
-        var page = this.getAttribute('data-page') || this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();
-        document.querySelectorAll('.nav-sub-item, .nav-item').forEach(function(n) { n.classList.remove('active'); n.removeAttribute('aria-current'); });
-        this.classList.add('active');
-        if (typeof renderPage === 'function') renderPage(page);
-        console.log('[CapMuse] Nav clicked:', page);
-      };
-    });
-    console.log('[CapMuse] Nav bound:', document.querySelectorAll('.nav-sub-item, .nav-item, .nav-box-item').length, 'items');
-  }, 500);
+  
 
   function init() {
     mainContent = document.getElementById('mainContent');
     originalHTML = mainContent ? mainContent.innerHTML : '';
+
+    // Bind nav immediately
+    document.querySelectorAll('.nav-sub-item, .nav-item, .nav-box-item, [data-page]').forEach(function(el) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', function(e) {
+        e.preventDefault();
+        var page = this.getAttribute('data-page') || this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();
+        document.querySelectorAll('.nav-sub-item, .nav-item').forEach(function(n) { n.classList.remove('active'); n.removeAttribute('aria-current'); });
+        this.classList.add('active');
+        renderPage(page);
+      });
+    });
+    console.log('[CapMuse] Nav bound');
 
     // Load both CSVs
     Promise.all([
@@ -1820,7 +1819,7 @@
 
       console.log('[CapMuse] Accounts:', ACCOUNTS.length, '| Funding Book:', DEALS.length);
       renderPage('dashboard');
-      bindNav();
+      
     });
   }
 
@@ -1873,87 +1872,7 @@
     return ['chip-gray', stage ? stage.substring(0,12) : 'Pending'];
   }
 
-  // === NAV BINDING ===
-  function bindNav() {
-    document.querySelectorAll('.nav-sub-item, .nav-item, .nav-box-item, [data-page]').forEach(el => {
-      el.addEventListener('click', function(e) {
-        e.preventDefault();
-        const page = this.getAttribute('data-page') || this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();
-        document.querySelectorAll('.nav-sub-item, .nav-item').forEach(n => { n.classList.remove('active'); n.removeAttribute('aria-current'); });
-        this.classList.add('active');
-        renderPage(page);
-      });
-    });
-  }
-
-  // === PAGE RENDERER ===
-  function renderPage(page) {
-    if (!mainContent) return;
-
-    // Funded deals from funding book
-    const fundedDeals = DEALS.filter(d => { const s=d.stage.toLowerCase(); return s.includes('won') || s.includes('closed') || s.includes('fund'); });
-    const totalFundedVol = fundedDeals.reduce((s,d) => s + d.amount, 0);
-
-    // Accounts stats
-    const acctFunded = ACCOUNTS.filter(d => d.stage.toLowerCase().includes('fund') && !d.stage.toLowerCase().includes('decline'));
-    const acctVol = acctFunded.reduce((s,d) => s + d.amount, 0);
-
-    switch(page) {
-      case 'dashboard':
-        mainContent.innerHTML = originalHTML;
-        // Populate featured card
-        const fm = document.querySelector('.featured-metric'); console.log('[CapMuse] featured-metric found:', !!fm);
-        if (fm) fm.textContent = '
-</html>
- + fmt(totalFundedVol || acctVol);
-        const fl = document.querySelector('.featured-label');
-        if (fl) fl.textContent = (DEALS.length || ACCOUNTS.length).toLocaleString() + ' Total Deals — Funding Book Portfolio';
-        const ft = document.querySelector('.featured-tags');
-        if (ft) ft.innerHTML = '<span class="featured-tag">' + fundedDeals.length + ' Funded</span><span class="featured-tag">
-</html>
- + fmt(totalFundedVol) + ' Volume</span><span class="featured-tag">' + [...new Set(DEALS.map(d=>d.lender).filter(Boolean))].length + ' Lenders</span>';
-        // Pipeline table = top funded deals
-        updateTable(fundedDeals.sort((a,b)=>b.amount-a.amount).slice(0,10));
-        break;
-
-      case 'applications':
-        renderTV('Applications Pipeline', ACCOUNTS, ['name','stage','amount','source','applied']);
-        break;
-      case 'businesses':
-        renderTV('All Businesses', ACCOUNTS.filter(d=>d.industry), ['name','industry','state','revenue','stage']);
-        break;
-      case 'funding':
-        renderTV('Funding Book — All Deals', DEALS.sort((a,b)=>b.amount-a.amount), ['name','amount','lender','rep','funded_date','position']);
-        break;
-      case 'statements':
-        renderTV('Deal Financials', DEALS.filter(d=>d.payback>0).sort((a,b)=>b.payback-a.payback), ['name','amount','payback','buy_rate','daily_payment','term']);
-        break;
-      case 'reports':
-        // Rep performance
-        const byRep = {};
-        DEALS.forEach(d => { if(!d.rep) return; if(!byRep[d.rep]) byRep[d.rep]={name:d.rep,deals:0,volume:0,avg_rate:0,rates:[]}; byRep[d.rep].deals++; byRep[d.rep].volume+=d.amount; if(d.buy_rate)byRep[d.rep].rates.push(d.buy_rate); });
-        const repData = Object.values(byRep).sort((a,b)=>b.volume-a.volume).map(r=>({name:r.name,stage:r.deals+' deals',amount:r.volume,rep:'',funded_date:'',lender:'',source:'',industry:'',state:'',buy_rate:r.rates.length?(r.rates.reduce((s,v)=>s+v,0)/r.rates.length).toFixed(2):'',position:'',daily_payment:0,payback:0,term:'',sell_rate:0,pts:0}));
-        renderTV('Rep Performance Report', repData, ['name','stage','amount','buy_rate']);
-        break;
-      case 'topfunded':
-        renderTV('Top Funded Deals', DEALS.sort((a,b)=>b.amount-a.amount).slice(0,100), ['name','amount','lender','rep','industry','state']);
-        break;
-      case 'fastest':
-        renderTV('Most Recent Deals', [...DEALS].filter(d=>d.funded_date).sort((a,b)=>b.funded_date.localeCompare(a.funded_date)), ['name','funded_date','amount','lender','rep']);
-        break;
-      case 'mostapps':
-        const byLender = {};
-        DEALS.forEach(d => { const l=d.lender||'Unknown'; byLender[l]=(byLender[l]||0)+1; });
-        const lenderData = Object.entries(byLender).sort((a,b)=>b[1]-a[1]).map(([name,count])=>({name,stage:count+' deals',amount:DEALS.filter(x=>x.lender===name).reduce((s,x)=>s+x.amount,0),rep:'',funded_date:'',lender:'',source:'',industry:'',state:'',buy_rate:0,position:'',daily_payment:0,payback:0,term:''}));
-        renderTV('Deals by Lender', lenderData, ['name','stage','amount']);
-        break;
-      case 'alerts':
-        renderTV('Declined / Lost Accounts', ACCOUNTS.filter(d=>d.stage.toLowerCase().includes('decline')||d.stage.toLowerCase().includes('lost')), ['name','stage','source','state','applied']);
-        break;
-      default:
-        renderTV('All Data', DEALS.slice(0,50), ['name','amount','lender','rep','stage']);
-    }
-  }
+  
 
   function updateTable(rows) {
     const tbody = document.querySelector('.pipeline-table tbody');
