@@ -245,18 +245,6 @@
     /* Chart */
     .chart-wrap { position: relative; height: 230px; margin-top: 4px; }
 
-    /* ── QUICK ACTIONS ── */
-    .actions-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; animation: fadeInUp 0.5s ease-out 0.64s both; }
-    .action-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 16px 18px; text-align: center; cursor: pointer; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 12px; transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease; box-shadow: var(--card-shadow); }
-    .action-card:hover { transform: translateY(-3px); border-color: var(--blue); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
-    .action-icon { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; }
-    .action-icon svg { width: 22px; height: 22px; }
-    .ai-1 { background: rgba(37,99,235,0.1);  color: #2563EB; }  html[data-theme="dark"] .ai-1 { color: #60A5FA; }
-    .ai-2 { background: rgba(16,185,129,0.1); color: #059669; }  html[data-theme="dark"] .ai-2 { color: #34D399; }
-    .ai-3 { background: rgba(245,158,11,0.1); color: #D97706; }  html[data-theme="dark"] .ai-3 { color: #FCD34D; }
-    .ai-4 { background: rgba(168,85,247,0.1); color: #7C3AED; }  html[data-theme="dark"] .ai-4 { color: #C4B5FD; }
-    .ai-5 { background: rgba(239,68,68,0.1);  color: #DC2626; }  html[data-theme="dark"] .ai-5 { color: #FCA5A5; }
-    .action-label { font-size: 13px; font-weight: 600; color: var(--text-primary); }
 
     /* ── MOBILE OVERLAY ── */
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 299; }
@@ -335,8 +323,6 @@
       </div>
       <div class="nav-sub" id="overviewSub">
         <a class="nav-sub-item" href="dashboard.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/></svg>Dashboard</a>
-        <a class="nav-sub-item" href="#"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 14l4-6 3 4 3-5 4 7H2z" stroke-linecap="round" stroke-linejoin="round"/></svg>Statements</a>
-        <a class="nav-sub-item" href="#"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 7h6M7 10h6M7 13h4" stroke-linecap="round"/></svg>Reports</a>
       </div>
 
       <div class="nav-section-toggle" id="crmToggle" role="button" tabindex="0" aria-expanded="false">
@@ -414,86 +400,15 @@
             <span class="hero-company-text" id="heroCompany"></span>
           </div>
           <div class="hero-badges" id="heroBadges"></div>
-          <div class="hero-qs-row">
-            <div class="hero-qs"><span class="hero-qs-val" id="qsVolume">—</span><span class="hero-qs-lbl">Total Volume</span></div>
-            <div class="hero-qs"><span class="hero-qs-val" id="qsDeals">—</span><span class="hero-qs-lbl">Deals Funded</span></div>
-            <div class="hero-qs"><span class="hero-qs-val" id="qsRate">—</span><span class="hero-qs-lbl">Approval Rate</span></div>
-          </div>
         </div>
       </section>
 
-      <!-- PERFORMANCE SNAPSHOT -->
-      <div>
-        <div class="section-header">
-          <span class="section-title">Performance Snapshot</span>
-          <span class="section-sub">Your career stats at a glance</span>
-        </div>
-        <div class="perf-grid" id="perfGrid"></div>
-      </div>
-
-      <!-- KPI CARDS -->
-      <div>
-        <div class="section-header">
-          <span class="section-title">Key Performance Indicators</span>
-          <span class="section-sub">Career milestones and personal bests</span>
-        </div>
-        <div class="kpi-grid" id="kpiGrid"></div>
-      </div>
-
-      <!-- ACTIVITY + CHART -->
-      <div class="bottom-row">
-        <div class="panel-card">
-          <div class="section-header">
-            <span class="section-title">Recent Activity</span>
-            <span class="section-sub">Last 7 days</span>
-          </div>
-          <div class="act-list" id="actList"></div>
-        </div>
-        <div class="panel-card">
-          <div class="section-header">
-            <span class="section-title">Monthly Performance</span>
-            <span class="section-sub">Funding volume ($K) — trailing 12 months</span>
-          </div>
-          <div class="chart-wrap">
-            <canvas id="perfChart"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- QUICK ACTIONS -->
-      <div>
-        <div class="section-header">
-          <span class="section-title">Quick Actions</span>
-        </div>
-        <div class="actions-grid">
-          <a href="#" class="action-card">
-            <div class="action-icon ai-1"><svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 20 20"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg></div>
-            <span class="action-label">New Deal</span>
-          </a>
-          <a href="lead.html" class="action-card">
-            <div class="action-icon ai-2"><svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 20 20"><circle cx="10" cy="6.5" r="3"/><path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/></svg></div>
-            <span class="action-label">View Leads</span>
-          </a>
-          <a href="pipeline.html" class="action-card">
-            <div class="action-icon ai-3"><svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 20 20"><path d="M3 5h14M3 9.5h10M3 14h6" stroke-linecap="round"/><circle cx="15" cy="14" r="2.5"/></svg></div>
-            <span class="action-label">Pipeline</span>
-          </a>
-          <a href="#" class="action-card">
-            <div class="action-icon ai-4"><svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 20 20"><path d="M10 3v5M10 3L7.5 5.5M10 3l2.5 2.5" stroke-linecap="round"/><rect x="3" y="10" width="14" height="7" rx="2"/></svg></div>
-            <span class="action-label">Upload Docs</span>
-          </a>
-          <a href="dashboard.html" class="action-card">
-            <div class="action-icon ai-5"><svg fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 20 20"><path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/></svg></div>
-            <span class="action-label">Reports</span>
-          </a>
-        </div>
-      </div>
-
+      <!-- PLACEHOLDER GRID -->
+      <div class="perf-grid" id="perfGrid" style="animation: fadeInUp 0.5s ease-out 0.18s both;"></div>
     </main>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="Assets/profile-stats.js"></script>
 <script>
 /* ── Theme toggle ── */
@@ -507,7 +422,6 @@
     var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', next);
     localStorage.setItem(KEY, next);
-    refreshChart();
   });
 })();
 
@@ -544,102 +458,22 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
   });
 });
 
-/* ── Utilities ── */
-function seedRng(n) {
-  var s = n | 0;
-  return function () { s = Math.imul(1664525, s) + 1013904223 | 0; return (s >>> 0) / 4294967296; };
-}
-
-function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
-
-function countTo(el, target, pre, suf, dec) {
-  pre = pre || ''; suf = suf || '';
-  var t0 = performance.now(), dur = 950;
-  (function tick(now) {
-    var p = Math.min((now - t0) / dur, 1);
-    var v = target * easeOut(p);
-    el.textContent = pre + (dec ? v.toFixed(1) : Math.round(v)) + suf;
-    if (p < 1) requestAnimationFrame(tick);
-  })(t0);
-}
-
-/* ── Chart ── */
-var chartInst = null;
-var chartData = [];
-
-function buildChart(data) {
-  var dark   = document.documentElement.getAttribute('data-theme') === 'dark';
-  var labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var ctx    = document.getElementById('perfChart').getContext('2d');
-  var grad   = ctx.createLinearGradient(0, 0, 0, 230);
-  grad.addColorStop(0, 'rgba(59,130,246,0.38)');
-  grad.addColorStop(1, 'rgba(59,130,246,0.02)');
-  var gridColor = dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-  var tickColor = dark ? '#4A5F78' : '#999999';
-  var ttBg      = dark ? '#1A2435' : '#FFFFFF';
-  var ttText    = dark ? '#F1F5F9' : '#111111';
-  var ttSub     = dark ? '#7A8FA8' : '#555555';
-  var ttBorder  = dark ? '#1A2435' : '#E8E8E8';
-
-  if (chartInst) { chartInst.destroy(); }
-  chartInst = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        borderColor: '#3B82F6',
-        backgroundColor: grad,
-        borderWidth: 2.5,
-        pointBackgroundColor: '#3B82F6',
-        pointBorderColor: dark ? '#141C28' : '#FFFFFF',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        tension: 0.4,
-        fill: true,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 900, easing: 'easeOutCubic' },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: ttBg, titleColor: ttText, bodyColor: ttSub,
-          borderColor: ttBorder, borderWidth: 1, padding: 10, displayColors: false,
-          callbacks: { label: function (c) { return ' $' + c.parsed.y.toLocaleString() + 'K'; } }
-        }
-      },
-      scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } }, border: { display: false } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 }, callback: function (v) { return '$' + v + 'K'; } }, border: { display: false } }
-      }
-    }
-  });
-}
-
-function refreshChart() {
-  if (chartData.length) buildChart(chartData);
-}
-
 /* ── Main populate ── */
 (function () {
   var userId = localStorage.getItem('capmuse-user') || 'anderson';
   var rep    = (window.REPS && window.REPS[userId]) ? window.REPS[userId] : (window.REPS ? window.REPS['anderson'] : null);
   if (!rep) return;
 
-  var first = rep.name.split(' ')[0];
+  var first    = rep.name.split(' ')[0];
   var initials = rep.name.split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
 
   /* Hero */
-  document.getElementById('heroPhoto').src       = rep.photo;
-  document.getElementById('heroPhoto').alt        = rep.name;
+  document.getElementById('heroPhoto').src  = rep.photo;
+  document.getElementById('heroPhoto').alt  = rep.name;
   document.getElementById('heroGreeting').textContent = 'Welcome back, ' + first + ' 👋';
-  document.getElementById('heroName').textContent  = rep.name;
-  document.getElementById('heroRole').textContent  = rep.role;
-  document.getElementById('heroCompany').textContent = rep.company;
+  document.getElementById('heroName').textContent     = rep.name;
+  document.getElementById('heroRole').textContent     = rep.role;
+  document.getElementById('heroCompany').textContent  = rep.company;
   document.title = 'Home — ' + rep.name + ' — CapMuse';
 
   /* Badges */
@@ -654,121 +488,21 @@ function refreshChart() {
   document.getElementById('sidebarRole').textContent   = rep.role;
   document.getElementById('avatarBtn').textContent     = initials;
 
-  /* Hero quick-stats (count up after brief delay for visual effect) */
-  setTimeout(function () {
-    countTo(document.getElementById('qsDeals'), rep.stats.totalDeals, '', '', false);
-    countTo(document.getElementById('qsRate'),  rep.stats.approvalRate, '', '%', false);
-    document.getElementById('qsVolume').textContent = '$' + rep.stats.volume + 'M';
-  }, 380);
-
-  /* ── Perf grid ── */
-  var ICONS = {
-    clock:     '<path d="M10 5v5l3 3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="10" r="7.5"/>',
-    person:    '<circle cx="10" cy="6.5" r="3"/><path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/>',
-    ruler:     '<path d="M3 17L17 3M6.5 13.5l1-1M10 10l1-1M13.5 6.5l1-1" stroke-linecap="round"/>',
-    money:     '<circle cx="10" cy="10" r="7.5"/><path d="M10 7v6M8 8.5h3a1.5 1.5 0 0 1 0 3H8.5a1.5 1.5 0 0 0 0 3H12" stroke-linecap="round"/>',
-    lightning: '<path d="M12 2L5 11h6l-2 7 8-9h-6l2-7z" stroke-linecap="round" stroke-linejoin="round"/>',
-    checkmark: '<path d="M4 10l4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/>',
-    trend:     '<path d="M3 15l5-5 3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h3v3" stroke-linecap="round"/>',
-    percent:   '<circle cx="6.5" cy="6.5" r="2"/><circle cx="13.5" cy="13.5" r="2"/><path d="M16 4L4 16" stroke-linecap="round"/>',
-    clients:   '<circle cx="7.5" cy="6" r="2.5"/><circle cx="12.5" cy="6" r="2.5"/><path d="M2 17c0-2.5 2.5-4.5 5.5-4.5" stroke-linecap="round"/><path d="M18 17c0-2.5-2.5-4.5-5.5-4.5" stroke-linecap="round"/><path d="M6 17c0-2.5 1.8-4 4-4s4 1.5 4 4" stroke-linecap="round"/>',
-  };
-
-  var PERF = [
-    { icon:'clock',     cls:'pi-blue',    label:'Experience',       val:rep.stats.experience,    fmt:function(n){ return n + ' yrs'; },        count:rep.stats.experience,    pre:'', suf:' yrs', dec:false },
-    { icon:'person',    cls:'pi-purple',  label:'Age',              val:rep.stats.age,           fmt:function(n){ return n + ' yrs'; },         count:rep.stats.age,           pre:'', suf:' yrs', dec:false },
-    { icon:'ruler',     cls:'pi-gold',    label:'Height',           val:rep.stats.height,        fmt:null,                                      count:null },
-    { icon:'money',     cls:'pi-green',   label:'Avg Deal Size',    val:'$' + rep.stats.avgDeal + 'K', fmt:function(n){ return '$'+n+'K'; },    count:rep.stats.avgDeal,       pre:'$', suf:'K', dec:false },
-    { icon:'lightning', cls:'pi-teal',    label:'Avg Time to Fund', val:rep.stats.timeToFund + ' days', fmt:null,                              count:rep.stats.timeToFund,    pre:'', suf:' days', dec:true },
-    { icon:'checkmark', cls:'pi-green',   label:'Total Deals',      val:rep.stats.totalDeals,    fmt:function(n){ return n; },                  count:rep.stats.totalDeals,    pre:'', suf:'', dec:false },
-    { icon:'trend',     cls:'pi-blue',    label:'Total Volume',     val:'$' + rep.stats.volume + 'M', fmt:null,                                count:null },
-    { icon:'percent',   cls:'pi-crimson', label:'Approval Rate',    val:rep.stats.approvalRate + '%', fmt:function(n){ return n+'%'; },         count:rep.stats.approvalRate,  pre:'', suf:'%', dec:false },
-    { icon:'clients',   cls:'pi-purple',  label:'Active Clients',   val:rep.stats.activeClients, fmt:function(n){ return n; },                  count:rep.stats.activeClients, pre:'', suf:'', dec:false },
-  ];
-
+  /* Placeholder grid — 9 blank cards, first says Coming Soon */
   var grid = document.getElementById('perfGrid');
-  PERF.forEach(function (p) {
+  for (var i = 0; i < 9; i++) {
     var card = document.createElement('div');
     card.className = 'perf-card';
-    card.innerHTML =
-      '<div class="perf-icon ' + p.cls + '"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7">' + ICONS[p.icon] + '</svg></div>' +
-      '<div class="perf-details">' +
-        '<div class="perf-val"' +
-          (p.count !== null ? ' data-count="' + p.count + '" data-pre="' + p.pre + '" data-suf="' + p.suf + '" data-dec="' + (p.dec?'1':'0') + '"' : ' data-static="1"') + '>' +
-          p.val +
-        '</div>' +
-        '<div class="perf-lbl">' + p.label + '</div>' +
-      '</div>';
+    card.style.minHeight = '80px';
+    if (i === 0) {
+      card.innerHTML =
+        '<div style="display:flex;align-items:center;gap:10px;color:var(--text-muted)">' +
+          '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="7.5"/><path d="M10 6v4l2.5 2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '<span style="font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase">Coming Soon</span>' +
+        '</div>';
+    }
     grid.appendChild(card);
-  });
-
-  setTimeout(function () {
-    grid.querySelectorAll('.perf-val').forEach(function (el) {
-      if (el.dataset.static) return;
-      countTo(el, parseFloat(el.dataset.count), el.dataset.pre, el.dataset.suf, el.dataset.dec === '1');
-    });
-  }, 320);
-
-  /* ── KPI cards ── */
-  var KPIS = [
-    { cls:'kk1', label:'Best Funding Month', val:rep.kpis.bestMonth,    sub:'All-time personal best', count:null },
-    { cls:'kk2', label:'Largest Deal',        val:rep.kpis.largestDeal, sub:'Single deal record',     count:null },
-    { cls:'kk3', label:'Avg Commission',      val:rep.kpis.avgCommission, sub:'Per funded deal',      count:null },
-    { cls:'kk4', label:'Client Retention',    val:rep.kpis.retention,   sub:'Yearly retention rate',  count:parseInt(rep.kpis.retention), pre:'', suf:'%', dec:false },
-    { cls:'kk5', label:'Total Volume',        val:'$' + rep.stats.volume + 'M', sub:'Career total',  count:null },
-    { cls:'kk6', label:'Deals Funded',        val:rep.stats.totalDeals, sub:'Career total',            count:rep.stats.totalDeals, pre:'', suf:'', dec:false },
-  ];
-
-  var kpiGrid = document.getElementById('kpiGrid');
-  KPIS.forEach(function (k) {
-    var card = document.createElement('div');
-    card.className = 'kpi-card ' + k.cls;
-    card.innerHTML =
-      '<div class="kpi-label">' + k.label + '</div>' +
-      '<div class="kpi-val"' +
-        (k.count !== null ? ' data-count="' + k.count + '" data-pre="' + (k.pre||'') + '" data-suf="' + (k.suf||'') + '" data-dec="' + (k.dec?'1':'0') + '"' : ' data-static="1"') + '>' +
-        k.val +
-      '</div>' +
-      '<div class="kpi-sub">' + k.sub + '</div>';
-    kpiGrid.appendChild(card);
-  });
-
-  setTimeout(function () {
-    kpiGrid.querySelectorAll('.kpi-val').forEach(function (el) {
-      if (el.dataset.static) return;
-      countTo(el, parseFloat(el.dataset.count), el.dataset.pre, el.dataset.suf, el.dataset.dec === '1');
-    });
-  }, 480);
-
-  /* ── Activity feed ── */
-  var acts = [
-    { dot:'dot-green',  text:'Funded a deal — ' + rep.kpis.largestDeal + ' (record this quarter)',        time:'2 hours ago' },
-    { dot:'dot-blue',   text:'Application approved and sent to underwriting',                               time:'Yesterday' },
-    { dot:'dot-gold',   text:'Added ' + (Math.floor(rep.stats.activeClients / 40) + 2) + ' new leads to pipeline', time:'2 days ago' },
-    { dot:'dot-purple', text:'Deal renewed with long-term client',                                          time:'3 days ago' },
-    { dot:'dot-blue',   text:'Reached ' + rep.stats.totalDeals + ' total funded deals milestone',          time:'5 days ago' },
-    { dot:'dot-green',  text:'Monthly performance report submitted',                                        time:'6 days ago' },
-  ];
-
-  var actList = document.getElementById('actList');
-  acts.forEach(function (a) {
-    var el = document.createElement('div');
-    el.className = 'act-item';
-    el.innerHTML =
-      '<div class="act-dot ' + a.dot + '"></div>' +
-      '<div class="act-body"><div class="act-text">' + a.text + '</div><div class="act-time">' + a.time + '</div></div>';
-    actList.appendChild(el);
-  });
-
-  /* ── Chart ── */
-  var seed = userId.split('').reduce(function (a, c) { return a + c.charCodeAt(0); }, 13);
-  var rng  = seedRng(seed);
-  var volK = rep.stats.volume * 1000;
-  var w    = Array.from({ length: 12 }, function () { return 0.45 + rng() * 1.1; });
-  var wSum = w.reduce(function (a, b) { return a + b; }, 0);
-  chartData = w.map(function (v) { return Math.round((v / wSum) * volK); });
-  buildChart(chartData);
-
+  }
 })();
 </script>
 
