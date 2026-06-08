@@ -1179,14 +1179,14 @@
 
         <!-- Email -->
         <div class="field">
-          <label class="field-label" for="email">Email address</label>
+          <label class="field-label" for="email">Username</label>
           <div class="input-wrap">
             <input
               id="email"
               class="field-input"
-              type="email"
-              placeholder="example@capital-infusion.com"
-              autocomplete="email"
+              type="text"
+              placeholder="e.g. anderson, gimmy, matthew"
+              autocomplete="username"
               spellcheck="false"
             />
             <svg class="input-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -1263,6 +1263,23 @@
       var hGlow     = document.querySelector('.horizon-glow');
       var lWrap     = document.getElementById('loginWrapper');
       var toggle    = document.getElementById('themeToggle');
+      var timers    = [];
+      var skipped   = false;
+
+      function schedule(fn, ms) {
+        timers.push(setTimeout(fn, ms));
+      }
+
+      function skipIntro() {
+        if (skipped || !intro || !intro.parentNode) return;
+        skipped = true;
+        timers.forEach(clearTimeout);
+        timers = [];
+        if (raf) cancelAnimationFrame(raf);
+        lWrap.classList.add('visible');
+        toggle.classList.add('intro-done');
+        intro.parentNode.removeChild(intro);
+      }
 
       /* ── 3-phase particle system ── */
       var ictx = iCanvas.getContext('2d');
@@ -1352,28 +1369,36 @@
       resize(); spawn(); draw();
 
       /* ── Timed sequence ── */
-      setTimeout(function () { phase = 1; },                              1000);
-      setTimeout(function () {
+      schedule(function () { phase = 1; },                              1000);
+      schedule(function () {
         hexOut.classList.add('draw');
         hexIn.classList.add('draw');
       },                                                                   2000);
-      setTimeout(function () {
+      schedule(function () {
         accents.forEach(function (a) { a.classList.add('show'); });
       },                                                                   2700);
-      setTimeout(function () { iLogo.classList.add('reveal'); },          3300);
-      setTimeout(function () { iTag.classList.add('show'); },             5100);
-      setTimeout(function () {
+      schedule(function () { iLogo.classList.add('reveal'); },          3300);
+      schedule(function () { iTag.classList.add('show'); },             5100);
+      schedule(function () {
         phase = 2; p2t = Date.now();
         bStage.classList.add('move-up');
         hGlow.classList.add('pulse');
       },                                                                   6300);
-      setTimeout(function () { lWrap.classList.add('visible'); },         7300);
-      setTimeout(function () { intro.classList.add('fade-out'); },        8400);
-      setTimeout(function () {
+      schedule(function () { lWrap.classList.add('visible'); },         7300);
+      schedule(function () { intro.classList.add('fade-out'); },        8400);
+      schedule(function () {
         cancelAnimationFrame(raf);
         if (intro && intro.parentNode) intro.parentNode.removeChild(intro);
         toggle.classList.add('intro-done');
       },                                                                   9300);
+
+      document.addEventListener('keydown', function (e) {
+        if (e.code !== 'Space' && e.key !== ' ') return;
+        var tag = e.target && e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
+        e.preventDefault();
+        skipIntro();
+      });
     })();
 
     /* ─── Login handler ─── */
@@ -1381,8 +1406,7 @@
       e.preventDefault();
       const email = document.getElementById('email').value;
       const pass = document.getElementById('password').value;
-      if (email === 'TheCapMuse123' && pass === 'Inc5000DataAnalytics!') {
-        localStorage.setItem('capmuse-user', 'anderson');
+      if (window.CapMuseAuth && window.CapMuseAuth.login(email, pass)) {
         window.location.href = 'home.html';
       } else {
         const btn = document.querySelector('.btn-primary');
@@ -1503,6 +1527,9 @@
       if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) tick();
     })();
   </script>
+
+  <script src="Assets/profile-stats.js"></script>
+  <script src="Assets/capmuse-auth.js"></script>
 
 </body>
 </html>

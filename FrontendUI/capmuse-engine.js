@@ -6,7 +6,12 @@ function start(){
   if(!mainContent){setTimeout(start,200);return;}
   originalHTML=mainContent.innerHTML;
   var navEls=document.querySelectorAll('.nav-sub-item,.nav-item,.nav-box-item,[data-page]');
-  for(var i=0;i<navEls.length;i++){navEls[i].style.cursor='pointer';(function(el){el.addEventListener('click',function(e){e.preventDefault();var page=this.getAttribute('data-page')||this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();var all=document.querySelectorAll('.nav-sub-item,.nav-item');for(var j=0;j<all.length;j++){all[j].classList.remove('active');}this.classList.add('active');render(page);});})(navEls[i]);}
+  for(var i=0;i<navEls.length;i++){navEls[i].style.cursor='pointer';(function(el){el.addEventListener('click',function(e){
+    var href=(this.getAttribute('href')||'').trim();
+    var page=this.getAttribute('data-page')||this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();
+    var isHtmlLink=href&&/\.html(\?|#|$)/i.test(href)&&!this.getAttribute('data-page');
+    if(isHtmlLink)return;
+    e.preventDefault();var all=document.querySelectorAll('.nav-sub-item,.nav-item');for(var j=0;j<all.length;j++){all[j].classList.remove('active');}this.classList.add('active');render(page);});})(navEls[i]);}
   Promise.all([fx('Accounts.csv'),fx('funding_book.csv')]).then(function(r){
     if(r[0]&&r[0].length){ACCOUNTS=r[0].map(mapAcct).filter(function(d){return d.name&&d.name!=='False';});}
     if(r[1]&&r[1].length){DEALS=r[1].map(mapDeal).filter(function(d){return d.name;});}

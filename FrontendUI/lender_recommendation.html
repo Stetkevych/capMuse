@@ -674,5 +674,11 @@
   })();
 </script>
 <script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-auth.js"></script>
+<script>
+  (function () {
+    if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
+  })();
+</script>
 </body>
 </html>

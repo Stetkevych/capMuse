@@ -338,8 +338,104 @@
     }
   };
 
+  function hashCode(str) {
+    var h = 0;
+    for (var i = 0; i < str.length; i++) {
+      h = ((h << 5) - h) + str.charCodeAt(i);
+      h |= 0;
+    }
+    return Math.abs(h);
+  }
+
+  function buildTodayStats(id, rep) {
+    var h = hashCode(id);
+    var s = rep.stats || {};
+    return {
+      leads:      3 + (h % 12),
+      pulls:      2 + (h % 8),
+      dealsOwned: 5 + (h % 15),
+      funded:     1 + (h % 4),
+      volume:     Math.round((s.avgDeal || 70) * 1000 * (1 + (h % 5))),
+      commission: 2000 + (h % 7000),
+      pipeline:   3 + (h % 10),
+      calls:      15 + (h % 35)
+    };
+  }
+
+  Object.keys(REPS).forEach(function (id) {
+    if (!REPS[id].today) REPS[id].today = buildTodayStats(id, REPS[id]);
+  });
+
+  REPS.anderson.today = {
+    leads: 8, pulls: 5, dealsOwned: 12, funded: 2,
+    volume: 420000, commission: 8400, pipeline: 6, calls: 34
+  };
+  REPS.gimmy.today = {
+    leads: 5, pulls: 3, dealsOwned: 7, funded: 1,
+    volume: 185000, commission: 3700, pipeline: 4, calls: 22
+  };
+
   /* Expose REPS globally so other page scripts can read rep data */
   window.REPS = REPS;
+
+  var REP_ALIASES = { jimmy: 'gimmy' };
+
+  function defaultRepProfile(id) {
+    var h = hashCode(id);
+    var name = id.charAt(0).toUpperCase() + id.slice(1);
+    return {
+      name: name,
+      role: 'Funding Advisor',
+      company: 'Capital Infusion',
+      badge: 'Rising Star',
+      photo: 'Assets/reps/' + id + '.png',
+      stats: {
+        experience: 3 + (h % 8),
+        age: 24 + (h % 14),
+        height: "5'10\"",
+        avgDeal: 55 + (h % 40),
+        timeToFund: 3.5 + (h % 30) / 10,
+        totalDeals: 80 + (h % 200),
+        volume: 5 + (h % 25) / 1,
+        approvalRate: 62 + (h % 20),
+        activeClients: 30 + (h % 80)
+      },
+      kpis: {
+        bestMonth: 'May 2024',
+        largestDeal: '$2.0M',
+        avgCommission: '$2,500',
+        retention: '78%'
+      }
+    };
+  }
+
+  function ensureRepProfile(personId) {
+    var key = String(personId || '').toLowerCase().replace(/\s+/g, '');
+    if (!key) key = 'anderson';
+    if (REP_ALIASES[key] && REPS[REP_ALIASES[key]]) key = REP_ALIASES[key];
+
+    var rep = REPS[key];
+    if (!rep) {
+      rep = defaultRepProfile(key);
+      rep.today = buildTodayStats(key, rep);
+      REPS[key] = rep;
+      return key;
+    }
+
+    if (!rep.stats || !rep.kpis) {
+      var defaults = defaultRepProfile(key);
+      rep.stats = rep.stats || defaults.stats;
+      rep.kpis  = rep.kpis  || defaults.kpis;
+      if (!rep.role)    rep.role    = defaults.role;
+      if (!rep.badge)   rep.badge   = defaults.badge;
+      if (!rep.photo)   rep.photo   = defaults.photo;
+      if (!rep.company) rep.company = defaults.company;
+    }
+    if (!rep.today) rep.today = buildTodayStats(key, rep);
+    return key;
+  }
+
+  window.ensureRepProfile = ensureRepProfile;
 
   /* ═══════════════════════════════════════════════════════════════
      Modal DOM — injected once on page load
@@ -454,8 +550,8 @@
      Populate modal with person data
   ═══════════════════════════════════════════════════════════════ */
   function populate(personId) {
-    var key  = String(personId).toLowerCase().replace(/\s+/g,'');
-    var data = REPS[key] || REPS['anderson'];
+    var key  = ensureRepProfile(personId);
+    var data = REPS[key];
     var s    = data.stats || {};
     var k    = data.kpis  || {};
     var photo = data.photo || 'Assets/reps/Cartoon/AndersonCartoon.png';

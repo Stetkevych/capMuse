@@ -138,6 +138,18 @@
       animation: scaleIn 0.65s cubic-bezier(0.22,1,0.36,1) 0.08s both;
       position: relative; z-index: 1;
     }
+    .hero-photo-ring[data-person-id] {
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hero-photo-ring[data-person-id]:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 0 1px rgba(99,102,241,0.35), 0 0 36px rgba(59,130,246,0.55), 0 0 72px rgba(59,130,246,0.25), 0 12px 44px rgba(0,0,0,0.5);
+    }
+    .hero-photo-ring[data-person-id]:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 4px;
+    }
     .hero-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center 8%; display: block; }
 
     .hero-info { flex: 1; animation: slideUp 0.52s ease-out 0.12s both; position: relative; z-index: 1; }
@@ -389,7 +401,7 @@
 
       <!-- HERO -->
       <section class="home-hero" aria-label="Personal overview">
-        <div class="hero-photo-ring">
+        <div class="hero-photo-ring" id="heroPhotoRing" role="button" tabindex="0" aria-label="View your stats card">
           <img id="heroPhoto" src="Assets/reps/anderson.png" alt="Profile" class="hero-photo" />
         </div>
         <div class="hero-info">
@@ -400,16 +412,21 @@
             <span class="hero-company-text" id="heroCompany"></span>
           </div>
           <div class="hero-badges" id="heroBadges"></div>
+          <div class="hero-qs-row" id="heroQuickStats"></div>
         </div>
       </section>
 
-      <!-- PLACEHOLDER GRID -->
-      <div class="perf-grid" id="perfGrid" style="animation: fadeInUp 0.5s ease-out 0.18s both;"></div>
+      <div class="section-header" id="todaySectionHeader">
+        <h2 class="section-title">Today's Performance</h2>
+        <span class="section-sub" id="todayDate"></span>
+      </div>
+      <div class="perf-grid" id="perfGrid"></div>
     </main>
   </div>
 </div>
 
 <script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-auth.js"></script>
 <script>
 /* ── Theme toggle ── */
 (function () {
@@ -460,12 +477,37 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
 
 /* ── Main populate ── */
 (function () {
-  var userId = localStorage.getItem('capmuse-user') || 'anderson';
-  var rep    = (window.REPS && window.REPS[userId]) ? window.REPS[userId] : (window.REPS ? window.REPS['anderson'] : null);
+  if (!window.CapMuseAuth.requireLogin()) return;
+
+  var userId = window.CapMuseAuth.getUserId();
+  if (window.ensureRepProfile) userId = window.ensureRepProfile(userId);
+  var rep = window.REPS[userId];
   if (!rep) return;
 
-  var first    = rep.name.split(' ')[0];
-  var initials = rep.name.split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+  var photoRing = document.getElementById('heroPhotoRing');
+  if (photoRing) {
+    photoRing.setAttribute('data-person-id', userId);
+    photoRing.setAttribute('title', 'View your stats card');
+    photoRing.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        photoRing.click();
+      }
+    });
+  }
+
+  var first = rep.name.split(' ')[0];
+  var today = rep.today || {};
+
+  function fmtMoney(n) {
+    if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return '$' + Math.round(n / 1000) + 'K';
+    return '$' + Number(n).toLocaleString();
+  }
+
+  function fmtCommission(n) {
+    return '$' + Number(n).toLocaleString();
+  }
 
   /* Hero */
   document.getElementById('heroPhoto').src  = rep.photo;
@@ -476,45 +518,52 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
   document.getElementById('heroCompany').textContent  = rep.company;
   document.title = 'Home — ' + rep.name + ' — CapMuse';
 
-  /* Badges */
   document.getElementById('heroBadges').innerHTML =
     '<span class="hbadge hb-gold">' + rep.badge + '</span>' +
     '<span class="hbadge hb-blue">' + rep.stats.experience + ' yrs exp</span>' +
     '<span class="hbadge hb-green">' + rep.company + '</span>';
 
-  /* Sidebar + topbar initials */
-  document.getElementById('sidebarAvatar').textContent = initials;
-  document.getElementById('sidebarName').textContent   = rep.name;
-  document.getElementById('sidebarRole').textContent   = rep.role;
-  document.getElementById('avatarBtn').textContent     = initials;
+  document.getElementById('heroQuickStats').innerHTML =
+    '<div class="hero-qs"><span class="hero-qs-val">' + fmtMoney(today.volume || 0) + '</span><span class="hero-qs-lbl">Volume today</span></div>' +
+    '<div class="hero-qs"><span class="hero-qs-val">' + (today.funded || 0) + '</span><span class="hero-qs-lbl">Funded today</span></div>' +
+    '<div class="hero-qs"><span class="hero-qs-val">' + (today.leads || 0) + '</span><span class="hero-qs-lbl">Leads today</span></div>';
 
-  /* Placeholder grid — 9 blank cards, first says Coming Soon */
-  var grid = document.getElementById('perfGrid');
-  for (var i = 0; i < 9; i++) {
-    var card = document.createElement('div');
-    card.className = 'perf-card';
-    card.style.minHeight = '80px';
-    if (i === 0) {
-      card.innerHTML =
-        '<div style="display:flex;align-items:center;gap:10px;color:var(--text-muted)">' +
-          '<svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="7.5"/><path d="M10 6v4l2.5 2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-          '<span style="font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase">Coming Soon</span>' +
-        '</div>';
-    }
-    grid.appendChild(card);
+  var dateEl = document.getElementById('todayDate');
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   }
-})();
-</script>
 
-<script>
-/* Avatar dropdown JS (same pattern as other pages) */
-(function () {
-  var btn  = document.getElementById('avatarBtn');
-  var menu = document.getElementById('avatarMenu');
-  if (!btn || !menu) return;
-  btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
-  document.addEventListener('click', function () { menu.classList.remove('open'); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.classList.remove('open'); });
+  window.CapMuseAuth.populateSidebar(rep);
+  window.CapMuseAuth.wireLogoutLinks();
+
+  var statCards = [
+    { icon: 'pi-blue',   val: today.leads || 0,      lbl: 'Leads submitted',     svg: '<path d="M4 4h12v12H4z" stroke-linecap="round"/><path d="M8 8h4M8 11h4" stroke-linecap="round"/>' },
+    { icon: 'pi-green',  val: today.pulls || 0,      lbl: 'Applications pulled', svg: '<path d="M10 3v14M6 7l4-4 4 4M6 13l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>' },
+    { icon: 'pi-purple', val: today.dealsOwned || 0, lbl: 'Deals owned',         svg: '<rect x="3" y="5" width="14" height="12" rx="2"/><path d="M7 5V3h6v2" stroke-linecap="round"/>' },
+    { icon: 'pi-gold',   val: today.funded || 0,     lbl: 'Funded today',        svg: '<path d="M4 10l4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/>' },
+    { icon: 'pi-teal',   val: fmtMoney(today.volume || 0), lbl: 'Volume',        svg: '<path d="M10 3v14M6 10h8" stroke-linecap="round"/>' },
+    { icon: 'pi-crimson',val: fmtCommission(today.commission || 0), lbl: 'Commission', svg: '<circle cx="10" cy="10" r="7"/><path d="M10 6v4l2 2" stroke-linecap="round"/>' },
+    { icon: 'pi-blue',   val: today.pipeline || 0,   lbl: 'Active pipeline',     svg: '<path d="M3 14h14M5 10h10M7 6h6" stroke-linecap="round"/>' },
+    { icon: 'pi-green',  val: today.calls || 0,      lbl: 'Calls made',          svg: '<path d="M5 4c4 6 6 8 10 12M5 16l2-5 3 1 4-6" stroke-linecap="round" stroke-linejoin="round"/>' },
+    { icon: 'pi-purple', val: (rep.stats.approvalRate || 0) + '%', lbl: 'Approval rate', svg: '<path d="M4 14l4-5 3 3 5-7" stroke-linecap="round" stroke-linejoin="round"/>' }
+  ];
+
+  var grid = document.getElementById('perfGrid');
+  grid.innerHTML = '';
+  statCards.forEach(function (card, i) {
+    var el = document.createElement('div');
+    el.className = 'perf-card';
+    el.style.animationDelay = (0.18 + i * 0.05) + 's';
+    el.innerHTML =
+      '<div class="perf-icon ' + card.icon + '">' +
+        '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7">' + card.svg + '</svg>' +
+      '</div>' +
+      '<div class="perf-details">' +
+        '<div class="perf-val">' + card.val + '</div>' +
+        '<div class="perf-lbl">' + card.lbl + '</div>' +
+      '</div>';
+    grid.appendChild(el);
+  });
 })();
 </script>
 </body>
