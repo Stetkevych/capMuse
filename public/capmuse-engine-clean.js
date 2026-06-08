@@ -7,7 +7,7 @@ function start(){
   originalHTML=mainContent.innerHTML;
   var navEls=document.querySelectorAll('.nav-sub-item,.nav-item,.nav-box-item,[data-page]');
   for(var i=0;i<navEls.length;i++){navEls[i].style.cursor='pointer';(function(el){el.addEventListener('click',function(e){e.preventDefault();var page=this.getAttribute('data-page')||this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();var all=document.querySelectorAll('.nav-sub-item,.nav-item');for(var j=0;j<all.length;j++){all[j].classList.remove('active');}this.classList.add('active');render(page);});})(navEls[i]);}
-  Promise.all([fx('Accounts.csv'),fx('funding_book_live.json')]).then(function(r){
+  Promise.all([fx('Accounts.csv'),fx('funding_book.csv')]).then(function(r){
     if(r[0]&&r[0].length){ACCOUNTS=r[0].map(mapAcct).filter(function(d){return d.name&&d.name!=='False';});}
     if(r[1]&&r[1].length){DEALS=r[1].map(mapDeal).filter(function(d){return d.name;});}
     console.log('[CapMuse] Accounts:'+ACCOUNTS.length+' Deals:'+DEALS.length);
@@ -15,12 +15,12 @@ function start(){
   });
 }
 function mapAcct(r){return{name:r.Account_Name||r.DBA||r.Business_Legal_Name||'',stage:r.Stage_of_Package||'',amount:nn(r.Amount),funded_date:r.Date_Funded||'',applied:r.Date_Applied||r.Created_Time||'',rep:r.First_Name||'',lender:r.Funder_2||'',source:r.Lead_Source||r.Original_Lead_Source||'',industry:r.Industry||r.I_Stated_Industry||'',state:r.State||r.Business_State||'',revenue:nn(r.Monthly_Revenue||r.Monthly_Revenue1)};}
-function mapDeal(r){return{name:r.Deal_Name||r.company||'',stage:r.Stage||'',amount:nn(r.Funded_Amount||r.funding),funded_date:r.Date_Funded||'',applied:r.Created_Time||'',rep:r['Owner.name']||r['Package_Owner.name']||'',puller:r['Puller.name']||'',lender:r.Lender||'',source:r.Lead_Source2||'',industry:r.Industry||'',state:r.State||'',buy_rate:nn(r.Buy_Rate||r.buy_rate),term:r.Term||'',position:r.Position||'',daily_payment:nn(r.Daily_Payment||r.daily_payment),payback:nn(r.Payback_Amount||r.payback)};}
+function mapDeal(r){return{name:r.Deal_Name||'',stage:r.Stage||'',amount:nn(r.Funded_Amount),funded_date:r.Date_Funded||'',applied:r.Created_Time||'',rep:r['Owner.name']||r['Package_Owner.name']||'',puller:r['Puller.name']||'',lender:r.Lender||'',source:r.Lead_Source2||'',industry:r.Industry||'',state:r.State||'',buy_rate:nn(r.Buy_Rate),term:r.Term||'',position:r.Position||'',daily_payment:nn(r.Daily_Payment),payback:nn(r.Payback_Amount)};}
 function nn(v){return parseFloat(String(v||'').replace(/[$,]/g,''))||0;}
 function fmt(v){if(v>=1e6)return(v/1e6).toFixed(1)+'M';if(v>=1e3)return(v/1e3).toFixed(0)+'K';return Math.round(v).toLocaleString();}
 function ini(s){return(s||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();}
 function stg(s){var l=(s||'').toLowerCase();if(l.indexOf('won')>-1||l.indexOf('closed')>-1||(l.indexOf('fund')>-1&&l.indexOf('decline')===-1))return['chip-green','Funded'];if(l.indexOf('approv')>-1)return['chip-blue','Approved'];if(l.indexOf('review')>-1||l.indexOf('submit')>-1)return['chip-blue','Review'];if(l.indexOf('decline')>-1||l.indexOf('lost')>-1)return['chip-gray','Declined'];return['chip-gray',s?s.substring(0,12):'Pending'];}
-function fx(file){return fetch(BUCKET+'/'+file).then(function(r){return r.ok?r.text():null;}).then(function(t){if(!t)return null;if(file.endsWith('.json')){try{return JSON.parse(t);}catch(e){return null;}}return csvParse(t);}).catch(function(){return null;});}
+function fx(file){return fetch(BUCKET+'/'+file).then(function(r){return r.ok?r.text():null;}).then(function(t){return t?csvParse(t):null;}).catch(function(){return null;});}
 function csvParse(text){var lines=[],cur='',inQ=false;for(var i=0;i<text.length;i++){var c=text[i];if(c==='"'){inQ=!inQ;}else if(c==='\n'&&!inQ){lines.push(cur);cur='';}else if(c!=='\r'){cur+=c;}}if(cur.trim())lines.push(cur);if(lines.length<2)return[];var h=spl(lines[0]);var out=[];for(var j=1;j<lines.length;j++){if(!lines[j].trim())continue;var v=spl(lines[j]);var o={};for(var k=0;k<h.length;k++){o[h[k]]=(v[k]||'').trim();}out.push(o);}return out;}
 function spl(line){var r=[],c='',q=false;for(var i=0;i<line.length;i++){if(line[i]==='"'){q=!q;}else if(line[i]===','&&!q){r.push(c);c='';}else{c+=line[i];}}r.push(c);return r;}
 function render(page){
