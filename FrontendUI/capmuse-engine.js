@@ -6,8 +6,11 @@ function start(){
   if(!mainContent){setTimeout(start,200);return;}
   originalHTML=mainContent.innerHTML;
   var navEls=document.querySelectorAll('.nav-sub-item,.nav-item,.nav-box-item,[data-page]');
-  for(var i=0;i<navEls.length;i++){navEls[i].style.cursor='pointer';(function(el){el.addEventListener('click',function(e){e.preventDefault();var page=this.getAttribute('data-page')||this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();var all=document.querySelectorAll('.nav-sub-item,.nav-item');for(var j=0;j<all.length;j++){all[j].classList.remove('active');}this.classList.add('active');render(page);});})(navEls[i]);}
-  Promise.all([fx('Accounts.csv'),fx('funding_book_live.json')]).then(function(r){
+  for(var i=0;i<navEls.length;i++){navEls[i].style.cursor='pointer';(function(el){el.addEventListener('click',function(e){var href=(this.getAttribute('href')||'').trim();var page=this.getAttribute('data-page')||this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();var isHtmlLink=href&&/\.html(\?|#|$)/i.test(href)&&!this.getAttribute('data-page');if(isHtmlLink)return;e.preventDefault();var all=document.querySelectorAll('.nav-sub-item,.nav-item');for(var j=0;j<all.length;j++){all[j].classList.remove('active');}this.classList.add('active');render(page);});})(navEls[i]);}
+  var isAnalytics=document.body.classList.contains('analytics-page');
+  var dealsLoader=window.CapMuseData?window.CapMuseData.getRawDeals():fx('funding_book_live.json');
+  var accountsLoader=isAnalytics?Promise.resolve(null):fx('Accounts.csv');
+  Promise.all([accountsLoader,dealsLoader]).then(function(r){
     if(r[0]&&r[0].length){ACCOUNTS=r[0].map(mapAcct).filter(function(d){return d.name&&d.name!=='False';});}
     if(r[1]&&r[1].length){DEALS=r[1].map(mapDeal).filter(function(d){return d.name;});}
     console.log('[CapMuse] Accounts:'+ACCOUNTS.length+' Deals:'+DEALS.length);
@@ -28,14 +31,26 @@ function render(page){
   var funded=DEALS.filter(function(d){var s=d.stage.toLowerCase();return s.indexOf('won')>-1||s.indexOf('closed')>-1||s.indexOf('fund')>-1;});
   var vol=funded.reduce(function(s,d){return s+d.amount;},0);
   if(page==='dashboard'){
-    mainContent.innerHTML=originalHTML;
-    var fm=document.querySelector('.featured-metric');if(fm)fm.textContent='$'+fmt(vol);
-    var fl=document.querySelector('.featured-label');if(fl)fl.textContent=DEALS.length+' Total Deals - Funding Book';
-    var ft=document.querySelector('.featured-tags');if(ft)ft.innerHTML='<span class="featured-tag">'+funded.length+' Funded</span><span class="featured-tag">$'+fmt(vol)+' Volume</span><span class="featured-tag">'+[...new Set(DEALS.map(function(d){return d.lender;}))].length+' Lenders</span>';
+    var isAnalytics=document.body.classList.contains('analytics-page');
+    if(!isAnalytics||!mainContent.querySelector('.analytics-main-col'))mainContent.innerHTML=originalHTML;
+    var fm=document.querySelector('.featured-metric');if(fm)fm.textContent='';
+    var fl=document.querySelector('.featured-label');if(fl)fl.textContent='Total Deals - Funding Book';
+    var ft=document.querySelector('.featured-tags');if(ft)ft.innerHTML='<span class="featured-tag">Funded</span><span class="featured-tag">Volume</span><span class="featured-tag">Lenders</span>';
     var tb=document.querySelector('.pipeline-table tbody');if(tb)tb.innerHTML=trows(funded.sort(function(a,b){return b.amount-a.amount;}).slice(0,10));
+    if(window.CapMuseStats&&window.CapMuseStats.refresh&&(isAnalytics?!mainContent.querySelector('.analytics-loaded'):true))window.CapMuseStats.refresh();
     return;
   }
-  if(page==='applications'){tbl('Applications',ACCOUNTS,['name','stage','amount','source','applied']);return;}
+  if(page==='applications'){
+    if(!ACCOUNTS.length&&document.body.classList.contains('analytics-page')){
+      mainContent.innerHTML='<div style="padding:24px;color:var(--text-muted);font-size:14px">Loading applications…</div>';
+      fx('Accounts.csv').then(function(r){
+        if(r&&r.length)ACCOUNTS=r.map(mapAcct).filter(function(d){return d.name&&d.name!=='False';});
+        tbl('Applications',ACCOUNTS,['name','stage','amount','source','applied']);
+      });
+      return;
+    }
+    tbl('Applications',ACCOUNTS,['name','stage','amount','source','applied']);return;
+  }
   if(page==='businesses'){tbl('Businesses',ACCOUNTS.filter(function(d){return d.industry;}),['name','industry','state','revenue','stage']);return;}
   if(page==='funding'){tbl('Funding Book',DEALS.sort(function(a,b){return b.amount-a.amount;}),['name','amount','lender','rep','funded_date','position']);return;}
   if(page==='statements'){tbl('Financials',DEALS.filter(function(d){return d.payback>0;}).sort(function(a,b){return b.payback-a.payback;}),['name','amount','payback','buy_rate','daily_payment','term']);return;}
@@ -46,7 +61,7 @@ function render(page){
   if(page==='alerts'){tbl('Declined/Lost',ACCOUNTS.filter(function(d){return d.stage.toLowerCase().indexOf('decline')>-1||d.stage.toLowerCase().indexOf('lost')>-1;}),['name','stage','source','state','applied']);return;}
   tbl('Data',DEALS.slice(0,50),['name','amount','lender','rep','stage']);
 }
-function trows(rows){return rows.map(function(d,i){var c=stg(d.stage);return '<tr><td>'+(i+1)+'</td><td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#10B981)">'+ini(d.name)+'</div><span class="biz-cell-name">'+d.name.substring(0,22)+'</span></div></td><td>$'+fmt(d.amount)+'</td><td>'+(d.lender||d.rep||'-')+'</td><td><span class="status-chip '+c[0]+'">'+c[1]+'</span></td></tr>';}).join('');}
+function trows(rows){return rows.map(function(d,i){var c=stg(d.stage);return '<tr><td>'+(i+1)+'</td><td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#10B981)">'+ini(d.name)+'</div><span class="biz-cell-name">'+d.name.substring(0,22)+'</span></div></td><td></td><td>'+(d.lender||d.rep||'-')+'</td><td><span class="status-chip '+c[0]+'">'+c[1]+'</span></td></tr>';}).join('');}
 function tbl(title,rows,cols){
   var labels={name:'Business',stage:'Stage',amount:'Amount',rep:'Rep',puller:'Puller',applied:'Applied',funded_date:'Funded',lender:'Lender',source:'Source',industry:'Industry',state:'State',revenue:'Revenue',buy_rate:'Rate',term:'Term',position:'Pos',daily_payment:'Daily',payback:'Payback'};
   var tot=rows.reduce(function(s,d){return s+(d.amount||0);},0);

@@ -437,10 +437,126 @@
 
   window.ensureRepProfile = ensureRepProfile;
 
+  var SKIP_COMPARE_KEYS = { gabe: 1, matt: 1, rondon2: 1, jimmy: 1 };
+
+  function getRepData(personId) {
+    var key = ensureRepProfile(personId);
+    var data = REPS[key];
+    return {
+      id: key,
+      name: data.name || key,
+      role: data.role || 'Funding Advisor',
+      company: data.company || 'Capital Infusion',
+      badge: data.badge || 'Funding Pro',
+      photo: data.photo || 'Assets/reps/Cartoon/AndersonCartoon.png',
+      stats: data.stats || {},
+      kpis: data.kpis || {},
+      today: data.today || {}
+    };
+  }
+
+  function listComparableReps(excludeId) {
+    var excludeKey = ensureRepProfile(excludeId);
+    var seen = {};
+    var list = [];
+    Object.keys(REPS).forEach(function (id) {
+      if (id === excludeKey) return;
+      if (SKIP_COMPARE_KEYS[id]) return;
+      if (REP_ALIASES[id]) return;
+      var rep = REPS[id];
+      if (!rep || !rep.name) return;
+      if (seen[rep.name]) return;
+      seen[rep.name] = true;
+      list.push({ id: id, name: rep.name });
+    });
+    list.sort(function (a, b) {
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }
+
+  function profileStatsPanelHTML(kpis) {
+    var k = kpis || {};
+    return '' +
+      '<div class="pmc-stats-row">' +
+        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Experience</span></div>' +
+        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Age</span></div>' +
+        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Height</span></div>' +
+      '</div>' +
+      '<div class="pmc-div slim"></div>' +
+      '<div class="pmc-stats-row">' +
+        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Avg Deal Size</span></div>' +
+        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Avg Time to Fund</span></div>' +
+        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Deals Funded</span></div>' +
+      '</div>' +
+      '<div class="pmc-div slim"></div>' +
+      '<div class="pmc-stats-row">' +
+        '<div class="pmc-stat s-green"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Approval Rate</span></div>' +
+        '<div class="pmc-stat s-gold"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Volume</span></div>' +
+        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Active Clients</span></div>' +
+      '</div>' +
+      '<div class="pmc-div"></div>' +
+      '<div class="pmc-kpis pmc-kpis-visible">' +
+        '<div class="pmc-kpi"><div class="pmc-kpi-icon">📅</div><div class="pmc-kpi-val">' + (k.bestMonth || '') + '</div><div class="pmc-kpi-lbl">Best Funding Month</div></div>' +
+        '<div class="pmc-kpi"><div class="pmc-kpi-icon">🏆</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Largest Deal Funded</div></div>' +
+        '<div class="pmc-kpi"><div class="pmc-kpi-icon">💰</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Avg Commission</div></div>' +
+        '<div class="pmc-kpi"><div class="pmc-kpi-icon">🔄</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Client Retention</div></div>' +
+      '</div>';
+  }
+
+  function renderProfileStatsPanel(container, personId) {
+    if (!container) return;
+    var rep = getRepData(personId);
+    container.innerHTML = profileStatsPanelHTML(rep.kpis);
+  }
+
+  var TODAY_METRICS = [
+    { icon: 'pi-blue',   lbl: 'Leads submitted',     svg: '<path d="M4 4h12v12H4z" stroke-linecap="round"/><path d="M8 8h4M8 11h4" stroke-linecap="round"/>' },
+    { icon: 'pi-green',  lbl: 'Applications pulled', svg: '<path d="M10 3v14M6 7l4-4 4 4M6 13l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>' },
+    { icon: 'pi-purple', lbl: 'Deals owned',         svg: '<rect x="3" y="5" width="14" height="12" rx="2"/><path d="M7 5V3h6v2" stroke-linecap="round"/>' },
+    { icon: 'pi-gold',   lbl: 'Funded today',        svg: '<path d="M4 10l4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/>' },
+    { icon: 'pi-teal',   lbl: 'Volume',              svg: '<path d="M10 3v14M6 10h8" stroke-linecap="round"/>' },
+    { icon: 'pi-crimson',lbl: 'Commission',          svg: '<circle cx="10" cy="10" r="7"/><path d="M10 6v4l2 2" stroke-linecap="round"/>' },
+    { icon: 'pi-blue',   lbl: 'Active pipeline',     svg: '<path d="M3 14h14M5 10h10M7 6h6" stroke-linecap="round"/>' },
+    { icon: 'pi-green',  lbl: 'Calls made',          svg: '<path d="M5 4c4 6 6 8 10 12M5 16l2-5 3 1 4-6" stroke-linecap="round" stroke-linejoin="round"/>' },
+    { icon: 'pi-purple', lbl: 'Approval rate',       svg: '<path d="M4 14l4-5 3 3 5-7" stroke-linecap="round" stroke-linejoin="round"/>' }
+  ];
+
+  function renderTodayPerfPanel(container, personId, options) {
+    if (!container) return;
+    options = options || {};
+    var compact = !!options.compact;
+    var animate = options.animate !== false && !compact;
+    ensureRepProfile(personId);
+
+    container.innerHTML = '';
+    TODAY_METRICS.forEach(function (card, i) {
+      var el = document.createElement('div');
+      el.className = compact ? 'pmc-compare-perf-item' : 'perf-card';
+      if (animate) el.style.animationDelay = (0.18 + i * 0.05) + 's';
+      el.innerHTML =
+        '<div class="' + (compact ? 'pmc-compare-perf-icon' : 'perf-icon') + ' ' + card.icon + '">' +
+          '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7">' + card.svg + '</svg>' +
+        '</div>' +
+        '<div class="' + (compact ? 'pmc-compare-perf-details' : 'perf-details') + '">' +
+          '<div class="' + (compact ? 'pmc-compare-perf-val' : 'perf-val') + '"></div>' +
+          '<div class="' + (compact ? 'pmc-compare-perf-lbl' : 'perf-lbl') + '">' + card.lbl + '</div>' +
+        '</div>';
+      container.appendChild(el);
+    });
+  }
+
+  window.getRepData = getRepData;
+  window.listComparableReps = listComparableReps;
+  window.renderProfileStatsPanel = renderProfileStatsPanel;
+  window.renderTodayPerfPanel = renderTodayPerfPanel;
+
   /* ═══════════════════════════════════════════════════════════════
      Modal DOM — injected once on page load
   ═══════════════════════════════════════════════════════════════ */
   var overlay, flipEl, closeBtn;
+  var compareOverlay, compareSelect, compareSelfCol, compareOtherCol, compareCloseBtn;
+  var compareSelfId = '';
 
   function buildModal() {
     var html = '' +
@@ -481,37 +597,7 @@
               '</div>' +
 
               '<div class="pmc-div"></div>' +
-
-              '<div class="pmc-stats-row">' +
-                '<div class="pmc-stat"><span class="pmc-stat-val" id="pmcExp">—</span><span class="pmc-stat-lbl">Experience</span></div>' +
-                '<div class="pmc-stat"><span class="pmc-stat-val" id="pmcAge">—</span><span class="pmc-stat-lbl">Age</span></div>' +
-                '<div class="pmc-stat"><span class="pmc-stat-val" id="pmcHt">—</span><span class="pmc-stat-lbl">Height</span></div>' +
-              '</div>' +
-
-              '<div class="pmc-div slim"></div>' +
-
-              '<div class="pmc-stats-row">' +
-                '<div class="pmc-stat"><span class="pmc-stat-val" id="pmcAvgDeal">—</span><span class="pmc-stat-lbl">Avg Deal Size</span></div>' +
-                '<div class="pmc-stat"><span class="pmc-stat-val" id="pmcTtf">—</span><span class="pmc-stat-lbl">Avg Time to Fund</span></div>' +
-                '<div class="pmc-stat"><span class="pmc-stat-val" id="pmcDeals">—</span><span class="pmc-stat-lbl">Total Deals Funded</span></div>' +
-              '</div>' +
-
-              '<div class="pmc-div slim"></div>' +
-
-              '<div class="pmc-stats-row">' +
-                '<div class="pmc-stat s-green"><span class="pmc-stat-val" id="pmcApproval">—</span><span class="pmc-stat-lbl">Approval Rate</span></div>' +
-                '<div class="pmc-stat s-gold"><span class="pmc-stat-val" id="pmcVolume">—</span><span class="pmc-stat-lbl">Total Volume</span></div>' +
-                '<div class="pmc-stat"><span class="pmc-stat-val" id="pmcClients">—</span><span class="pmc-stat-lbl">Active Clients</span></div>' +
-              '</div>' +
-
-              '<div class="pmc-div"></div>' +
-
-              '<div class="pmc-kpis">' +
-                '<div class="pmc-kpi" style="--kd:540ms"><div class="pmc-kpi-icon">📅</div><div class="pmc-kpi-val" id="pmcBestMonth">—</div><div class="pmc-kpi-lbl">Best Funding Month</div></div>' +
-                '<div class="pmc-kpi" style="--kd:610ms"><div class="pmc-kpi-icon">🏆</div><div class="pmc-kpi-val" id="pmcLargestDeal">—</div><div class="pmc-kpi-lbl">Largest Deal Funded</div></div>' +
-                '<div class="pmc-kpi" style="--kd:680ms"><div class="pmc-kpi-icon">💰</div><div class="pmc-kpi-val" id="pmcCommission">—</div><div class="pmc-kpi-lbl">Avg Commission</div></div>' +
-                '<div class="pmc-kpi" style="--kd:750ms"><div class="pmc-kpi-icon">🔄</div><div class="pmc-kpi-val" id="pmcRetention">—</div><div class="pmc-kpi-lbl">Client Retention</div></div>' +
-              '</div>' +
+              '<div id="pmcStatsPanel"></div>' +
             '</div>' +
 
           '</div>' +
@@ -530,79 +616,144 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     Counter animation
-  ═══════════════════════════════════════════════════════════════ */
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-
-  function countTo(el, target, pre, suf, isDecimal) {
-    var duration = 950;
-    var start = performance.now();
-    function tick(now) {
-      var t = Math.min((now - start) / duration, 1);
-      var v = target * easeOutCubic(t);
-      el.textContent = pre + (isDecimal ? v.toFixed(1) : Math.round(v)) + suf;
-      if (t < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
      Populate modal with person data
   ═══════════════════════════════════════════════════════════════ */
   function populate(personId) {
-    var key  = ensureRepProfile(personId);
-    var data = REPS[key];
-    var s    = data.stats || {};
-    var k    = data.kpis  || {};
-    var photo = data.photo || 'Assets/reps/Cartoon/AndersonCartoon.png';
+    var rep = getRepData(personId);
 
-    // Front face
-    document.getElementById('pmcFrontPhoto').src = photo;
-    document.getElementById('pmcFrontPhoto').alt = data.name;
-    document.getElementById('pmcFrontName').textContent = data.name || personId;
-    document.getElementById('pmcFrontRole').textContent = data.role || 'Funding Advisor';
-    document.getElementById('pmcFrontCo').textContent   = data.company || 'Capital Infusion';
+    document.getElementById('pmcFrontPhoto').src = rep.photo;
+    document.getElementById('pmcFrontPhoto').alt = rep.name;
+    document.getElementById('pmcFrontName').textContent = rep.name;
+    document.getElementById('pmcFrontRole').textContent = rep.role;
+    document.getElementById('pmcFrontCo').textContent   = rep.company;
 
-    // Back face header
-    document.getElementById('pmcBackPhoto').src  = photo;
-    document.getElementById('pmcBackPhoto').alt  = data.name;
-    document.getElementById('pmcPersonName').textContent = data.name || personId;
-    document.getElementById('pmcBackRole').textContent   = data.role || 'Funding Advisor';
-    document.getElementById('pmcBackCo').textContent     = data.company || 'Capital Infusion';
-    document.getElementById('pmcBadge').textContent      = data.badge || 'Funding Pro';
+    document.getElementById('pmcBackPhoto').src  = rep.photo;
+    document.getElementById('pmcBackPhoto').alt  = rep.name;
+    document.getElementById('pmcPersonName').textContent = rep.name;
+    document.getElementById('pmcBackRole').textContent   = rep.role;
+    document.getElementById('pmcBackCo').textContent     = rep.company;
+    document.getElementById('pmcBadge').textContent      = rep.badge;
 
-    // Static stat
-    document.getElementById('pmcHt').textContent = s.height || '—';
+    renderProfileStatsPanel(document.getElementById('pmcStatsPanel'), rep.id);
+  }
 
-    // Reset countable stats
-    var COUNTERS = [
-      { id:'pmcExp',      val: s.experience  ||0, pre:'',  suf:' YRS', dec:false },
-      { id:'pmcAge',      val: s.age         ||0, pre:'',  suf:'',     dec:false },
-      { id:'pmcAvgDeal',  val: s.avgDeal     ||0, pre:'$', suf:'K',    dec:false },
-      { id:'pmcTtf',      val: s.timeToFund  ||0, pre:'',  suf:' Days',dec:true  },
-      { id:'pmcDeals',    val: s.totalDeals  ||0, pre:'',  suf:'',     dec:false },
-      { id:'pmcApproval', val: s.approvalRate||0, pre:'',  suf:'%',    dec:false },
-      { id:'pmcVolume',   val: s.volume      ||0, pre:'$', suf:'M',    dec:true  },
-      { id:'pmcClients',  val: s.activeClients||0,pre:'',  suf:'',     dec:false }
-    ];
-    COUNTERS.forEach(function(c) {
-      document.getElementById(c.id).textContent = c.pre + '0' + c.suf;
+  function renderCompareColumn(colEl, personId, columnLabel) {
+    if (!colEl) return;
+    var rep = getRepData(personId);
+    colEl.innerHTML =
+      '<div class="pmc-compare-col-label">' + columnLabel + '</div>' +
+      '<div class="pmc-compare-header">' +
+        '<div class="pmc-back-photo-ring"><img src="' + rep.photo + '" alt="' + rep.name + '" /></div>' +
+        '<div class="pmc-compare-header-text">' +
+          '<div class="pmc-back-name">' + rep.name + '</div>' +
+          '<div class="pmc-back-role">' + rep.role + '</div>' +
+          '<span class="pmc-badge">' + rep.badge + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="pmc-compare-section-title">Career Stats</div>' +
+      '<div class="pmc-compare-stats"></div>' +
+      '<div class="pmc-compare-section-title">Today\'s Performance</div>' +
+      '<div class="pmc-compare-today-grid"></div>';
+
+    renderProfileStatsPanel(colEl.querySelector('.pmc-compare-stats'), rep.id);
+    renderTodayPerfPanel(colEl.querySelector('.pmc-compare-today-grid'), rep.id, { compact: true, animate: false });
+  }
+
+  function buildCompareModal() {
+    var html = '' +
+      '<div id="pmcCompareOverlay" class="pmc-overlay pmc-compare-overlay" role="dialog" aria-modal="true" aria-labelledby="pmcCompareTitle" hidden>' +
+        '<div class="pmc-compare-shell">' +
+          '<div class="pmc-compare-toolbar">' +
+            '<h2 class="pmc-compare-title" id="pmcCompareTitle">Compare Stats</h2>' +
+            '<div class="pmc-compare-picker">' +
+              '<label for="pmcCompareSelect" class="pmc-compare-picker-label">Compare with</label>' +
+              '<select id="pmcCompareSelect" class="pmc-compare-select" aria-label="Select rep to compare"></select>' +
+            '</div>' +
+            '<button type="button" class="pmc-close pmc-compare-close" id="pmcCompareClose" aria-label="Close comparison">' +
+              '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">' +
+                '<path d="M5 5l10 10M15 5L5 15" stroke-linecap="round"/>' +
+              '</svg>' +
+            '</button>' +
+          '</div>' +
+          '<div class="pmc-compare-body">' +
+            '<div class="pmc-compare-columns">' +
+              '<div class="pmc-compare-col" id="pmcCompareSelf"></div>' +
+              '<div class="pmc-compare-col" id="pmcCompareOther"></div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    compareOverlay   = document.getElementById('pmcCompareOverlay');
+    compareSelect    = document.getElementById('pmcCompareSelect');
+    compareSelfCol   = document.getElementById('pmcCompareSelf');
+    compareOtherCol  = document.getElementById('pmcCompareOther');
+    compareCloseBtn  = document.getElementById('pmcCompareClose');
+
+    compareCloseBtn.addEventListener('click', closeCompare);
+    compareOverlay.addEventListener('click', function (e) {
+      if (e.target === compareOverlay) closeCompare();
+    });
+    compareSelect.addEventListener('change', function () {
+      renderCompareColumn(compareOtherCol, compareSelect.value, compareSelect.options[compareSelect.selectedIndex].text);
+    });
+  }
+
+  function openCompare(preselectedId) {
+    if (window.CapMuseAuth && !window.CapMuseAuth.getUserId()) {
+      window.location.href = 'login.html';
+      return;
+    }
+    var selfId = window.CapMuseAuth ? window.CapMuseAuth.getUserId() : null;
+    if (!selfId) {
+      window.location.href = 'login.html';
+      return;
+    }
+    compareSelfId = ensureRepProfile(selfId);
+
+    var reps = listComparableReps(compareSelfId);
+    compareSelect.innerHTML = '';
+    reps.forEach(function (r) {
+      var opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.name;
+      compareSelect.appendChild(opt);
     });
 
-    // KPIs (static)
-    document.getElementById('pmcBestMonth').textContent   = k.bestMonth    || '—';
-    document.getElementById('pmcLargestDeal').textContent = k.largestDeal  || '—';
-    document.getElementById('pmcCommission').textContent  = k.avgCommission|| '—';
-    document.getElementById('pmcRetention').textContent   = k.retention    || '—';
+    if (!reps.length) return;
 
-    return COUNTERS;
+    var otherId = preselectedId && reps.some(function (r) { return r.id === preselectedId; })
+      ? preselectedId
+      : reps[0].id;
+    compareSelect.value = otherId;
+
+    renderCompareColumn(compareSelfCol, compareSelfId, 'You');
+    renderCompareColumn(compareOtherCol, otherId, compareSelect.options[compareSelect.selectedIndex].text);
+
+    compareOverlay.removeAttribute('hidden');
+    requestAnimationFrame(function () {
+      compareOverlay.classList.add('pmc-open');
+      document.body.style.overflow = 'hidden';
+    });
   }
+
+  function closeCompare() {
+    if (!compareOverlay) return;
+    compareOverlay.classList.remove('pmc-open');
+    document.body.style.overflow = '';
+    setTimeout(function () {
+      compareOverlay.setAttribute('hidden', '');
+    }, 330);
+  }
+
+  window.CapMuseCompare = { open: openCompare, close: closeCompare };
 
   /* ═══════════════════════════════════════════════════════════════
      Open / close
   ═══════════════════════════════════════════════════════════════ */
   function openProfile(personId) {
-    var counters = populate(personId);
+    populate(personId);
 
     flipEl.classList.remove('pmc-flipped');
     overlay.removeAttribute('hidden');
@@ -613,13 +764,6 @@
 
       setTimeout(function () {
         flipEl.classList.add('pmc-flipped');
-
-        // Run counters mid-flip
-        setTimeout(function () {
-          counters.forEach(function (c) {
-            countTo(document.getElementById(c.id), c.val, c.pre, c.suf, c.dec);
-          });
-        }, 300);
       }, 80);
     });
   }
@@ -638,23 +782,33 @@
      Event delegation — works on every page automatically
   ═══════════════════════════════════════════════════════════════ */
   document.addEventListener('click', function (e) {
-    // Ignore clicks inside the modal itself (except handled by closeBtn/overlay)
+    if (compareOverlay && compareOverlay.contains(e.target) && e.target !== compareOverlay) return;
     if (overlay && overlay.contains(e.target) && e.target !== overlay) return;
+    if (e.target.closest('#btnCompareStats')) return;
     var trigger = e.target.closest('[data-person-id]');
     if (trigger) openProfile(trigger.dataset.personId);
   });
 
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && overlay && overlay.classList.contains('pmc-open')) {
+    if (e.key !== 'Escape') return;
+    if (compareOverlay && compareOverlay.classList.contains('pmc-open')) {
+      closeCompare();
+      return;
+    }
+    if (overlay && overlay.classList.contains('pmc-open')) {
       closeProfile();
     }
   });
 
-  /* ── Init ── */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', buildModal);
-  } else {
+  function initModals() {
     buildModal();
+    buildCompareModal();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initModals);
+  } else {
+    initModals();
   }
 
 })();
