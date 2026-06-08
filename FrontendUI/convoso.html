@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leads — CapMuse</title>
+  <title>Convoso — CapMuse</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -32,9 +32,6 @@
       --search-border:  #1A2435;
       --ticker-bg:      #141C28;
       --ticker-border:  #1A2435;
-      --table-head:     #0C0F14;
-      --table-border:   #1A2435;
-      --table-hover:    rgba(96,165,250,0.04);
       --card-shadow:    0 1px 3px rgba(0,0,0,.5), 0 4px 16px rgba(0,0,0,.4);
     }
 
@@ -60,9 +57,6 @@
       --search-border:  #E0E0E0;
       --ticker-bg:      #FFFFFF;
       --ticker-border:  #E8E8E8;
-      --table-head:     #F8F8F8;
-      --table-border:   #EEEEEE;
-      --table-hover:    rgba(37,99,235,0.03);
       --card-shadow:    0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.07);
     }
 
@@ -71,16 +65,13 @@
       --green:     #10B981;
       --sidebar-w: 215px;
       --sidebar-gap: 16px;
-      --topbar-h:  56px;
       --ease:      cubic-bezier(0.4,0,0.2,1);
     }
 
     html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; background: var(--page-bg); color: var(--text-primary); }
 
-    /* ── Layout ── */
     .layout { display: flex; min-height: 100vh; }
 
-    /* ── Sidebar ── */
     .sidebar {
       width: var(--sidebar-w);
       position: fixed; left: var(--sidebar-gap); top: var(--sidebar-gap); bottom: var(--sidebar-gap);
@@ -129,33 +120,13 @@
     .sub-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.6; }
     .nav-sub-item.active .sub-icon { opacity: 1; }
 
-    .nav-tag {
-      font-size: 9px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-      background: rgba(37,99,235,0.12); color: var(--blue); border-radius: 4px; padding: 1px 5px; margin-left: 4px;
-    }
-
     .nav-item {
       display: flex; align-items: center; gap: 10px; padding: 8px 18px;
       color: var(--nav-item-color); font-size: 14px; font-weight: 400; cursor: pointer;
       text-decoration: none; transition: color 0.12s ease, background-color 0.12s ease;
     }
     .nav-item:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
-    .nav-item.active { color: var(--nav-active); font-weight: 600; }
     .nav-icon { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.65; }
-    .nav-item.active .nav-icon { opacity: 1; }
-
-    .nav-divider { height: 1px; background: var(--sidebar-border); margin: 10px 0; }
-
-    .nav-box { margin: 0 10px; background: var(--nav-box-bg); border: 1px solid var(--nav-box-border); border-radius: 10px; padding: 4px 0; display: flex; flex-direction: column; }
-    .nav-box-item {
-      display: flex; align-items: center; gap: 10px; padding: 7px 12px;
-      color: var(--nav-sub-color); font-size: 13px; font-weight: 400; cursor: pointer; text-decoration: none;
-      border-radius: 7px; transition: color 0.12s ease, background-color 0.12s ease;
-    }
-    .nav-box-item:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
-    .nav-box-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.55; }
-
-    .nav-bottom { padding: 0; display: flex; flex-direction: column; }
 
     .sidebar-footer { padding: 10px; border-top: 1px solid var(--sidebar-border); flex-shrink: 0; }
     .sidebar-user { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; cursor: pointer; transition: background 0.15s ease; }
@@ -165,16 +136,14 @@
     .user-name { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .user-role { font-size: 10.5px; color: var(--text-muted); }
 
-    /* ── Main wrapper ── */
     .main-wrapper { margin-left: calc(var(--sidebar-w) + 32px); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
 
-    /* ── Topbar ── */
     .topbar { position: sticky; top: 0; height: 72px; background: transparent; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 14px 28px 0; gap: 14px; }
     .burger { display: none; width: 32px; height: 32px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; align-items: center; justify-content: center; border-radius: 6px; flex-shrink: 0; }
     .search-wrap { flex: 0 1 640px; position: relative; max-width: 640px; min-width: 320px; }
     .search-icon-l { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
     .search-icon-r { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--blue); pointer-events: none; }
-    .search-input { width: 100%; height: 42px; background: var(--surface); border: 1px solid var(--search-border); border-radius: 100px; color: var(--text-primary); font-family: inherit; font-size: 13.5px; padding: 0 42px 0 40px; outline: none; box-shadow: 0 10px 30px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04); transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+    .search-input { width: 100%; height: 42px; background: var(--surface); border: 1px solid var(--search-border); border-radius: 100px; color: var(--text-primary); font-family: inherit; font-size: 13.5px; padding: 0 42px 0 40px; outline: none; box-shadow: 0 10px 30px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04); transition: border-color 0.18s ease; }
     .search-input::placeholder { color: var(--text-muted); }
     .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
     .topbar-right { display: flex; align-items: center; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--topbar-border); border-radius: 100px; box-shadow: 0 10px 30px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04); flex-shrink: 0; }
@@ -195,7 +164,6 @@
     html[data-theme="light"] .icon-moon { display: none; }
     html[data-theme="light"] .icon-sun  { display: block; }
 
-    /* ── Page content base ── */
     .page-content { flex: 1; padding: 8px 28px 32px; display: flex; flex-direction: column; gap: 16px; }
 
     .ticker-bar { background: var(--ticker-bg); border: 1px solid var(--ticker-border); border-radius: 14px; height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; box-shadow: var(--card-shadow); flex-shrink: 0; }
@@ -204,30 +172,9 @@
     .ticker-link:hover { color: var(--text-primary); }
     .ticker-link svg { width: 14px; height: 14px; }
 
-    .status-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; border-radius: 100px; padding: 2px 7px; white-space: nowrap; }
-    .chip-green { background: rgba(16,185,129,0.10); color: #059669; }
-    .chip-blue  { background: rgba(37,99,235,0.10);  color: #2563EB; }
-    .chip-amber { background: rgba(245,158,11,0.10); color: #B45309; }
-    .chip-gray  { background: rgba(0,0,0,0.06);      color: #888; }
-    .chip-red   { background: rgba(239,68,68,0.10);  color: #DC2626; }
-    html[data-theme="dark"] .chip-green { background: rgba(16,185,129,0.15); color: #34D399; }
-    html[data-theme="dark"] .chip-blue  { background: rgba(37,99,235,0.15);  color: #60A5FA; }
-    html[data-theme="dark"] .chip-amber { background: rgba(245,158,11,0.15); color: #FCD34D; }
-    html[data-theme="dark"] .chip-gray  { background: rgba(255,255,255,0.06); color: #7A8FA8; }
-    html[data-theme="dark"] .chip-red   { background: rgba(239,68,68,0.15);  color: #F87171; }
-
-    /* ── Sidebar overlay ── */
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 250; }
 
-    /* ══════════════════════════
-       LEADS PAGE SPECIFIC
-    ══════════════════════════ */
-
-    /* Page header */
-    .page-header {
-      display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
-      padding-bottom: 4px;
-    }
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 4px; }
     .page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
     .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
     .page-header-actions { display: flex; align-items: center; gap: 8px; }
@@ -236,8 +183,7 @@
       display: inline-flex; align-items: center; gap: 6px;
       height: 36px; padding: 0 16px; border-radius: 8px; border: none;
       background: var(--blue); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: opacity 0.15s ease, transform 0.15s ease;
-      text-decoration: none;
+      cursor: pointer; transition: opacity 0.15s ease, transform 0.15s ease; text-decoration: none;
     }
     .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
     .btn-primary svg { width: 14px; height: 14px; }
@@ -247,18 +193,15 @@
       height: 36px; padding: 0 14px; border-radius: 8px;
       border: 1px solid var(--border); background: var(--surface);
       color: var(--text-secondary); font-family: inherit; font-size: 13px; font-weight: 500;
-      cursor: pointer; transition: background 0.15s ease, color 0.15s ease;
-      text-decoration: none;
+      cursor: pointer; transition: background 0.15s ease, color 0.15s ease; text-decoration: none;
     }
     .btn-secondary:hover { background: var(--surface-2); color: var(--text-primary); }
     .btn-secondary svg { width: 14px; height: 14px; }
 
-    /* KPI strip */
     .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     .kpi-card {
       background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      padding: 16px 20px; box-shadow: var(--card-shadow);
-      border-top: 3px solid transparent;
+      padding: 16px 20px; box-shadow: var(--card-shadow); border-top: 3px solid transparent;
     }
     .kpi-card.kc-blue   { border-top-color: #2563EB; }
     .kpi-card.kc-green  { border-top-color: #10B981; }
@@ -271,83 +214,24 @@
     .kpi-delta.down { color: #EF4444; }
     .kpi-delta.neu  { color: var(--text-muted); }
 
-    /* Tab bar + filter bar */
-    .controls-row {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-      box-shadow: var(--card-shadow); overflow: hidden;
+    .funnel-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .funnel-step {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; box-shadow: var(--card-shadow); text-align: center;
+      position: relative; cursor: pointer; transition: transform 0.15s ease;
     }
-    .tab-bar { display: flex; align-items: center; gap: 2px; padding: 10px 14px 0; border-bottom: 1px solid var(--border); }
-    .tab {
-      display: flex; align-items: center; gap: 5px;
-      padding: 7px 13px 9px; font-size: 13px; font-weight: 500; color: var(--text-muted);
-      cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
-      text-decoration: none; transition: color 0.15s ease, border-color 0.15s ease;
-      white-space: nowrap;
-    }
-    .tab:hover { color: var(--text-primary); }
-    .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
-    .tab-count {
-      font-size: 10px; font-weight: 700; background: var(--surface-2);
-      color: var(--text-muted); border-radius: 20px; padding: 1px 6px; min-width: 20px; text-align: center;
-    }
-    .tab.active .tab-count { background: rgba(37,99,235,0.10); color: var(--blue); }
+    .funnel-step:hover { transform: translateY(-2px); }
+    .funnel-step::after { content: '›'; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--text-muted); pointer-events: none; }
+    .funnel-step:last-child::after { display: none; }
+    .funnel-step-label { font-size: 10.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .funnel-step-count { font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+    .funnel-step-amt { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .funnel-step.fs-connected .funnel-step-count { color: #10B981; }
+    .funnel-step.fs-voicemail .funnel-step-count { color: #8B5CF6; }
+    .funnel-step.fs-noanswer .funnel-step-count { color: #2563EB; }
+    .funnel-step.fs-busy     .funnel-step-count { color: #F59E0B; }
+    .funnel-step.fs-callback .funnel-step-count { color: #06B6D4; }
 
-    .filter-bar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; flex-wrap: wrap; }
-    .filter-search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 320px; }
-    .filter-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted); pointer-events: none; }
-    .filter-search { width: 100%; height: 34px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 12.5px; padding: 0 10px 0 32px; outline: none; transition: border-color 0.18s ease; }
-    .filter-search:focus { border-color: var(--blue); }
-    .filter-select { height: 34px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); font-family: inherit; font-size: 12.5px; padding: 0 28px 0 10px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M5 8l5 5 5-5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; transition: border-color 0.18s ease; }
-    .filter-select:focus { border-color: var(--blue); }
-    .filter-spacer { flex: 1; }
-    .filter-export { display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: background 0.15s ease; }
-    .filter-export:hover { background: var(--border); color: var(--text-primary); }
-    .filter-export svg { width: 13px; height: 13px; }
-
-    /* Data table */
-    .data-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--card-shadow); }
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table thead tr { background: var(--table-head); }
-    .data-table th { padding: 10px 12px; font-size: 10.5px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--table-border); white-space: nowrap; }
-    .data-table th:first-child { padding-left: 18px; width: 40px; text-align: center; }
-    .data-table th:last-child { padding-right: 18px; text-align: center; }
-    .data-table td { padding: 11px 12px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--table-border); vertical-align: middle; }
-    .data-table td:first-child { padding-left: 18px; text-align: center; color: var(--text-muted); font-size: 12px; }
-    .data-table td:last-child { padding-right: 18px; text-align: center; }
-    .data-table tbody tr:last-child td { border-bottom: none; }
-    .data-table tbody tr:hover td { background: var(--table-hover); }
-
-    .lead-name-cell { display: flex; flex-direction: column; gap: 1px; }
-    .lead-biz { font-weight: 600; color: var(--text-primary); font-size: 13px; }
-    .lead-contact { font-size: 11.5px; color: var(--text-muted); }
-
-    .score-badge {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 32px; height: 20px; border-radius: 5px; font-size: 10.5px; font-weight: 700;
-    }
-    .score-hi  { background: rgba(16,185,129,0.12); color: #059669; }
-    .score-mid { background: rgba(245,158,11,0.12);  color: #B45309; }
-    .score-lo  { background: rgba(239,68,68,0.10);   color: #DC2626; }
-    html[data-theme="dark"] .score-hi  { background: rgba(16,185,129,0.18); color: #34D399; }
-    html[data-theme="dark"] .score-mid { background: rgba(245,158,11,0.18); color: #FCD34D; }
-    html[data-theme="dark"] .score-lo  { background: rgba(239,68,68,0.18);  color: #F87171; }
-
-    .action-btn { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); font-family: inherit; font-size: 11.5px; font-weight: 500; cursor: pointer; transition: background 0.15s ease; }
-    .action-btn:hover { background: var(--border); color: var(--text-primary); }
-
-    @media (max-width: 768px) {
-      .sidebar { width: min(var(--sidebar-w), calc(100vw - 32px)); transform: translateX(calc(-100% - 24px)); }
-      .sidebar.open { transform: translateX(0); }
-      .sidebar-overlay.visible { display: block; }
-      .main-wrapper { margin-left: 0; }
-      .topbar { height: 66px; justify-content: flex-start; padding: 10px 16px 0; gap: 10px; }
-      .search-wrap { flex: 1 1 auto; min-width: 0; }
-      .burger { display: flex; }
-      .kpi-strip { grid-template-columns: repeat(2, 1fr); }
-      .cards-col { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    /* ── Stat Cards Bento Grid ── */
     .cards-col { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); grid-auto-rows:minmax(110px,auto); gap:12px; align-items:stretch; margin:8px 0 4px; }
     .stat-card { border-radius:16px; padding:24px 28px; display:flex; align-items:center; justify-content:space-between; gap:16px; position:relative; overflow:hidden; cursor:pointer; transition:transform 0.18s ease,box-shadow 0.18s ease; }
     .stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 32px -4px rgba(0,0,0,0.25); }
@@ -355,8 +239,6 @@
     .stat-card.navy   { background:linear-gradient(135deg,#0F1F3D 0%,#162848 100%); }
     .stat-card.teal   { background:linear-gradient(135deg,#064E3B 0%,#0D9488 100%); }
     .stat-card.plum   { background:linear-gradient(135deg,#2D0F5E 0%,#4A1272 100%); }
-    .stat-card.crimson{ background:linear-gradient(135deg,#2A0505 0%,#7C1212 60%,#2A0A05 100%); }
-    .stat-card.indigo { background:linear-gradient(135deg,#1E1B4B 0%,#3730A3 100%); }
     .stat-card::after { content:''; position:absolute; right:-30px; bottom:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.06); pointer-events:none; }
     .stat-card.rep-leader-card { grid-column:span 12; background:linear-gradient(135deg,#0D1520 0%,#111D2E 55%,#0C1A0F 100%); padding:0; align-items:stretch; justify-content:flex-start; gap:0; min-height:210px; }
     .rep-hero { width:210px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px 20px; background:rgba(245,158,11,0.07); border-right:1px solid rgba(245,158,11,0.18); gap:7px; }
@@ -394,6 +276,27 @@
     .card-rep-photo { width:100%; height:100%; border-radius:50%; object-fit:cover; object-position:center 5%; display:block; }
     .photo-wrap-teal { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#34D399,#0D9488); padding:3px; box-shadow:0 0 18px rgba(16,185,129,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
     .photo-wrap-blue { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#60A5FA,#2563EB); padding:3px; box-shadow:0 0 18px rgba(96,165,250,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
+    .vs-card-body { display:flex; flex-direction:column; gap:10px; width:100%; }
+    .vs-row { display:flex; align-items:center; gap:10px; }
+    .vs-label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:0.08em; width:80px; flex-shrink:0; }
+    .vs-rep-wrap { display:flex; align-items:center; gap:8px; flex:1; }
+    .vs-rep-photo { width:36px; height:36px; border-radius:50%; object-fit:cover; object-position:center 8%; border:2px solid rgba(255,255,255,0.25); }
+    .vs-rep-name { font-size:14px; font-weight:700; color:#fff; }
+    .vs-count { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:800; color:#FCD34D; margin-left:auto; }
+    .vs-divider { height:1px; background:rgba(255,255,255,0.1); margin:4px 0; }
+
+    @media (max-width: 768px) {
+      .sidebar { width: min(var(--sidebar-w), calc(100vw - 32px)); transform: translateX(calc(-100% - 24px)); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.visible { display: block; }
+      .main-wrapper { margin-left: 0; }
+      .topbar { height: 66px; justify-content: flex-start; padding: 10px 16px 0; gap: 10px; }
+      .search-wrap { flex: 1 1 auto; min-width: 0; }
+      .burger { display: flex; }
+      .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+      .funnel-row { grid-template-columns: repeat(3, 1fr); }
+      .cards-col { grid-template-columns: repeat(2, 1fr); }
+    }
   </style>
   <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
@@ -439,8 +342,7 @@
         </a>
       </div>
 
-      <!-- CRM Section — open, Leads active -->
-      <div class="nav-section-toggle open active" id="crmToggle" role="button" tabindex="0" aria-expanded="true">
+      <div class="nav-section-toggle" id="crmToggle" role="button" tabindex="0" aria-expanded="false">
         <div class="toggle-left">
           <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
             <circle cx="10" cy="6.5" r="3"/>
@@ -452,8 +354,8 @@
           <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <div class="nav-sub open" id="crmSub">
-        <a class="nav-sub-item active" href="lead.html" aria-current="page">
+      <div class="nav-sub" id="crmSub">
+        <a class="nav-sub-item" href="lead.html">
           <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
             <circle cx="10" cy="6.5" r="3"/>
             <path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/>
@@ -485,7 +387,7 @@
         </a>
       </div>
 
-      <div class="nav-section-toggle" id="dialerToggle" role="button" tabindex="0" aria-expanded="false">
+      <div class="nav-section-toggle open active" id="dialerToggle" role="button" tabindex="0" aria-expanded="true">
         <div class="toggle-left">
           <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
             <path d="M5.5 3.5h2.2a1.5 1.5 0 0 1 1.4 1l1.1 3.3a1.5 1.5 0 0 1-.4 1.5l-1.6 1.6a11 11 0 0 0 5 5l1.6-1.6a1.5 1.5 0 0 1 1.5-.4l3.3 1.1a1.5 1.5 0 0 1 1 1.4V16a1.5 1.5 0 0 1-1.5 1.5A13 13 0 0 1 4 5.5 1.5 1.5 0 0 1 5.5 4z" stroke-linecap="round" stroke-linejoin="round"/>
@@ -496,8 +398,8 @@
           <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <div class="nav-sub" id="dialerSub">
-        <a class="nav-sub-item" href="convoso.html">
+      <div class="nav-sub open" id="dialerSub">
+        <a class="nav-sub-item active" href="convoso.html" aria-current="page">
           <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
             <path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -526,7 +428,7 @@
       </button>
       <div class="search-wrap">
         <svg class="search-icon-l" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
-        <input class="search-input" type="search" placeholder="Search leads by name, business, or phone…" aria-label="Search" />
+        <input class="search-input" type="search" placeholder="Search reps or call campaigns…" aria-label="Search" />
         <svg class="search-icon-r" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
       </div>
       <div class="topbar-right">
@@ -552,65 +454,62 @@
 
     <main class="page-content" role="main">
 
-      <!-- Ticker -->
       <div class="ticker-bar">
-        <span class="ticker-msg">New leads this week &nbsp;·&nbsp; Awaiting follow-up &nbsp;·&nbsp; Conversion rate vs last month</span>
-        <a class="ticker-link" href="pipeline.html">
-          View Pipeline
+        <span class="ticker-msg">Live dialer activity &nbsp;·&nbsp; Team connect rates &nbsp;·&nbsp; Outbound volume today</span>
+        <a class="ticker-link" href="lead.html">
+          View Leads
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
       </div>
 
-      <!-- Page header -->
       <div class="page-header">
-        <div class="page-header-left">
-          <h1 class="page-title">Leads</h1>
-          <p class="page-subtitle">All inbound and outbound leads from Zoho CRM</p>
+        <div>
+          <h1 class="page-title">Convoso</h1>
+          <p class="page-subtitle">Dialer performance and call activity from Convoso</p>
         </div>
         <div class="page-header-actions">
           <button class="btn-secondary">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 10h14M10 3v14" stroke-linecap="round"/></svg>
-            Import
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2M10 3v10M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Export
           </button>
           <button class="btn-primary">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg>
-            New Lead
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 4v5h5M16 16v-5h-5M16 4l-4 4M4 16l4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Sync Convoso
           </button>
         </div>
       </div>
 
-      <!-- KPI strip -->
       <div class="kpi-strip">
         <div class="kpi-card kc-blue">
-          <div class="kpi-label">Total Leads</div>
+          <div class="kpi-label">Total Calls Today</div>
           <div class="kpi-value"></div>
           <div class="kpi-delta up">
-            <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-        <div class="kpi-card kc-green">
-          <div class="kpi-label">New This Week</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta up">
-            <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-        <div class="kpi-card kc-amber">
-          <div class="kpi-label">Conversion Rate</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta up">
-            <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
         </div>
         <div class="kpi-card kc-purple">
-          <div class="kpi-label">Avg Days to Close</div>
+          <div class="kpi-label">Outbound Calls</div>
           <div class="kpi-value"></div>
-          <div class="kpi-delta down">
-            <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 5v10M5 10l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="kpi-delta up">
+            <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+        <div class="kpi-card kc-amber">
+          <div class="kpi-label">Inbound Calls</div>
+          <div class="kpi-value"></div>
+          <div class="kpi-delta neu"></div>
+        </div>
+        <div class="kpi-card kc-green">
+          <div class="kpi-label">Avg Connect Rate</div>
+          <div class="kpi-value"></div>
+          <div class="kpi-delta up">
+            <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
         </div>
       </div>
 
-      <!-- ── Stat Cards ── -->
       <div class="cards-col" id="statCards">
 
-        <!-- Card 1: Most Leads All Time — full-width leaderboard -->
         <div class="stat-card rep-leader-card">
           <div class="rep-hero" data-person-id="anderson">
             <div class="rep-crown">🥇</div>
@@ -618,11 +517,11 @@
               <img src="Assets/reps/anderson.png" alt="Anderson" class="rep-photo" />
             </div>
             <div class="rep-hero-name">Anderson</div>
-            <div class="rep-hero-label">Most Leads · All Time</div>
+            <div class="rep-hero-label">Most Calls · This Week</div>
             <div class="rep-hero-amount"></div>
           </div>
           <div class="rep-board">
-            <div class="rep-board-head">All-Time Lead Leaderboard</div>
+            <div class="rep-board-head">Weekly Call Leaderboard</div>
             <div class="rep-grid">
               <div class="rep-row r-gold" data-person-id="anderson">
                 <span class="rep-pos medal">🥇</span><span class="rep-name">Anderson</span><span class="rep-amt"></span>
@@ -652,10 +551,24 @@
           </div>
         </div>
 
-        <!-- Card 2: Most Leads Today -->
+        <div class="stat-card blue-1" data-person-id="matthew" style="grid-column:span 6;align-items:flex-start;padding:20px 24px;">
+          <div class="card-left">
+            <p class="card-headline">Most outbound calls<br />today:</p>
+            <div class="card-names">
+              <span class="card-name">Matthew</span>
+            </div>
+            <span class="card-big-single"></span>
+          </div>
+          <div class="card-right">
+            <div class="photo-wrap-blue">
+              <img src="Assets/reps/matthew.png" alt="Matthew" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
         <div class="stat-card plum" data-person-id="gabriel" style="grid-column:span 6;align-items:flex-start;padding:20px 24px;">
           <div class="card-left">
-            <p class="card-headline">Most leads submitted<br />today:</p>
+            <p class="card-headline">Highest connect rate<br />today:</p>
             <div class="card-names">
               <span class="card-name" style="color:#C084FC">Gabriel</span>
             </div>
@@ -668,205 +581,117 @@
           </div>
         </div>
 
-        <!-- Card 3: Most Industry -->
         <div class="stat-card teal" data-person-id="ivan" style="grid-column:span 6;align-items:flex-start;padding:20px 24px;">
           <div class="card-left">
-            <p class="card-headline" style="color:rgba(110,231,183,0.85)">Top industry<br />by lead count:</p>
+            <p class="card-headline" style="color:rgba(110,231,183,0.85)">Biggest avg call duration<br />today:</p>
             <div class="card-names">
-              <span class="card-name" style="color:#34D399">Restaurant</span>
+              <span class="card-name" style="color:#34D399">Ivan</span>
             </div>
             <span class="card-big-single" style="background:linear-gradient(135deg,#6EE7B7,#34D399,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(52,211,153,0.55))"></span>
           </div>
           <div class="card-right">
             <div class="photo-wrap-teal">
-              <img src="Assets/reps/Cartoon/IvanCartoon.png" alt="Top Rep" class="card-rep-photo" />
+              <img src="Assets/reps/Cartoon/IvanCartoon.png" alt="Ivan" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card navy" style="grid-column:span 6;align-items:flex-start;padding:22px 26px;">
+          <div class="vs-card-body">
+            <p class="card-headline" style="margin-bottom:16px;">Outbound calls: Yesterday vs. Today</p>
+            <div class="vs-row">
+              <span class="vs-label">Yesterday</span>
+              <div class="vs-rep-wrap" data-person-id="anderson">
+                <img src="Assets/reps/anderson.png" alt="Anderson" class="vs-rep-photo" />
+                <span class="vs-rep-name">Anderson</span>
+              </div>
+              <span class="vs-count"></span>
+            </div>
+            <div class="vs-divider"></div>
+            <div class="vs-row">
+              <span class="vs-label">Today</span>
+              <div class="vs-rep-wrap" data-person-id="matthew">
+                <img src="Assets/reps/matthew.png" alt="Matthew" class="vs-rep-photo" />
+                <span class="vs-rep-name">Matthew</span>
+              </div>
+              <span class="vs-count" style="color:#34D399"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card blue-1" data-person-id="blake" style="grid-column:span 4;align-items:flex-start;padding:20px 22px;">
+          <div class="card-left">
+            <p class="card-headline">Biggest avg call duration<br />this week:</p>
+            <div class="card-names">
+              <span class="card-name">Blake</span>
+            </div>
+            <span class="card-big-single"></span>
+          </div>
+          <div class="card-right">
+            <div class="photo-wrap-blue" style="width:72px;height:72px;">
+              <img src="Assets/reps/blake.png" alt="Blake" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card plum" data-person-id="colin" style="grid-column:span 4;align-items:flex-start;padding:20px 22px;">
+          <div class="card-left">
+            <p class="card-headline">Most talk time<br />today:</p>
+            <div class="card-names">
+              <span class="card-name" style="color:#C084FC">Colin</span>
+            </div>
+            <span class="card-big-single" style="background:linear-gradient(135deg,#F0ABFC,#C084FC,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(232,121,249,0.55))"></span>
+          </div>
+          <div class="card-right">
+            <div class="card-rep-photo-wrap" style="width:72px;height:72px;">
+              <img src="Assets/reps/colin.png" alt="Colin" class="card-rep-photo" />
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card teal" data-person-id="evan" style="grid-column:span 4;align-items:flex-start;padding:20px 22px;">
+          <div class="card-left">
+            <p class="card-headline" style="color:rgba(110,231,183,0.85)">Most dial attempts<br />today:</p>
+            <div class="card-names">
+              <span class="card-name" style="color:#34D399">Evan</span>
+            </div>
+            <span class="card-big-single" style="background:linear-gradient(135deg,#6EE7B7,#34D399,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(52,211,153,0.55))"></span>
+          </div>
+          <div class="card-right">
+            <div class="photo-wrap-teal" style="width:72px;height:72px;">
+              <img src="Assets/reps/evan.png" alt="Evan" class="card-rep-photo" />
             </div>
           </div>
         </div>
 
       </div>
-      <!-- END Stat Cards -->
 
-      <!-- Controls: tabs + filters -->
-      <div class="controls-row">
-        <div class="tab-bar" role="tablist">
-          <a class="tab active" href="#" role="tab" aria-selected="true">All <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">New <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Contacted <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Qualified <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Converted <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Dead <span class="tab-count"></span></a>
+      <div class="funnel-row">
+        <div class="funnel-step fs-connected">
+          <div class="funnel-step-label">Connected</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
         </div>
-        <div class="filter-bar">
-          <div class="filter-search-wrap">
-            <svg class="filter-search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
-            <input class="filter-search" type="search" placeholder="Search leads…" aria-label="Search leads" />
-          </div>
-          <select class="filter-select" aria-label="Filter by rep">
-            <option value="">All Reps</option>
-            <option>Anderson</option>
-            <option>Frank</option>
-            <option>Blake</option>
-            <option>Ivan</option>
-            <option>Kip</option>
-            <option>Colin</option>
-            <option>Matthew</option>
-            <option>Santi</option>
-            <option>Rio</option>
-          </select>
-          <select class="filter-select" aria-label="Filter by source">
-            <option value="">All Sources</option>
-            <option>Web Referral</option>
-            <option>Inbound Call</option>
-            <option>Partner</option>
-            <option>Cold Call</option>
-            <option>Referral</option>
-          </select>
-          <select class="filter-select" aria-label="Filter by stage">
-            <option value="">All Stages</option>
-            <option>New</option>
-            <option>Contacted</option>
-            <option>Qualified</option>
-            <option>Converted</option>
-            <option>Dead</option>
-          </select>
-          <div class="filter-spacer"></div>
-          <button class="filter-export">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2M10 3v10M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Export
-          </button>
+        <div class="funnel-step fs-voicemail">
+          <div class="funnel-step-label">Voicemail</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
         </div>
-      </div>
-
-      <!-- Data table -->
-      <div class="data-card">
-        <table class="data-table" aria-label="Leads table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Business / Contact</th>
-              <th>Phone</th>
-              <th>Lead Source</th>
-              <th>Assigned Rep</th>
-              <th>Stage</th>
-              <th>Score</th>
-              <th>Date Added</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Apex Dental Group</span><span class="lead-contact">Sarah Chen</span></div></td>
-              <td>(212) 555-0123</td>
-              <td>Web Referral</td>
-              <td>Ivan</td>
-              <td><span class="status-chip chip-blue">Qualified</span></td>
-              <td><span class="score-badge score-hi">87</span></td>
-              <td>Jun 4</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Blue Ridge Farms</span><span class="lead-contact">Mark Johnson</span></div></td>
-              <td>(404) 555-0892</td>
-              <td>Inbound Call</td>
-              <td>Frank</td>
-              <td><span class="status-chip chip-amber">New</span></td>
-              <td><span class="score-badge score-mid">72</span></td>
-              <td>Jun 5</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Metro Fitness LLC</span><span class="lead-contact">Ana Reyes</span></div></td>
-              <td>(305) 555-0441</td>
-              <td>Partner</td>
-              <td>Blake</td>
-              <td><span class="status-chip chip-gray">Contacted</span></td>
-              <td><span class="score-badge score-mid">65</span></td>
-              <td>Jun 3</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>4</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Summit Realty Group</span><span class="lead-contact">David Park</span></div></td>
-              <td>(310) 555-0778</td>
-              <td>Web Referral</td>
-              <td>Anderson</td>
-              <td><span class="status-chip chip-blue">Qualified</span></td>
-              <td><span class="score-badge score-hi">91</span></td>
-              <td>Jun 2</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>5</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Coastal Supply Co</span><span class="lead-contact">Maria Torres</span></div></td>
-              <td>(954) 555-0234</td>
-              <td>Referral</td>
-              <td>Kip</td>
-              <td><span class="status-chip chip-green">Converted</span></td>
-              <td><span class="score-badge score-hi">94</span></td>
-              <td>May 28</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>6</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Pacific Print Co</span><span class="lead-contact">James Lee</span></div></td>
-              <td>(206) 555-0567</td>
-              <td>Cold Call</td>
-              <td>Colin</td>
-              <td><span class="status-chip chip-blue">Qualified</span></td>
-              <td><span class="score-badge score-mid">78</span></td>
-              <td>Jun 1</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>7</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Desert Motors Inc</span><span class="lead-contact">Lisa Wright</span></div></td>
-              <td>(602) 555-0912</td>
-              <td>Web Referral</td>
-              <td>Santi</td>
-              <td><span class="status-chip chip-amber">New</span></td>
-              <td><span class="score-badge score-mid">58</span></td>
-              <td>Jun 5</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>8</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Canyon Foods LLC</span><span class="lead-contact">Rob Mason</span></div></td>
-              <td>(720) 555-0345</td>
-              <td>Inbound Call</td>
-              <td>Rio</td>
-              <td><span class="status-chip chip-gray">Contacted</span></td>
-              <td><span class="score-badge score-mid">63</span></td>
-              <td>Jun 3</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>9</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Harbor Tech Solutions</span><span class="lead-contact">Kate Brown</span></div></td>
-              <td>(617) 555-0689</td>
-              <td>Referral</td>
-              <td>Ivan</td>
-              <td><span class="status-chip chip-blue">Qualified</span></td>
-              <td><span class="score-badge score-hi">88</span></td>
-              <td>May 30</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>10</td>
-              <td><div class="lead-name-cell"><span class="lead-biz">Valley Medical Group</span><span class="lead-contact">Carlos Diaz</span></div></td>
-              <td>(858) 555-0123</td>
-              <td>Partner</td>
-              <td>Matthew</td>
-              <td><span class="status-chip chip-red">Dead</span></td>
-              <td><span class="score-badge score-lo">42</span></td>
-              <td>May 15</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="funnel-step fs-noanswer">
+          <div class="funnel-step-label">No Answer</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
+        </div>
+        <div class="funnel-step fs-busy">
+          <div class="funnel-step-label">Busy</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
+        </div>
+        <div class="funnel-step fs-callback">
+          <div class="funnel-step-label">Callback</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
+        </div>
       </div>
 
     </main>

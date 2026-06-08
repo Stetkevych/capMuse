@@ -29,9 +29,9 @@ function render(page){
   var vol=funded.reduce(function(s,d){return s+d.amount;},0);
   if(page==='dashboard'){
     mainContent.innerHTML=originalHTML;
-    var fm=document.querySelector('.featured-metric');if(fm)fm.textContent='$'+fmt(vol);
-    var fl=document.querySelector('.featured-label');if(fl)fl.textContent=DEALS.length+' Total Deals - Funding Book';
-    var ft=document.querySelector('.featured-tags');if(ft)ft.innerHTML='<span class="featured-tag">'+funded.length+' Funded</span><span class="featured-tag">$'+fmt(vol)+' Volume</span><span class="featured-tag">'+[...new Set(DEALS.map(function(d){return d.lender;}))].length+' Lenders</span>';
+    var fm=document.querySelector('.featured-metric');if(fm)fm.textContent='';
+    var fl=document.querySelector('.featured-label');if(fl)fl.textContent='Total Deals - Funding Book';
+    var ft=document.querySelector('.featured-tags');if(ft)ft.innerHTML='<span class="featured-tag">Funded</span><span class="featured-tag">Volume</span><span class="featured-tag">Lenders</span>';
     var tb=document.querySelector('.pipeline-table tbody');if(tb)tb.innerHTML=trows(funded.sort(function(a,b){return b.amount-a.amount;}).slice(0,10));
     return;
   }
@@ -46,7 +46,7 @@ function render(page){
   if(page==='alerts'){tbl('Declined/Lost',ACCOUNTS.filter(function(d){return d.stage.toLowerCase().indexOf('decline')>-1||d.stage.toLowerCase().indexOf('lost')>-1;}),['name','stage','source','state','applied']);return;}
   tbl('Data',DEALS.slice(0,50),['name','amount','lender','rep','stage']);
 }
-function trows(rows){return rows.map(function(d,i){var c=stg(d.stage);return '<tr><td>'+(i+1)+'</td><td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#10B981)">'+ini(d.name)+'</div><span class="biz-cell-name">'+d.name.substring(0,22)+'</span></div></td><td>$'+fmt(d.amount)+'</td><td>'+(d.lender||d.rep||'-')+'</td><td><span class="status-chip '+c[0]+'">'+c[1]+'</span></td></tr>';}).join('');}
+function trows(rows){return rows.map(function(d,i){var c=stg(d.stage);return '<tr><td>'+(i+1)+'</td><td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#10B981)">'+ini(d.name)+'</div><span class="biz-cell-name">'+d.name.substring(0,22)+'</span></div></td><td></td><td>'+(d.lender||d.rep||'-')+'</td><td><span class="status-chip '+c[0]+'">'+c[1]+'</span></td></tr>';}).join('');}
 function tbl(title,rows,cols){
   var labels={name:'Business',stage:'Stage',amount:'Amount',rep:'Rep',puller:'Puller',applied:'Applied',funded_date:'Funded',lender:'Lender',source:'Source',industry:'Industry',state:'State',revenue:'Revenue',buy_rate:'Rate',term:'Term',position:'Pos',daily_payment:'Daily',payback:'Payback'};
   var tot=rows.reduce(function(s,d){return s+(d.amount||0);},0);
