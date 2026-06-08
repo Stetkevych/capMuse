@@ -15,6 +15,47 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'CapMuse API', timestamp: new Date().toISOString() });
 });
 
+// POST /api/funding-book — receive Zoho Funding Book webhook
+app.post('/api/funding-book', async (req, res) => {
+  try {
+    const record = req.body;
+    if (!record || !record.record_id) return res.status(400).json({ error: 'Invalid payload' });
+
+    // Add timestamp
+    record.received_at = new Date().toISOString();
+
+    // Load existing funding book data
+    let existing = [];
+    try {
+      const obj = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: 'funding_book_live.json' }));
+      const text = await obj.Body.transformToString();
+      existing = JSON.parse(text);
+    } catch { }
+
+    // Upsert by record_id
+    const idx = existing.findIndex(r => r.record_id === record.record_id);
+    if (idx > -1) {
+      existing[idx] = record;
+    } else {
+      existing.push(record);
+    }
+
+    // Save back
+    await s3.send(new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: 'funding_book_live.json',
+      Body: JSON.stringify(existing),
+      ContentType: 'application/json',
+    }));
+
+    console.log(`[Funding Book] ${record.company || record.record_id} | $${record.funding} | ${record.lender}`);
+    res.json({ success: true, record_id: record.record_id, total_records: existing.length });
+  } catch (err) {
+    console.error('[Funding Book]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/ingest — receive JSON payload, append to a dataset in S3
 app.post('/api/ingest', async (req, res) => {
   try {
