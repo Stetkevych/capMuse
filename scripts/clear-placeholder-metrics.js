@@ -19,6 +19,7 @@ const HTML_FILES = [
   'lead.html',
   'lender_recommendation.html',
   'convoso.html',
+  'analytics.html',
 ];
 
 function clearInnerText(html, pattern) {
