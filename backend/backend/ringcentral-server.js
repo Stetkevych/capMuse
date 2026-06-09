@@ -5,6 +5,14 @@ const RingCentral = require("@ringcentral/sdk").SDK;
 
 const app = express();
 app.use(express.json());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Request-Private-Network');
+  res.header('Access-Control-Allow-Private-Network', 'true');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
 
 const PORT = process.env.PORT || 8002;
 
@@ -16,10 +24,12 @@ const rcsdk = new RingCentral({
 
 const platform = rcsdk.platform();
 
+let loginPromise = null;
 async function login() {
-  await platform.login({
-    jwt: process.env.RiNGCENTRAL_JWT,
-  });
+  if (loginPromise) return loginPromise;
+  loginPromise = platform.login({ jwt: process.env.RiNGCENTRAL_JWT })
+    .catch(function (e) { loginPromise = null; throw e; });
+  return loginPromise;
 }
 
 
