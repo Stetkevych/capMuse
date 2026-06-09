@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RingCentral — CapMuse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html[data-theme="dark"] {
+      --page-bg:        #0C0F14;
+      --sidebar-bg:     #111720;
+      --sidebar-border: #1A2435;
+      --topbar-border:  #1A2435;
+      --surface:        #141C28;
+      --surface-2:      #1A2435;
+      --text-primary:   #F1F5F9;
+      --text-secondary: #7A8FA8;
+      --text-muted:     #4A5F78;
+      --nav-item-color: #8A9EBB;
+      --nav-sub-color:  #7A8FA8;
+      --nav-active:     #60A5FA;
+      --nav-hover-bg:   rgba(255,255,255,0.04);
+      --nav-box-bg:     rgba(255,255,255,0.04);
+      --nav-box-border: rgba(255,255,255,0.07);
+      --border:         #1A2435;
+      --search-border:  #1A2435;
+      --ticker-bg:      #141C28;
+      --ticker-border:  #1A2435;
+      --table-head:     #0C0F14;
+      --table-border:   #1A2435;
+      --table-hover:    rgba(96,165,250,0.04);
+      --card-shadow:    0 1px 3px rgba(0,0,0,.5), 0 4px 16px rgba(0,0,0,.4);
+    }
+    html[data-theme="light"] {
+      --page-bg:        #EBEBEB;
+      --sidebar-bg:     #FFFFFF;
+      --sidebar-border: #E8E8E8;
+      --topbar-border:  #E8E8E8;
+      --surface:        #FFFFFF;
+      --surface-2:      #F4F4F4;
+      --text-primary:   #111111;
+      --text-secondary: #555555;
+      --text-muted:     #999999;
+      --nav-item-color: #333333;
+      --nav-sub-color:  #444444;
+      --nav-active:     #2563EB;
+      --nav-hover-bg:   rgba(0,0,0,0.04);
+      --nav-box-bg:     #F4F4F4;
+      --nav-box-border: transparent;
+      --border:         #E8E8E8;
+      --search-border:  #E0E0E0;
+      --ticker-bg:      #FFFFFF;
+      --ticker-border:  #E8E8E8;
+      --table-head:     #F8F8F8;
+      --table-border:   #EEEEEE;
+      --table-hover:    rgba(37,99,235,0.03);
+      --card-shadow:    0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.07);
+    }
+    :root { --blue:#2563EB; --green:#10B981; --sidebar-w:215px; --sidebar-gap:16px; --ease:cubic-bezier(0.4,0,0.2,1); }
+
+    html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; background: var(--page-bg); color: var(--text-primary); }
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar { width: var(--sidebar-w); position: fixed; left: var(--sidebar-gap); top: var(--sidebar-gap); bottom: var(--sidebar-gap); background: var(--sidebar-bg); border: 1px solid var(--sidebar-border); border-radius: 18px; box-shadow: 0 18px 45px rgba(15,23,42,0.12), 0 3px 12px rgba(15,23,42,0.08); display: flex; flex-direction: column; z-index: 300; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; transition: transform 0.3s var(--ease); }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .sidebar-logo { display: flex; align-items: center; gap: 9px; padding: 18px 18px 14px; flex-shrink: 0; }
+    .sidebar-logo img { width: 30px; height: 30px; object-fit: contain; }
+    .sidebar-wordmark { font-family: 'Orbitron', sans-serif; font-size: 14.5px; font-weight: 700; letter-spacing: 0.04em; background: linear-gradient(135deg, var(--blue), var(--green)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .sidebar-nav { flex: 1; padding: 6px 0 8px; display: flex; flex-direction: column; }
+    .nav-section-toggle { display: flex; align-items: center; justify-content: space-between; padding: 8px 18px; cursor: pointer; color: var(--nav-item-color); font-size: 14px; font-weight: 500; user-select: none; transition: color 0.15s ease; }
+    .nav-section-toggle:hover { color: var(--text-primary); }
+    .nav-section-toggle.active { color: var(--nav-active); font-weight: 600; }
+    .toggle-left { display: flex; align-items: center; gap: 10px; }
+    .toggle-icon { width: 17px; height: 17px; opacity: 0.7; flex-shrink: 0; }
+    .toggle-chevron { width: 14px; height: 14px; color: var(--text-muted); transition: transform 0.2s ease; flex-shrink: 0; }
+    .nav-section-toggle.open .toggle-chevron { transform: rotate(180deg); }
+    .nav-sub { display: flex; flex-direction: column; overflow: hidden; max-height: 0; transition: max-height 0.25s var(--ease); }
+    .nav-sub.open { max-height: 400px; }
+    .nav-sub-item { display: flex; align-items: center; gap: 10px; padding: 7px 18px 7px 42px; color: var(--nav-sub-color); font-size: 13.5px; font-weight: 400; cursor: pointer; text-decoration: none; transition: color 0.12s ease, background-color 0.12s ease; }
+    .nav-sub-item:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .nav-sub-item.active { color: var(--nav-active); font-weight: 600; }
+    .sub-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.6; }
+    .nav-sub-item.active .sub-icon { opacity: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 18px; color: var(--nav-item-color); font-size: 14px; font-weight: 400; cursor: pointer; text-decoration: none; transition: color 0.12s ease, background-color 0.12s ease; }
+    .nav-item:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .nav-icon { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.65; }
+    .sidebar-footer { padding: 10px; border-top: 1px solid var(--sidebar-border); flex-shrink: 0; }
+    .sidebar-user { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; cursor: pointer; transition: background 0.15s ease; }
+    .sidebar-user:hover { background: var(--nav-hover-bg); }
+    .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #0F4C81, #10B981); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 10.5px; color: var(--text-muted); }
+
+    .main-wrapper { margin-left: calc(var(--sidebar-w) + 32px); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+    .topbar { position: sticky; top: 0; height: 72px; background: transparent; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 14px 28px 0; gap: 14px; }
+    .burger { display: none; width: 32px; height: 32px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; align-items: center; justify-content: center; border-radius: 6px; flex-shrink: 0; }
+    .search-wrap { flex: 0 1 640px; position: relative; max-width: 640px; min-width: 320px; }
+    .search-icon-l { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
+    .search-icon-r { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--blue); pointer-events: none; }
+    .search-input { width: 100%; height: 42px; background: var(--surface); border: 1px solid var(--search-border); border-radius: 100px; color: var(--text-primary); font-family: inherit; font-size: 13.5px; padding: 0 42px 0 40px; outline: none; box-shadow: 0 10px 30px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04); transition: border-color 0.18s ease; }
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
+    .topbar-right { display: flex; align-items: center; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--topbar-border); border-radius: 100px; box-shadow: 0 10px 30px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04); flex-shrink: 0; }
+    .top-btn { width: 32px; height: 32px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 7px; position: relative; transition: background 0.13s ease, color 0.13s ease; }
+    .top-btn:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .top-btn svg { width: 18px; height: 18px; }
+    .notif-pip { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); }
+    .top-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #0F4C81, #10B981); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; cursor: pointer; flex-shrink: 0; }
+    .avatar-wrap { position: relative; }
+    .avatar-menu { position: absolute; top: calc(100% + 8px); right: 0; min-width: 160px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease; z-index: 200; }
+    .avatar-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .avatar-menu-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--text-primary); cursor: pointer; text-decoration: none; transition: background 0.12s ease; }
+    .avatar-menu-item:hover { background: var(--nav-hover-bg); }
+    .avatar-menu-item.danger { color: #EF4444; }
+    .avatar-menu-item.danger:hover { background: rgba(239,68,68,0.1); }
+    .icon-moon { display: block; }
+    .icon-sun  { display: none; }
+    html[data-theme="light"] .icon-moon { display: none; }
+    html[data-theme="light"] .icon-sun  { display: block; }
+
+    .page-content { flex: 1; padding: 8px 28px 32px; display: flex; flex-direction: column; gap: 16px; }
+
+    .ticker-bar { background: var(--ticker-bg); border: 1px solid var(--ticker-border); border-radius: 14px; height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; box-shadow: var(--card-shadow); flex-shrink: 0; }
+    .ticker-msg { font-size: 13.5px; color: var(--text-secondary); font-weight: 400; }
+    .ticker-link { display: flex; align-items: center; gap: 5px; font-size: 13.5px; font-weight: 600; color: var(--text-secondary); cursor: pointer; text-decoration: none; transition: color 0.15s ease; }
+    .ticker-link:hover { color: var(--text-primary); }
+    .ticker-link svg { width: 14px; height: 14px; }
+
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 250; }
+
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 4px; flex-wrap: wrap; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+    .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .page-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .btn-primary { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: 8px; border: none; background: var(--blue); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s ease, transform 0.15s ease; text-decoration: none; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-primary svg { width: 14px; height: 14px; }
+    .btn-secondary { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; text-decoration: none; }
+    .btn-secondary:hover { background: var(--surface-2); color: var(--text-primary); }
+
+    .rc-select { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 13px; cursor: pointer; outline: none; transition: border-color 0.15s ease; min-width: 160px; }
+    .rc-select:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(37,99,235,0.10); }
+    .date-input { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 13px; cursor: pointer; outline: none; transition: border-color 0.15s ease; }
+    .date-input:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(37,99,235,0.10); }
+    .date-sep { color: var(--text-muted); font-size: 12px; padding: 0 2px; }
+    .rc-status { font-size: 12px; color: var(--text-muted); padding: 0 4px; }
+
+    .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; box-shadow: var(--card-shadow); border-top: 3px solid transparent; }
+    .kpi-card.kc-blue   { border-top-color: #2563EB; }
+    .kpi-card.kc-green  { border-top-color: #10B981; }
+    .kpi-card.kc-amber  { border-top-color: #F59E0B; }
+    .kpi-card.kc-purple { border-top-color: #8B5CF6; }
+    .kpi-label { font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .kpi-value { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1; }
+    .kpi-sub { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+
+    .rc-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 64px 24px; background: var(--surface); border: 1px dashed var(--border); border-radius: 16px; text-align: center; gap: 10px; }
+    .rc-empty-icon { width: 44px; height: 44px; color: var(--text-muted); opacity: 0.5; }
+    .rc-empty-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+    .rc-empty-sub { font-size: 13px; color: var(--text-muted); }
+
+    .rc-detail { display: none; flex-direction: column; gap: 14px; }
+    .rc-detail.visible { display: flex; }
+
+    .rc-rep-card { background: linear-gradient(135deg, #0D1520 0%, #111D2E 55%, #0C1A0F 100%); border-radius: 16px; padding: 22px 28px; display: flex; align-items: center; gap: 24px; position: relative; overflow: hidden; }
+    .rc-rep-card::after { content: ''; position: absolute; right: -30px; bottom: -30px; width: 140px; height: 140px; border-radius: 50%; background: rgba(37,99,235,0.08); pointer-events: none; }
+    .rc-rep-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #2563EB, #10B981); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #fff; flex-shrink: 0; box-shadow: 0 0 24px rgba(37,99,235,0.5); }
+    .rc-rep-info { flex: 1; min-width: 0; }
+    .rc-rep-name { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+    .rc-rep-ext  { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+    .rc-rep-period { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+    .rc-rep-highlight { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 800; color: #60A5FA; letter-spacing: -0.02em; flex-shrink: 0; text-align: right; position: relative; z-index: 1; }
+    .rc-rep-highlight-label { font-size: 11px; color: rgba(255,255,255,0.35); text-align: right; margin-top: 2px; }
+
+    .rc-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .rc-stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; box-shadow: var(--card-shadow); }
+    .rc-stat-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+    .rc-stat-value { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1; }
+    .rc-stat-sub { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
+
+    .rc-breakdown { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--card-shadow); }
+    .rc-breakdown-head { padding: 14px 18px; font-size: 13px; font-weight: 700; color: var(--text-primary); border-bottom: 1px solid var(--border); background: var(--surface-2); }
+    .rc-breakdown-body { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; }
+    .rc-breakdown-item { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    .rc-breakdown-item:nth-child(odd) { border-right: 1px solid var(--border); }
+    .rc-breakdown-item:last-child, .rc-breakdown-item:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+    .rc-breakdown-item-label { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-bottom: 4px; }
+    .rc-breakdown-item-value { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+
+    @media (max-width: 900px) {
+      .rc-stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .sidebar { width: min(var(--sidebar-w), calc(100vw - 32px)); transform: translateX(calc(-100% - 24px)); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.visible { display: block; }
+      .main-wrapper { margin-left: 0; }
+      .topbar { height: 66px; justify-content: flex-start; padding: 10px 16px 0; gap: 10px; }
+      .search-wrap { flex: 1 1 auto; min-width: 0; }
+      .burger { display: flex; }
+      .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+      .rc-stats-grid { grid-template-columns: 1fr; }
+      .rc-breakdown-body { grid-template-columns: 1fr; }
+    }
+
+    /* ── Rankings ── */
+    .rank-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--card-shadow); }
+    .rank-section-head { padding: 14px 20px 12px; border-bottom: 1px solid var(--border); background: var(--surface-2); display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .rank-section-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .rank-section-sub { font-size: 11px; color: var(--text-muted); }
+    .rank-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+    .rank-col { padding: 14px 18px 16px; border-right: 1px solid var(--border); }
+    .rank-col:last-child { border-right: none; }
+    .rank-col-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px; }
+    .rank-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .rank-row:last-child { border-bottom: none; }
+    .rank-badge { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+    .rb-1 { background: rgba(245,158,11,0.15); color: #F59E0B; }
+    .rb-2 { background: rgba(148,163,184,0.15); color: #94A3B8; }
+    .rb-3 { background: rgba(180,83,9,0.12); color: #B45309; }
+    .rb-n { background: var(--surface-2); color: var(--text-muted); }
+    .rank-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .rank-val { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
+    .rank-placeholder { font-size: 12px; color: var(--text-muted); padding: 10px 0; text-align: center; }
+    @media (max-width: 640px) {
+      .rank-grid-3 { grid-template-columns: 1fr; }
+      .rank-col { border-right: none; border-bottom: 1px solid var(--border); }
+      .rank-col:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <aside class="sidebar" id="sidebar" aria-label="Navigation">
+    <div class="sidebar-logo">
+      <img src="Assets/LogoUpdates.png" alt="CapMuse" />
+      <span class="sidebar-wordmark">CapMuse</span>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <a class="nav-item" href="home.html">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M3 9.5L10 3l7 6.5V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 18v-5h4v5" stroke-linecap="round"/>
+        </svg>
+        Home
+      </a>
+
+      <div class="nav-section-toggle" id="overviewToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <rect x="2" y="2" width="7" height="7" rx="1.5"/>
+            <rect x="11" y="2" width="7" height="7" rx="1.5"/>
+            <rect x="2" y="11" width="7" height="7" rx="1.5"/>
+            <rect x="11" y="11" width="7" height="7" rx="1.5"/>
+          </svg>
+          Overview
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="nav-sub" id="overviewSub">
+        <a class="nav-sub-item" href="dashboard.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-sub-item" href="analytics.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 14l4-6 3 4 3-5 4 7H2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Live Data
+        </a>
+      </div>
+
+      <div class="nav-section-toggle" id="crmToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="10" cy="6.5" r="3"/>
+            <path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/>
+          </svg>
+          CRM
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="nav-sub" id="crmSub">
+        <a class="nav-sub-item" href="lead.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="6.5" r="3"/><path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/></svg>
+          Leads
+        </a>
+        <a class="nav-sub-item" href="pipeline.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h14M3 9.5h10M3 14h6" stroke-linecap="round"/><circle cx="15" cy="14" r="2.5"/></svg>
+          Pipeline
+        </a>
+        <a class="nav-sub-item" href="funding_book.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 3h9l4 4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M13 3v4h4" stroke-linecap="round"/><path d="M7 9h6M7 12h6M7 15h3" stroke-linecap="round"/></svg>
+          Funding Book
+        </a>
+        <a class="nav-sub-item" href="lender_recommendation.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="5" width="16" height="11" rx="2"/><path d="M2 9h16" stroke-linecap="round"/><path d="M6 13h2M10 13h2" stroke-linecap="round"/></svg>
+          Lender Match
+        </a>
+      </div>
+
+      <div class="nav-section-toggle open active" id="dialerToggle" role="button" tabindex="0" aria-expanded="true">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M5.5 3.5h2.2a1.5 1.5 0 0 1 1.4 1l1.1 3.3a1.5 1.5 0 0 1-.4 1.5l-1.6 1.6a11 11 0 0 0 5 5l1.6-1.6a1.5 1.5 0 0 1 1.5-.4l3.3 1.1a1.5 1.5 0 0 1 1 1.4V16a1.5 1.5 0 0 1-1.5 1.5A13 13 0 0 1 4 5.5 1.5 1.5 0 0 1 5.5 4z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Dialer
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="nav-sub open" id="dialerSub">
+        <a class="nav-sub-item" href="convoso.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Convoso
+        </a>
+        <a class="nav-sub-item active" href="ringcentral.html" aria-current="page">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 2a5 5 0 0 1 0 8" stroke-linecap="round"/></svg>
+          RingCentral
+        </a>
+      </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" role="button" tabindex="0">
+        <div class="user-avatar">GP</div>
+        <div class="user-info">
+          <div class="user-name">Gustavo Prieto</div>
+          <div class="user-role">Software Engineer</div>
+        </div>
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0" aria-hidden="true"><path d="M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="topbar" role="banner">
+      <button class="burger" id="burgerBtn" aria-label="Open navigation">
+        <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke-linecap="round"/></svg>
+      </button>
+      <div class="search-wrap">
+        <svg class="search-icon-l" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
+        <input class="search-input" type="search" placeholder="Search reps or campaigns…" aria-label="Search" />
+        <svg class="search-icon-r" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="topbar-right">
+        <button class="top-btn" aria-label="Notifications">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke-linecap="round"/><path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke-linecap="round"/></svg>
+          <span class="notif-pip" aria-hidden="true"></span>
+        </button>
+        <button class="top-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M17.293 13.293A8 8 0 0 1 6.707 2.707a8.001 8.001 0 1 0 10.586 10.586z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke-linecap="round"/></svg>
+        </button>
+        <div class="avatar-wrap">
+          <div class="top-avatar" id="avatarBtn" role="button" tabindex="0" aria-label="User menu">GP</div>
+          <div class="avatar-menu" id="avatarMenu">
+            <a href="login.html" class="avatar-menu-item danger">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" width="16" height="16" aria-hidden="true"><path d="M13 15l4-5-4-5M17 10H7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 19H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h4" stroke-linecap="round"/></svg>
+              Log out
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content" role="main">
+
+      <div class="ticker-bar">
+        <span class="ticker-msg">Outbound calls &nbsp;·&nbsp; Messages &nbsp;·&nbsp; Avg handle time</span>
+        <a class="ticker-link" href="convoso.html">
+          View Convoso
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">RingCentral</h1>
+          <p class="page-subtitle">Outbound call and message analytics per rep</p>
+        </div>
+        <div class="page-header-actions">
+          <select id="rcRepSelect" class="rc-select" aria-label="Select rep">
+            <option value="">All Reps</option>
+            <option value="Erik Anderson">Erik Anderson</option>
+            <option value="Ivan Ortega">Ivan Ortega</option>
+            <option value="Matthew Birnholz">Matthew Birnholz</option>
+            <option value="Michael Cifuentes">Michael Cifuentes</option>
+            <option value="Ray Ortega">Ray Ortega</option>
+            <option value="Rio Pampallona">Rio Pampallona</option>
+            <option value="Blake Fiorito">Blake Fiorito</option>
+            <option value="Dominic Basilio">Dominic Basilio</option>
+            <option value="Kip Langat">Kip Langat</option>
+            <option value="Colin O'Bryan">Colin O'Bryan</option>
+            <option value="Christian Quintana">Christian Quintana</option>
+            <option value="Nikholas Lazo">Nikholas Lazo</option>
+            <option value="Anthony Diaz">Anthony Diaz</option>
+            <option value="Ken Pflug">Ken Pflug</option>
+          </select>
+          <input type="date" id="rcDateStart" class="date-input" aria-label="Start date" />
+          <span class="date-sep">to</span>
+          <input type="date" id="rcDateEnd" class="date-input" aria-label="End date" />
+          <button id="rcBtnToday" class="btn-secondary">Today</button>
+          <button id="rcBtnWeek" class="btn-secondary">This Week</button>
+          <button id="rcLoadBtn" class="btn-primary">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 4v5h5M16 16v-5h-5M16 4l-4 4M4 16l4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Load Stats
+          </button>
+          <span id="rcStatus" class="rc-status"></span>
+        </div>
+      </div>
+
+      <!-- KPI Strip -->
+      <div class="kpi-strip">
+        <div class="kpi-card kc-blue">
+          <div class="kpi-label">Outbound Calls</div>
+          <div class="kpi-value" id="rcKpiCalls">—</div>
+          <div class="kpi-sub" id="rcKpiCallsSub"></div>
+        </div>
+        <div class="kpi-card kc-green">
+          <div class="kpi-label">Outbound Messages</div>
+          <div class="kpi-value" id="rcKpiMsgs">—</div>
+          <div class="kpi-sub" id="rcKpiMsgsSub"></div>
+        </div>
+        <div class="kpi-card kc-amber">
+          <div class="kpi-label">Avg Handle Time</div>
+          <div class="kpi-value" id="rcKpiAht">—</div>
+          <div class="kpi-sub" id="rcKpiAhtSub"></div>
+        </div>
+        <div class="kpi-card kc-purple">
+          <div class="kpi-label">Total Activity</div>
+          <div class="kpi-value" id="rcKpiTotal">—</div>
+          <div class="kpi-sub" id="rcKpiTotalSub"></div>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="rc-empty" id="rcEmpty">
+        <svg class="rc-empty-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13 2a5 5 0 0 1 0 8" stroke-linecap="round"/>
+        </svg>
+        <div class="rc-empty-title">No data loaded</div>
+        <div class="rc-empty-sub">Select a rep and date range, then click Load Stats</div>
+      </div>
+
+      <!-- Detail panel (shown after loading) -->
+      <div class="rc-detail" id="rcDetail">
+
+        <!-- Rep hero card -->
+        <div class="rc-rep-card">
+          <div class="rc-rep-avatar" id="rcAvatar">?</div>
+          <div class="rc-rep-info">
+            <div class="rc-rep-name" id="rcRepName">—</div>
+            <div class="rc-rep-ext" id="rcRepExt"></div>
+            <div class="rc-rep-period" id="rcRepPeriod"></div>
+          </div>
+          <div style="text-align:right;position:relative;z-index:1">
+            <div class="rc-rep-highlight" id="rcHeroValue">—</div>
+            <div class="rc-rep-highlight-label" id="rcHeroLabel">total activity</div>
+          </div>
+        </div>
+
+        <!-- Stats grid -->
+        <div class="rc-stats-grid">
+          <div class="rc-stat-card">
+            <div class="rc-stat-label">Outbound Calls</div>
+            <div class="rc-stat-value" id="rcStatCalls">—</div>
+            <div class="rc-stat-sub" id="rcStatCallsSub"></div>
+          </div>
+          <div class="rc-stat-card">
+            <div class="rc-stat-label">Avg Calls / Day</div>
+            <div class="rc-stat-value" id="rcStatCallsDay">—</div>
+            <div class="rc-stat-sub">per working day in range</div>
+          </div>
+          <div class="rc-stat-card">
+            <div class="rc-stat-label">Outbound Messages</div>
+            <div class="rc-stat-value" id="rcStatMsgs">—</div>
+            <div class="rc-stat-sub" id="rcStatMsgsSub"></div>
+          </div>
+          <div class="rc-stat-card">
+            <div class="rc-stat-label">Avg Messages / Day</div>
+            <div class="rc-stat-value" id="rcStatMsgsDay">—</div>
+            <div class="rc-stat-sub">per day in range</div>
+          </div>
+          <div class="rc-stat-card">
+            <div class="rc-stat-label">Avg Handle Time</div>
+            <div class="rc-stat-value" id="rcStatAht">—</div>
+            <div class="rc-stat-sub" id="rcStatAhtSec"></div>
+          </div>
+          <div class="rc-stat-card">
+            <div class="rc-stat-label">Total Activity</div>
+            <div class="rc-stat-value" id="rcStatTotal">—</div>
+            <div class="rc-stat-sub" id="rcStatTotalDay"></div>
+          </div>
+        </div>
+
+        <!-- Breakdown panel -->
+        <div class="rc-breakdown">
+          <div class="rc-breakdown-head">Activity Breakdown</div>
+          <div class="rc-breakdown-body">
+            <div class="rc-breakdown-item">
+              <div class="rc-breakdown-item-label">Extension</div>
+              <div class="rc-breakdown-item-value" id="rcBdExt">—</div>
+            </div>
+            <div class="rc-breakdown-item">
+              <div class="rc-breakdown-item-label">Calls vs Messages</div>
+              <div class="rc-breakdown-item-value" id="rcBdRatio">—</div>
+            </div>
+            <div class="rc-breakdown-item">
+              <div class="rc-breakdown-item-label">Total Calls</div>
+              <div class="rc-breakdown-item-value" id="rcBdCalls">—</div>
+            </div>
+            <div class="rc-breakdown-item">
+              <div class="rc-breakdown-item-label">Total Messages</div>
+              <div class="rc-breakdown-item-value" id="rcBdMsgs">—</div>
+            </div>
+            <div class="rc-breakdown-item">
+              <div class="rc-breakdown-item-label">Avg Handle Time</div>
+              <div class="rc-breakdown-item-value" id="rcBdAht">—</div>
+            </div>
+            <div class="rc-breakdown-item">
+              <div class="rc-breakdown-item-label">Avg Activity / Day</div>
+              <div class="rc-breakdown-item-value" id="rcBdActDay">—</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Callers Ranking ── -->
+      <div class="rank-section">
+        <div class="rank-section-head">
+          <span class="rank-section-title">Top 5 Callers &nbsp;·&nbsp; Outbound Calls &nbsp;·&nbsp; All Reps</span>
+          <span class="rank-section-sub" id="rcCallsRankStatus">Loading…</span>
+        </div>
+        <div class="rank-grid-3">
+          <div class="rank-col">
+            <div class="rank-col-label">Today</div>
+            <div class="rank-list" id="rcCallsToday"><div class="rank-placeholder">Loading…</div></div>
+          </div>
+          <div class="rank-col">
+            <div class="rank-col-label">This Week</div>
+            <div class="rank-list" id="rcCallsWeek"><div class="rank-placeholder">Loading…</div></div>
+          </div>
+          <div class="rank-col">
+            <div class="rank-col-label">This Month</div>
+            <div class="rank-list" id="rcCallsMonth"><div class="rank-placeholder">Loading…</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Messagers Ranking ── -->
+      <div class="rank-section">
+        <div class="rank-section-head">
+          <span class="rank-section-title">Top 5 Messagers &nbsp;·&nbsp; Outbound Messages &nbsp;·&nbsp; All Reps</span>
+          <span class="rank-section-sub" id="rcMsgsRankStatus">Loading…</span>
+        </div>
+        <div class="rank-grid-3">
+          <div class="rank-col">
+            <div class="rank-col-label">Today</div>
+            <div class="rank-list" id="rcMsgsToday"><div class="rank-placeholder">Loading…</div></div>
+          </div>
+          <div class="rank-col">
+            <div class="rank-col-label">This Week</div>
+            <div class="rank-list" id="rcMsgsWeek"><div class="rank-placeholder">Loading…</div></div>
+          </div>
+          <div class="rank-col">
+            <div class="rank-col-label">This Month</div>
+            <div class="rank-list" id="rcMsgsMonth"><div class="rank-placeholder">Loading…</div></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const html = document.documentElement;
+    const btn  = document.getElementById('themeBtn');
+    const KEY  = 'capmuse-theme';
+    const saved = localStorage.getItem(KEY);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    html.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+    btn.addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem(KEY, next);
+    });
+  })();
+
+  (function () {
+    function bindToggle(toggleId, subId) {
+      const toggle = document.getElementById(toggleId);
+      const sub    = document.getElementById(subId);
+      if (!toggle || !sub) return;
+      toggle.addEventListener('click', () => {
+        const isOpen = sub.classList.contains('open');
+        sub.classList.toggle('open', !isOpen);
+        toggle.classList.toggle('open', !isOpen);
+        toggle.setAttribute('aria-expanded', String(!isOpen));
+      });
+    }
+    bindToggle('overviewToggle', 'overviewSub');
+    bindToggle('crmToggle', 'crmSub');
+    bindToggle('dialerToggle', 'dialerSub');
+  })();
+
+  (function () {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const burger  = document.getElementById('burgerBtn');
+    const open  = () => { sidebar.classList.add('open'); overlay.classList.add('visible'); document.body.style.overflow = 'hidden'; };
+    const close = () => { sidebar.classList.remove('open'); overlay.classList.remove('visible'); document.body.style.overflow = ''; };
+    burger.addEventListener('click', open);
+    overlay.addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  })();
+
+  (function () {
+    var btn  = document.getElementById('avatarBtn');
+    var menu = document.getElementById('avatarMenu');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', function () { menu.classList.remove('open'); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.classList.remove('open'); });
+  })();
+</script>
+
+<script>
+/* ── RingCentral Backend Integration ── */
+(function () {
+  var RC_URL = 'http://localhost:8002';
+
+  var ALL_REPS = [
+    'Erik Anderson','Ivan Ortega','Matthew Birnholz','Michael Cifuentes',
+    'Ray Ortega','Rio Pampallona','Blake Fiorito','Dominic Basilio',
+    'Kip Langat',"Colin O'Bryan",'Christian Quintana','Nikholas Lazo',
+    'Anthony Diaz','Ken Pflug'
+  ];
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function todayStr() { return isoDate(new Date()); }
+  function weekStartStr() { var d = new Date(); d.setDate(d.getDate() - d.getDay()); return isoDate(d); }
+  function initials(name) { return name.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); }
+
+  var repSelectEl, dateStartEl, dateEndEl, statusEl;
+
+  function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
+  function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+  async function fetchOne(rep, start, end) {
+    try {
+      var res = await fetch(RC_URL + '/ringcentral/analytics-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: rep, start_date: start, end_date: end })
+      });
+      if (!res.ok) return null;
+      var data = await res.json();
+      return (data && data.success !== false) ? data : null;
+    } catch (e) { return null; }
+  }
+
+  async function loadData() {
+    var rep   = repSelectEl ? repSelectEl.value : '';
+    var start = dateStartEl ? dateStartEl.value : todayStr();
+    var end   = dateEndEl   ? dateEndEl.value   : todayStr();
+
+    setStatus('Loading…');
+    var loadBtn = document.getElementById('rcLoadBtn');
+    if (loadBtn) loadBtn.disabled = true;
+
+    try {
+      if (!rep) {
+        /* All Reps: fetch everyone in parallel and aggregate */
+        var results = await Promise.all(ALL_REPS.map(function (r) { return fetchOne(r, start, end); }));
+        var valid   = results.filter(Boolean);
+        if (valid.length === 0) throw new Error('no data');
+
+        var totCalls = 0, totMsgs = 0, totActivity = 0, ahtSum = 0, ahtCount = 0;
+        valid.forEach(function (d) {
+          totCalls    += d.outbound_calls || 0;
+          totMsgs     += d.outbound_messages || 0;
+          totActivity += d.total_outbound_activity || 0;
+          if (d.avg_handle_time_seconds > 0) { ahtSum += d.avg_handle_time_seconds; ahtCount++; }
+        });
+        var avgAhtSec  = ahtCount > 0 ? Math.round(ahtSum / ahtCount) : 0;
+        var avgAhtFmt  = avgAhtSec > 0 ? Math.floor(avgAhtSec / 60) + 'm ' + (avgAhtSec % 60) + 's' : '—';
+        var days = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000) + 1);
+
+        var agg = {
+          outbound_calls:            totCalls,
+          outbound_messages:         totMsgs,
+          total_outbound_activity:   totActivity,
+          avg_calls_per_day:         (totCalls    / days).toFixed(1),
+          avg_messages_per_day:      (totMsgs     / days).toFixed(1),
+          avg_total_activity_per_day:(totActivity / days).toFixed(1),
+          avg_handle_time_seconds:   avgAhtSec,
+          avg_handle_time:           avgAhtFmt,
+          extension:                 valid.length + ' reps',
+          user:                      'All Reps'
+        };
+        setStatus('');
+        render(agg, 'All Reps', start, end);
+
+      } else {
+        /* Single rep */
+        var data = await fetchOne(rep, start, end);
+        if (!data) throw new Error('not found');
+        setStatus('');
+        render(data, rep, start, end);
+      }
+    } catch (e) {
+      setStatus(e.message === 'not found' ? 'Rep not found in RingCentral'
+              : e.message === 'no data'   ? 'No RingCentral data for this period'
+              : 'Cannot reach RingCentral server (port 8002)');
+      console.error('RingCentral fetch error:', e);
+    } finally {
+      if (loadBtn) loadBtn.disabled = false;
+    }
+  }
+
+  function render(d, repName, start, end) {
+    /* KPI strip */
+    setText('rcKpiCalls',    d.outbound_calls);
+    setText('rcKpiCallsSub', d.avg_calls_per_day + ' avg/day');
+    setText('rcKpiMsgs',     d.outbound_messages);
+    setText('rcKpiMsgsSub',  d.avg_messages_per_day + ' avg/day');
+    setText('rcKpiAht',      d.avg_handle_time || '—');
+    setText('rcKpiAhtSub',   d.avg_handle_time_seconds + 's avg');
+    setText('rcKpiTotal',    d.total_outbound_activity);
+    setText('rcKpiTotalSub', d.avg_total_activity_per_day + ' avg/day');
+
+    /* Hero card */
+    var avatarEl = document.getElementById('rcAvatar');
+    if (avatarEl) avatarEl.textContent = repName === 'All Reps' ? 'ALL' : initials(d.user || repName);
+    setText('rcRepName',   d.user || repName);
+    setText('rcRepExt',    d.extension ? (repName === 'All Reps' ? d.extension : 'Extension ' + d.extension) : '');
+    setText('rcRepPeriod', start + ' → ' + end);
+    setText('rcHeroValue', d.total_outbound_activity);
+    setText('rcHeroLabel', 'total activity');
+
+    /* Stats grid */
+    setText('rcStatCalls',    d.outbound_calls);
+    setText('rcStatCallsSub', d.avg_calls_per_day + ' avg per day');
+    setText('rcStatCallsDay', d.avg_calls_per_day);
+    setText('rcStatMsgs',     d.outbound_messages);
+    setText('rcStatMsgsSub',  d.avg_messages_per_day + ' avg per day');
+    setText('rcStatMsgsDay',  d.avg_messages_per_day);
+    setText('rcStatAht',      d.avg_handle_time || '—');
+    setText('rcStatAhtSec',   d.avg_handle_time_seconds + ' seconds');
+    setText('rcStatTotal',    d.total_outbound_activity);
+    setText('rcStatTotalDay', d.avg_total_activity_per_day + ' avg/day');
+
+    /* Breakdown */
+    setText('rcBdExt',   d.extension || '—');
+    var total   = d.total_outbound_activity || 1;
+    var callPct = total > 0 ? Math.round(d.outbound_calls / total * 100) : 0;
+    setText('rcBdRatio',  d.outbound_calls + ' calls / ' + d.outbound_messages + ' msgs (' + callPct + '% calls)');
+    setText('rcBdCalls',  d.outbound_calls);
+    setText('rcBdMsgs',   d.outbound_messages);
+    setText('rcBdAht',    d.avg_handle_time || '—');
+    setText('rcBdActDay', d.avg_total_activity_per_day + ' / day');
+
+    /* Show detail, hide empty */
+    document.getElementById('rcEmpty').style.display = 'none';
+    var detail = document.getElementById('rcDetail');
+    if (detail) { detail.classList.add('visible'); }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    repSelectEl = document.getElementById('rcRepSelect');
+    dateStartEl = document.getElementById('rcDateStart');
+    dateEndEl   = document.getElementById('rcDateEnd');
+    statusEl    = document.getElementById('rcStatus');
+
+    if (dateStartEl && !dateStartEl.value) dateStartEl.value = todayStr();
+    if (dateEndEl   && !dateEndEl.value)   dateEndEl.value   = todayStr();
+
+    var btnToday = document.getElementById('rcBtnToday');
+    var btnWeek  = document.getElementById('rcBtnWeek');
+    var btnLoad  = document.getElementById('rcLoadBtn');
+
+    if (btnToday) btnToday.addEventListener('click', function () {
+      if (dateStartEl) dateStartEl.value = todayStr();
+      if (dateEndEl)   dateEndEl.value   = todayStr();
+      loadData();
+    });
+    if (btnWeek) btnWeek.addEventListener('click', function () {
+      if (dateStartEl) dateStartEl.value = weekStartStr();
+      if (dateEndEl)   dateEndEl.value   = todayStr();
+      loadData();
+    });
+    if (repSelectEl) repSelectEl.addEventListener('change', loadData);
+    if (btnLoad) btnLoad.addEventListener('click', loadData);
+
+    /* Auto-load all reps on open */
+    loadData();
+  });
+})();
+</script>
+
+<script>
+/* ── RingCentral Rankings ── */
+(function () {
+  var RC_URL = 'http://localhost:8002';
+
+  var ALL_REPS = [
+    'Erik Anderson','Ivan Ortega','Matthew Birnholz','Michael Cifuentes',
+    'Ray Ortega','Rio Pampallona','Blake Fiorito','Dominic Basilio',
+    'Kip Langat',"Colin O'Bryan",'Christian Quintana','Nikholas Lazo',
+    'Anthony Diaz','Ken Pflug'
+  ];
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function todayStr()      { return isoDate(new Date()); }
+  function weekStartStr()  { var d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoDate(d); }
+  function monthStartStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-01'; }
+
+  function shortName(full) {
+    var p = (full || '').trim().split(/\s+/);
+    return p.length === 1 ? p[0] : p[0] + ' ' + p[p.length - 1][0] + '.';
+  }
+
+  function badgeClass(i) {
+    return ['rb-1','rb-2','rb-3','rb-n','rb-n'][i] || 'rb-n';
+  }
+
+  function renderList(containerId, repData, metric) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    var sorted = repData
+      .map(function (d) { return { name: d.user, val: d[metric] || 0 }; })
+      .sort(function (a, b) { return b.val - a.val; })
+      .filter(function (r) { return r.val > 0; })
+      .slice(0, 5);
+    if (sorted.length === 0) {
+      el.innerHTML = '<div class="rank-placeholder">No data</div>';
+      return;
+    }
+    el.innerHTML = sorted.map(function (r, i) {
+      return '<div class="rank-row">'
+        + '<div class="rank-badge ' + badgeClass(i) + '">' + (i + 1) + '</div>'
+        + '<div class="rank-name">' + shortName(r.name) + '</div>'
+        + '<div class="rank-val">' + r.val + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  async function fetchAllForPeriod(start, end) {
+    var results = await Promise.all(ALL_REPS.map(function (rep) {
+      return fetch(RC_URL + '/ringcentral/analytics-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: rep, start_date: start, end_date: end })
+      }).then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+    }));
+    return results.filter(function (d) { return d && d.success !== false; });
+  }
+
+  async function loadRankings() {
+    var today  = todayStr();
+    var wStart = weekStartStr();
+    var mStart = monthStartStr();
+    var callsStatus = document.getElementById('rcCallsRankStatus');
+    var msgsStatus  = document.getElementById('rcMsgsRankStatus');
+
+    var setAllPlaceholder = function (msg) {
+      ['rcCallsToday','rcCallsWeek','rcCallsMonth',
+       'rcMsgsToday','rcMsgsWeek','rcMsgsMonth'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.innerHTML = '<div class="rank-placeholder">' + msg + '</div>';
+      });
+    };
+
+    try {
+      /* Fetch all 3 periods in parallel; each period fetches all 14 reps in parallel */
+      var periods = await Promise.all([
+        fetchAllForPeriod(today,  today),
+        fetchAllForPeriod(wStart, today),
+        fetchAllForPeriod(mStart, today)
+      ]);
+      var todayData  = periods[0];
+      var weekData   = periods[1];
+      var monthData  = periods[2];
+
+      /* Callers */
+      renderList('rcCallsToday',  todayData,  'outbound_calls');
+      renderList('rcCallsWeek',   weekData,   'outbound_calls');
+      renderList('rcCallsMonth',  monthData,  'outbound_calls');
+      /* Messagers */
+      renderList('rcMsgsToday',   todayData,  'outbound_messages');
+      renderList('rcMsgsWeek',    weekData,   'outbound_messages');
+      renderList('rcMsgsMonth',   monthData,  'outbound_messages');
+
+      var ts = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      if (callsStatus) callsStatus.textContent = ts;
+      if (msgsStatus)  msgsStatus.textContent  = ts;
+
+    } catch (e) {
+      if (callsStatus) callsStatus.textContent = 'Error loading rankings';
+      if (msgsStatus)  msgsStatus.textContent  = 'Error loading rankings';
+      setAllPlaceholder('Unavailable');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadRankings);
+})();
+</script>
+</body>
+</html>
