@@ -126,25 +126,74 @@
     .fb-hero {
       background: var(--surface);
       border: 1px solid var(--border);
+      border-left: 4px solid var(--blue);
       border-radius: 20px;
       padding: 28px 32px;
       box-shadow: var(--card-shadow);
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      gap: 24px;
+      gap: 32px;
       flex-wrap: wrap;
     }
-    .fb-hero-left { flex: 1; min-width: 240px; }
+    .fb-hero-spotlight {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      padding: 0;
+      min-width: 0;
+    }
+    .fb-hero-spotlight[hidden] { display: none !important; }
+    .fb-spot-photo-ring {
+      width: 108px; height: 108px; border-radius: 50%; overflow: hidden;
+      border: none; flex-shrink: 0; position: relative;
+      background: var(--surface-2);
+      box-shadow: 0 6px 24px rgba(15,23,42,0.14);
+    }
+    html[data-theme="dark"] .fb-spot-photo-ring { box-shadow: 0 6px 24px rgba(0,0,0,0.35); }
+    .fb-spot-photo-ring img { width: 100%; height: 100%; object-fit: cover; }
+    .fb-spot-photo-ring .hero-photo-placeholder {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 700; color: var(--text-muted);
+    }
+    .fb-spot-photo-ring .hero-photo-placeholder[hidden] { display: none; }
+    .fb-spot-name {
+      font-size: 14px; font-weight: 700; color: var(--text-primary);
+      line-height: 1.25; max-width: 120px; word-break: break-word;
+    }
+    .fb-hero-main { flex: 1; min-width: 220px; display: flex; flex-direction: column; justify-content: center; }
     .fb-hero-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 28px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1.1; }
-    .fb-hero-sub { font-size: 14px; color: var(--text-secondary); margin-top: 6px; max-width: 520px; }
-    .fb-live-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #059669; background: rgba(16,185,129,0.10); border-radius: 100px; padding: 4px 10px; }
-    html[data-theme="dark"] .fb-live-badge { color: #34D399; background: rgba(16,185,129,0.15); }
-    .fb-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #10B981; box-shadow: 0 0 6px rgba(16,185,129,0.8); }
-    .fb-hero-kpis { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-end; }
-    .fb-kpi { text-align: right; }
-    .fb-kpi-val { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1; }
-    .fb-kpi-lbl { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+    .fb-hero-sub { font-size: 14px; color: var(--text-secondary); margin-top: 6px; max-width: 520px; line-height: 1.5; }
+    .fb-hero-kpis {
+      display: flex;
+      align-items: stretch;
+      flex-shrink: 0;
+      align-self: center;
+      gap: 0;
+    }
+    .fb-kpi {
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 4px 28px;
+      text-align: center;
+      border-left: 1px solid var(--border);
+      min-width: 108px;
+    }
+    .fb-kpi:first-child { border-left: none; padding-left: 0; }
+    .fb-kpi:last-child { padding-right: 0; }
+    .fb-kpi-val {
+      font-family: 'Inter', sans-serif; font-size: 26px; font-weight: 800;
+      color: var(--text-primary); letter-spacing: -0.03em; line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .fb-kpi-lbl {
+      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px;
+    }
+    .fb-kpi--primary .fb-kpi-val { color: var(--blue); }
+    html[data-theme="dark"] .fb-kpi--primary .fb-kpi-val { color: #60A5FA; }
     .fb-active-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .fb-active-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--text-secondary); background: var(--surface-2); border: 1px solid var(--border); border-radius: 100px; padding: 4px 10px 4px 12px; }
     .fb-active-tag button { border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; }
@@ -153,6 +202,9 @@
     .fb-filter-section { display: flex; flex-direction: column; gap: 10px; }
     .fb-filter-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; }
     .fb-filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (min-width: 901px) {
+      .fb-filter-grid { grid-template-columns: repeat(4, 1fr); }
+    }
     .fb-filter-chip {
       display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
       min-height: 56px; padding: 12px 14px;
@@ -176,6 +228,12 @@
     .fb-rep-table { width: 100%; border-collapse: collapse; }
     .fb-rep-table thead tr { background: var(--table-head); }
     .fb-rep-table th { padding: 11px 14px; font-size: 10.5px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--table-border); white-space: nowrap; }
+    .fb-rep-table th[data-sort] { cursor: pointer; user-select: none; transition: color 0.15s ease; }
+    .fb-rep-table th[data-sort]:hover { color: var(--blue); }
+    .fb-rep-table th.sorted { color: var(--blue); }
+    html[data-theme="dark"] .fb-rep-table th[data-sort]:hover,
+    html[data-theme="dark"] .fb-rep-table th.sorted { color: #60A5FA; }
+    .fb-sort-arrow { display: inline-block; margin-left: 4px; font-size: 9px; opacity: 0.9; }
     .fb-rep-table th:first-child { width: 48px; text-align: center; padding-left: 18px; }
     .fb-rep-table th:last-child { padding-right: 18px; }
     .fb-rep-table td { padding: 12px 14px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--table-border); vertical-align: middle; }
@@ -185,7 +243,16 @@
     .fb-rep-table tbody tr:hover td { background: var(--table-hover); }
     .fb-rep-name { font-weight: 600; color: var(--text-primary); cursor: pointer; text-decoration: none; }
     .fb-rep-name:hover { color: var(--blue); }
-    .fb-money { font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; color: var(--text-primary); }
+    .fb-money { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .fb-money-total {
+      display: inline-block; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700;
+      color: #fff; background: var(--blue); border-radius: 6px; padding: 4px 8px;
+    }
+    html[data-theme="dark"] .fb-money-total { background: #2563EB; }
+    .fb-pts { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .fb-row-top td { background: rgba(37,99,235,0.04); }
+    .fb-row-top td:first-child { box-shadow: inset 3px 0 0 #F59E0B; }
+    html[data-theme="dark"] .fb-row-top td { background: rgba(96,165,250,0.06); }
     .fb-empty { padding: 48px 24px; text-align: center; color: var(--text-muted); font-size: 14px; }
 
     .fb-filter-overlay {
@@ -223,6 +290,15 @@
     .fb-filter-option:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
     .fb-filter-option.selected { background: rgba(37,99,235,0.10); color: var(--blue); font-weight: 600; }
     html[data-theme="dark"] .fb-filter-option.selected { color: #60A5FA; }
+    .fb-filter-check {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; color: var(--text-secondary); cursor: pointer;
+    }
+    .fb-filter-check:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .fb-filter-check input { accent-color: var(--blue); width: 16px; height: 16px; flex-shrink: 0; }
+    .fb-filter-check-all { font-weight: 700; border-bottom: 1px solid var(--border); margin-bottom: 4px; padding-bottom: 10px; }
+    .fb-filter-check-parent { font-weight: 600; color: var(--text-primary); }
+    .fb-filter-check-child { padding-left: 28px; font-size: 12px; }
     .fb-date-presets { display: flex; flex-direction: column; gap: 4px; padding: 4px 0; }
     .fb-date-custom { display: flex; gap: 10px; padding: 12px 6px 4px; flex-wrap: wrap; }
     .fb-date-custom label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); flex: 1; min-width: 120px; }
@@ -235,8 +311,16 @@
 
     @media (max-width: 900px) {
       .fb-filter-grid { grid-template-columns: repeat(2, 1fr); }
-      .fb-hero-kpis { width: 100%; justify-content: flex-start; }
-      .fb-kpi { text-align: left; }
+      .fb-hero { flex-direction: column; align-items: stretch; gap: 24px; }
+      .fb-hero-spotlight { flex-direction: row; width: 100%; text-align: left; align-items: center; gap: 14px; }
+      .fb-spot-name { max-width: none; text-align: left; }
+      .fb-hero-kpis {
+        width: 100%; display: grid; grid-template-columns: repeat(2, 1fr);
+        border-top: 1px solid var(--border); padding-top: 20px; gap: 16px 0;
+      }
+      .fb-kpi { border-left: none; padding: 0; min-width: 0; text-align: left; }
+      .fb-kpi:nth-child(odd) { padding-right: 12px; }
+      .fb-kpi:nth-child(even) { padding-left: 12px; border-left: 1px solid var(--border); }
     }
     @media (max-width: 768px) {
       .sidebar { width: min(var(--sidebar-w), calc(100vw - 32px)); transform: translateX(calc(-100% - 24px)); }
@@ -348,13 +432,14 @@
     <main class="page-content" role="main">
 
       <section class="fb-hero" aria-label="Funding Book summary">
-        <div class="fb-hero-left">
+        <div class="fb-hero-spotlight" id="fbHeroSpotlight" hidden aria-label="Top rep"></div>
+        <div class="fb-hero-main">
           <h1 class="fb-hero-title">Funding Book</h1>
-          <p class="fb-hero-sub">Rep leaderboard from live funded deals. Default view is year-to-date use filters to drill down by lead source, state, lender, and more.</p>
+          <p class="fb-hero-sub">Rep leaderboard from live funded deals. Default view is year-to-date — use filters to drill down by lead source, state, lender, and more.</p>
           <div class="fb-active-filters" id="fbActiveFilters" aria-label="Active filters"></div>
         </div>
         <div class="fb-hero-kpis">
-          <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiVolume">—</div><div class="fb-kpi-lbl">Total funded</div></div>
+          <div class="fb-kpi fb-kpi--primary"><div class="fb-kpi-val" id="fbKpiVolume">—</div><div class="fb-kpi-lbl">Total funded</div></div>
           <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiDeals">—</div><div class="fb-kpi-lbl">Deals</div></div>
           <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiAvg">—</div><div class="fb-kpi-lbl">Avg deal</div></div>
           <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiReps">—</div><div class="fb-kpi-lbl">Reps</div></div>
@@ -375,12 +460,14 @@
           <thead>
             <tr>
               <th>#</th>
-              <th>Name</th>
-              <th>Total Funding</th>
+              <th data-sort="name">Name <span class="fb-sort-arrow"></span></th>
+              <th data-sort="volume">Total Funding <span class="fb-sort-arrow"></span></th>
+              <th data-sort="revenue">Total Revenue <span class="fb-sort-arrow"></span></th>
+              <th data-sort="points">Points <span class="fb-sort-arrow"></span></th>
               <th>Team</th>
-              <th>Count</th>
-              <th>Avg. Funding</th>
-              <th>Avg. Rev</th>
+              <th data-sort="count">Count <span class="fb-sort-arrow"></span></th>
+              <th data-sort="avg">Avg. Funding <span class="fb-sort-arrow"></span></th>
+              <th data-sort="avgRev">Avg. Rev <span class="fb-sort-arrow"></span></th>
             </tr>
           </thead>
           <tbody id="fbRepTableBody"></tbody>
