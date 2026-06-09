@@ -16,7 +16,6 @@
     'lead.html',
     'pipeline.html',
     'lender_recommendation.html',
-    'convoso.html',
     'ringcentral.html'
   ];
   var DEMO_HIDDEN_NAV = [
@@ -24,7 +23,6 @@
     { href: 'lead.html', label: 'Leads' },
     { href: 'pipeline.html', label: 'Pipeline' },
     { href: 'lender_recommendation.html', label: 'Lender Match' },
-    { href: 'convoso.html', label: 'Convoso' },
     { href: 'ringcentral.html', label: 'RingCentral' }
   ];
 
@@ -33,7 +31,8 @@
   function currentPage() {
     return (window.location.pathname.split('/').pop() || 'home.html').toLowerCase();
   }
-
+  
+  
   function injectDemoStyles() {
     if (demoStylesInjected) return;
     demoStylesInjected = true;
@@ -126,7 +125,11 @@
       '<a class="nav-item' + (page === 'funding_book.html' ? ' active' : '') + '" href="funding_book.html"' +
         (page === 'funding_book.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('funding_book.html') +
-        'Funding Book</a>';
+        'Funding Book</a>' +
+      '<a class="nav-item' + (page === 'convoso.html' ? ' active' : '') + '" href="convoso.html"' +
+        (page === 'convoso.html' ? ' aria-current="page"' : '') + '>' +
+        linkIconHtml('convoso.html') +
+        'Convoso</a>';
 
     var hiddenItems = DEMO_HIDDEN_NAV.map(function (item) {
       return '<a class="nav-sub-item nav-disabled" href="' + item.href + '" aria-disabled="true" title="Unavailable for demo">' +

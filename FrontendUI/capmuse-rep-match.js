@@ -25,10 +25,11 @@
     }
 
     if (targetTokens.length === 1) {
-      var first = targetTokens[0];
+      var token = targetTokens[0];
+      if (token.length <= 2) return false;
       var recTokens = tokens(recordName);
-      if (recTokens.length === 1) return recTokens[0] === first;
-      return false;
+      if (recTokens.length === 1) return recTokens[0] === token;
+      return recTokens[0] === token || recTokens[recTokens.length - 1] === token;
     }
 
     return false;
@@ -56,8 +57,9 @@
   }
 
   function matchRolesFor(rep, options) {
-    if (rep && rep.bookRoles && rep.bookRoles.length) return rep.bookRoles;
     if (options && options.fundedOnly) return ['package_owner'];
+    if (options && options.pullerOnly) return ['puller'];
+    if (rep && rep.bookRoles && rep.bookRoles.length) return rep.bookRoles;
     return ['package_owner', 'puller'];
   }
 
