@@ -8,7 +8,9 @@
     if (v == null || v === '') return '';
     var n = typeof v === 'number' ? v : nn(v);
     if (!n) return '';
-    if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e6 || Math.round(n / 1000) >= 1000) {
+      return '$' + (n / 1e6).toFixed(2) + 'M';
+    }
     if (n >= 1e3) return '$' + Math.round(n / 1000) + 'K';
     return '$' + Math.round(n).toLocaleString();
   }
@@ -39,28 +41,21 @@
     return d && d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth();
   }
 
-  function sameDay(a, b) {
-    return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-  }
-
-  function mostRecentDate(list) {
-    var max = null;
-    list.forEach(function (d) {
-      if (d.date && (!max || d.date > max)) max = d.date;
-    });
-    return max;
-  }
-
   function sumField(list, key) {
     return list.reduce(function (s, d) { return s + (d[key] || 0); }, 0);
   }
 
-  function recordMatchesRep(record, rep, userId) {
+  function recordMatchesRep(record, rep, userId, options) {
+    options = options || {};
     if (window.CapMuseRepMatch) {
-      return window.CapMuseRepMatch.recordMatchesRep(record, rep, userId, {});
+      return window.CapMuseRepMatch.recordMatchesRep(record, rep, userId, options);
     }
     var owner = record.package_owner || record['Package_Owner.name'] || '';
+    var puller = record.puller || record['Puller.name'] || '';
     var target = (rep && (rep.bookName || rep.name)) || userId || '';
+    if (options.pullerOnly) {
+      return puller && target && puller.toLowerCase() === target.toLowerCase();
+    }
     return owner && target && owner.toLowerCase() === target.toLowerCase();
   }
 
@@ -97,63 +92,56 @@
 
   function emptyToday() {
     return {
-      leads: null, pulls: null, dealsOwned: null, funded: null,
-      volume: null, commission: null, pipeline: null, calls: null
+      leads: null, pulls: null, dealsOwned: null, funded: 0,
+      volume: 0, commission: null, pipeline: null, calls: null
     };
   }
 
   function computeLive(userId, raw) {
     if (!window.REPS || !window.REPS[userId]) return null;
     var rep = window.REPS[userId];
-    var deals = raw.filter(function (r) { return r.company || r.Deal_Name; }).map(mapRecord).filter(function (d) {
-      return recordMatchesRep(d.raw, rep, userId);
+    var mapped = raw.filter(function (r) { return r.company || r.Deal_Name; }).map(mapRecord);
+    var fundedDeals = mapped.filter(function (d) {
+      return recordMatchesRep(d.raw, rep, userId, { fundedOnly: true });
     });
+    var pulledDeals = mapped.filter(function (d) {
+      return recordMatchesRep(d.raw, rep, userId, { pullerOnly: true });
+    });
+    var totalPulled = pulledDeals.length;
 
-    if (!deals.length) {
+    if (!fundedDeals.length) {
       return {
-        usedLatestDay: false,
         today: emptyToday(),
         stats: {
           experience: null, age: null, height: null,
-          avgDeal: null, timeToFund: null, totalDeals: null,
-          approvalRate: null, volume: null, activeClients: null
+          avgDeal: null, timeToFund: null, totalDeals: 0,
+          totalPulled: totalPulled, volume: '$0', activeClients: null
         },
         kpis: {
-          bestMonth: null, largestDeal: null, avgCommission: null, retention: null
+          bestMonth: null, largestDeal: null, totalFunded: '$0', avgRevenue: null
         },
-        hero: { volumeToday: null, fundedToday: null, mtdVolume: null }
+        hero: { volumeToday: 0, fundedToday: 0, mtdVolume: 0 }
       };
     }
 
-    var todayDeals = deals.filter(function (d) { return isToday(d.date); });
-    var usedLatestDay = false;
-    if (!todayDeals.length) {
-      var latest = mostRecentDate(deals);
-      if (latest) {
-        todayDeals = deals.filter(function (d) { return sameDay(d.date, latest); });
-        usedLatestDay = todayDeals.length > 0;
-      }
-    }
-
-    var mtdDeals = deals.filter(function (d) { return isThisMonth(d.date); });
-    var totalVol = sumField(deals, 'funding');
-    var totalRev = sumField(deals, 'revenue');
-    var totalDeals = deals.length;
+    var todayDeals = fundedDeals.filter(function (d) { return isToday(d.date); });
+    var mtdDeals = fundedDeals.filter(function (d) { return isThisMonth(d.date); });
+    var totalVol = sumField(fundedDeals, 'funding');
+    var totalRev = sumField(fundedDeals, 'revenue');
+    var totalDeals = fundedDeals.length;
     var avgDeal = totalVol / totalDeals;
-    var largest = deals.reduce(function (m, d) { return d.funding > m ? d.funding : m; }, 0);
+    var largest = fundedDeals.reduce(function (m, d) { return d.funding > m ? d.funding : m; }, 0);
     var todayVol = sumField(todayDeals, 'funding');
-    var todayRev = sumField(todayDeals, 'revenue');
-    var timeToFund = avgTimeToFund(deals);
+    var timeToFund = avgTimeToFund(fundedDeals);
 
     return {
-      usedLatestDay: usedLatestDay,
       today: {
         leads: null,
         pulls: null,
         dealsOwned: null,
-        funded: todayDeals.length || null,
-        volume: todayVol || null,
-        commission: todayRev || null,
+        funded: todayDeals.length,
+        volume: todayVol,
+        commission: null,
         pipeline: null,
         calls: null
       },
@@ -164,20 +152,20 @@
         avgDeal: fmtMoney(avgDeal),
         timeToFund: timeToFund,
         totalDeals: totalDeals,
-        approvalRate: null,
+        totalPulled: totalPulled,
         volume: fmtMoney(totalVol),
         activeClients: null
       },
       kpis: {
-        bestMonth: bestMonthLabel(deals),
+        bestMonth: bestMonthLabel(fundedDeals),
         largestDeal: fmtMoney(largest),
-        avgCommission: totalDeals && totalRev ? fmtMoney(totalRev / totalDeals) : null,
-        retention: null
+        totalFunded: fmtMoney(totalVol),
+        avgRevenue: totalDeals && totalRev ? fmtMoney(totalRev / totalDeals) : null
       },
       hero: {
-        volumeToday: todayVol || null,
-        fundedToday: todayDeals.length || null,
-        mtdVolume: sumField(mtdDeals, 'funding') || null
+        volumeToday: todayVol,
+        fundedToday: todayDeals.length,
+        mtdVolume: sumField(mtdDeals, 'funding')
       }
     };
   }
@@ -185,9 +173,9 @@
   function applyLive(userId, live) {
     if (!live || !window.REPS[userId]) return live;
     var rep = window.REPS[userId];
-    rep.today = live.today;
-    rep.stats = live.stats;
-    rep.kpis = live.kpis;
+    rep.today = Object.assign({}, live.today);
+    rep.stats = Object.assign({}, live.stats);
+    rep.kpis = Object.assign({}, live.kpis);
     rep._liveData = true;
 
     window.dispatchEvent(new CustomEvent('capmuse:rep-stats-updated', {
@@ -215,23 +203,17 @@
     if (heroRow && document.body.classList.contains('home-page')) {
       var vals = heroRow.querySelectorAll('.hero-qs-val');
       var lbls = heroRow.querySelectorAll('.hero-qs-lbl');
-      if (vals[0]) vals[0].textContent = fmtMoney(live.hero.volumeToday) || '';
-      if (vals[1]) vals[1].textContent = live.hero.fundedToday != null ? String(live.hero.fundedToday) : '';
-      if (vals[2]) vals[2].textContent = fmtMoney(live.hero.mtdVolume) || '';
-      if (lbls[0]) lbls[0].textContent = live.usedLatestDay ? 'Volume (latest day)' : 'Volume today';
-      if (lbls[1]) lbls[1].textContent = live.usedLatestDay ? 'Funded (latest day)' : 'Funded today';
+      if (vals[0]) vals[0].textContent = live.hero.volumeToday === 0 ? '$0' : (fmtMoney(live.hero.volumeToday) || '');
+      if (vals[1]) vals[1].textContent = String(live.hero.fundedToday != null ? live.hero.fundedToday : 0);
+      if (vals[2]) vals[2].textContent = live.hero.mtdVolume === 0 ? '$0' : (fmtMoney(live.hero.mtdVolume) || '');
+      if (lbls[0]) lbls[0].textContent = 'Volume today';
+      if (lbls[1]) lbls[1].textContent = 'Funded today';
       if (lbls[2]) lbls[2].textContent = 'MTD volume';
     }
 
     var perfGrid = document.getElementById('perfGrid');
     if (perfGrid && window.renderTodayPerfPanel) {
       window.renderTodayPerfPanel(perfGrid, userId, { animate: false });
-    }
-
-    var dateEl = document.getElementById('todayDate');
-    if (dateEl && live.usedLatestDay) {
-      dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) +
-        ' · showing latest funded day (live book sync)';
     }
   }
 

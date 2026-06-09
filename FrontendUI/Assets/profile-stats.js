@@ -121,6 +121,7 @@
     },
     dominic: {
       name: 'Dominic',
+      bookName: 'Dominic Basilio',
       role: 'Junior Advisor',
       company: 'Capital Infusion',
       badge: 'Learning Fast',
@@ -405,8 +406,8 @@
       kpis: {
         bestMonth: 'May 2024',
         largestDeal: '$2.0M',
-        avgCommission: '$2,500',
-        retention: '78%'
+        totalFunded: null,
+        avgRevenue: null
       }
     };
   }
@@ -493,7 +494,7 @@
       '</div>' +
       '<div class="pmc-div slim"></div>' +
       '<div class="pmc-stats-row">' +
-        '<div class="pmc-stat s-green"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Approval Rate</span></div>' +
+        '<div class="pmc-stat s-green"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Pulled Apps</span></div>' +
         '<div class="pmc-stat s-gold"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Volume</span></div>' +
         '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Active Clients</span></div>' +
       '</div>' +
@@ -501,8 +502,8 @@
       '<div class="pmc-kpis pmc-kpis-visible">' +
         '<div class="pmc-kpi"><div class="pmc-kpi-icon">📅</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Best Funding Month</div></div>' +
         '<div class="pmc-kpi"><div class="pmc-kpi-icon">🏆</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Largest Deal Funded</div></div>' +
-        '<div class="pmc-kpi"><div class="pmc-kpi-icon">💰</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Avg Commission</div></div>' +
-        '<div class="pmc-kpi"><div class="pmc-kpi-icon">🔄</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Client Retention</div></div>' +
+        '<div class="pmc-kpi"><div class="pmc-kpi-icon">💵</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Total Amount Funded</div></div>' +
+        '<div class="pmc-kpi"><div class="pmc-kpi-icon">💰</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Average Revenue</div></div>' +
       '</div>';
   }
 
@@ -511,7 +512,9 @@
     if (typeof v === 'string' && v.indexOf('$') === 0) return v;
     var n = parseFloat(v) || 0;
     if (!n) return '';
-    if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e6 || Math.round(n / 1000) >= 1000) {
+      return '$' + (n / 1e6).toFixed(2) + 'M';
+    }
     if (n >= 1e3) return '$' + Math.round(n / 1000) + 'K';
     return '$' + Math.round(n).toLocaleString();
   }
@@ -529,10 +532,11 @@
   }
 
   var TODAY_FIELD_KEYS = ['leads', 'pulls', 'dealsOwned', 'funded', 'volume', 'commission', 'pipeline', 'calls'];
+  var BOOK_TODAY_KEYS = { funded: 1, volume: 1 };
 
   function formatTodayMetric(key, val) {
-    if (emptyStat(val)) return '';
-    if (key === 'volume' || key === 'commission') return fmtPerfMoney(val);
+    if (val == null || val === '' || val === '—') return '';
+    if (key === 'volume' || key === 'commission') return val === 0 ? '$0' : fmtPerfMoney(val);
     return String(val);
   }
 
@@ -543,11 +547,14 @@
     var sel = compact ? '.pmc-compare-perf-val' : '.perf-val';
     var cards = container.querySelectorAll(sel);
     TODAY_FIELD_KEYS.forEach(function (key, i) {
-      if (cards[i]) cards[i].textContent = formatTodayMetric(key, t[key]);
+      if (!cards[i]) return;
+      if (!BOOK_TODAY_KEYS[key]) {
+        cards[i].textContent = '';
+        return;
+      }
+      cards[i].textContent = formatTodayMetric(key, t[key]);
     });
-    if (cards[8]) {
-      cards[8].textContent = formatProfileStat('approvalRate', rep.stats && rep.stats.approvalRate);
-    }
+    if (cards[8]) cards[8].textContent = '';
   }
 
   function fillProfileStatsValues(container, personId) {
@@ -557,21 +564,26 @@
     var k = rep.kpis || {};
     var statVals = container.querySelectorAll('.pmc-stat-val');
     var statTexts = [
-      formatProfileStat('experience', s.experience),
-      formatProfileStat('age', s.age),
-      s.height || '',
+      '',
+      '',
+      '',
       s.avgDeal || '',
       formatProfileStat('timeToFund', s.timeToFund),
       s.totalDeals != null ? String(s.totalDeals) : '',
-      formatProfileStat('approvalRate', s.approvalRate),
+      s.totalPulled != null ? String(s.totalPulled) : '',
       s.volume || '',
-      s.activeClients != null ? String(s.activeClients) : ''
+      ''
     ];
     statVals.forEach(function (el, i) {
       el.textContent = statTexts[i] || '';
     });
     var kpiVals = container.querySelectorAll('.pmc-kpi-val');
-    var kpiTexts = [k.bestMonth || '', k.largestDeal || '', k.avgCommission || '', k.retention || ''];
+    var kpiTexts = [
+      k.bestMonth || '',
+      k.largestDeal || '',
+      k.totalFunded || s.volume || '',
+      k.avgRevenue || ''
+    ];
     kpiVals.forEach(function (el, i) {
       el.textContent = kpiTexts[i] || '';
     });
