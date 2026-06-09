@@ -47,6 +47,40 @@
 
   function nn(v) { return parseFloat(String(v || '').replace(/[$,]/g, '')) || 0; }
 
+  var PACKAGE_OWNER_RECORD_FIXES = {
+    '3793076000601237337': 'House .',
+    '3793076000605384128': 'House .',
+    '3793076000606189343': 'House .',
+    '3793076000624144182': 'House .',
+    '3793076000649034499': 'House .'
+  };
+
+  function packageOwnerFromRecord(r) {
+    var recordId = String(r.record_id || '');
+    if (PACKAGE_OWNER_RECORD_FIXES[recordId]) return PACKAGE_OWNER_RECORD_FIXES[recordId];
+    var fromLookup = (r['Package_Owner.name'] || (r.Package_Owner && r.Package_Owner.name) || r.package_owner_name || '').trim();
+    if (fromLookup) return fromLookup;
+    return (r.package_owner || '').trim();
+  }
+
+  function mapLiveDeal(r) {
+    var funded = nn(r.funding || r.Funded_Amount);
+    return {
+      client_name:            (r.company || r.Deal_Name || '').trim(),
+      rep_name:               packageOwnerFromRecord(r),
+      lender_name:            (r.lender || r.Lender || '').trim(),
+      lead_source:            (r.lead_source || r.Lead_Source2 || r.Lead_Source || '').trim(),
+      industry:               (r.industry || r.Industry || '').trim(),
+      state:                  (r.state || r.State || '').trim(),
+      approval_status:        funded > 0 ? 'funded' : 'submitted',
+      funded_amount:          funded,
+      requested_amount:       nn(r.requested_amount || r.Amount),
+      application_submitted_at: r.date_applied || r.Date_Applied || r.Created_Time || '',
+      funded_at:              r.date_funded || r.Date_Funded || '',
+      days_total_to_fund:     calcDays(r.date_applied || r.Date_Applied || r.Created_Time, r.date_funded || r.Date_Funded),
+    };
+  }
+
   // ── Data mappers ───────────────────────────────────────────────────────────
   function mapAccount(r) {
     var stage = r.Stage_of_Package || '';
@@ -111,28 +145,66 @@
       .catch(function () { cb([]); });
   }
 
+  function finishLoad(deals) {
+    _deals = deals;
+    _loaded = true;
+    _loading = false;
+    console.log('[CapMuse Search] Loaded ' + _deals.length + ' records');
+    _queue.forEach(function (fn) { fn(_deals); });
+    _queue = [];
+  }
+
+  function loadCsvFallback() {
+    fetchCSV('Accounts.csv', function (rows) {
+      var deals = [];
+      if (rows.length) {
+        deals = rows.map(mapAccount).filter(function (d) { return d.client_name; });
+      }
+      fetchCSV('funding_book.csv', function (rows2) {
+        if (rows2.length && !deals.length) {
+          deals = rows2.map(mapDeal).filter(function (d) { return d.client_name; });
+        } else if (rows2.length) {
+          deals = deals.concat(rows2.map(mapDeal).filter(function (d) { return d.client_name; }));
+        }
+        finishLoad(deals);
+      });
+    });
+  }
+
+  function loadLiveJson(cb) {
+    if (window.CapMuseData && typeof window.CapMuseData.getRawDeals === 'function') {
+      window.CapMuseData.getRawDeals().then(function (rows) {
+        if (rows && rows.length) {
+          cb(rows.map(mapLiveDeal).filter(function (d) { return d.client_name || d.rep_name; }));
+        } else {
+          cb(null);
+        }
+      }).catch(function () { cb(null); });
+      return;
+    }
+    fetch(BUCKET + '/funding_book_live.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rows) {
+        if (rows && rows.length) {
+          cb(rows.map(mapLiveDeal).filter(function (d) { return d.client_name || d.rep_name; }));
+        } else {
+          cb(null);
+        }
+      })
+      .catch(function () { cb(null); });
+  }
+
   function loadData(cb) {
     if (_loaded) { cb(_deals); return; }
     _queue.push(cb);
     if (_loading) return;
     _loading = true;
-    fetchCSV('Accounts.csv', function (rows) {
-      if (rows.length) {
-        _deals = rows.map(mapAccount).filter(function (d) { return d.client_name; });
+    loadLiveJson(function (liveDeals) {
+      if (liveDeals && liveDeals.length) {
+        finishLoad(liveDeals);
+      } else {
+        loadCsvFallback();
       }
-      // Also try funding_book.csv to supplement
-      fetchCSV('funding_book.csv', function (rows2) {
-        if (rows2.length && !_deals.length) {
-          _deals = rows2.map(mapDeal).filter(function (d) { return d.client_name; });
-        } else if (rows2.length) {
-          var extra = rows2.map(mapDeal).filter(function (d) { return d.client_name; });
-          _deals = _deals.concat(extra);
-        }
-        _loaded = true;
-        console.log('[CapMuse Search] Loaded ' + _deals.length + ' records');
-        _queue.forEach(function (fn) { fn(_deals); });
-        _queue = [];
-      });
     });
   }
 
@@ -302,15 +374,59 @@
     });
   }
 
+  function escapeReg(s) {
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function wordMatch(haystack, needle) {
+    if (!needle || needle.length < 3) return false;
+    return new RegExp('\\b' + escapeReg(needle) + '\\b', 'i').test(haystack);
+  }
+
+  function uniqueRepNames(deals) {
+    var names = [];
+    deals.forEach(function (d) {
+      if (d.rep_name && names.indexOf(d.rep_name) === -1) names.push(d.rep_name);
+    });
+    return names.sort(function (a, b) { return b.length - a.length; });
+  }
+
   // ── Entity detection ───────────────────────────────────────────────────────
   function detectRep(q, deals) {
-    var names = [];
-    deals.forEach(function (d) { if (d.rep_name && names.indexOf(d.rep_name) === -1) names.push(d.rep_name); });
-    for (var i = 0; i < names.length; i++) {
-      var first = names[i].split(' ')[0].toLowerCase();
-      if (first.length > 2 && q.indexOf(first) > -1) return first;
+    var names = uniqueRepNames(deals);
+    var i, full, first;
+
+    for (i = 0; i < names.length; i++) {
+      full = names[i].toLowerCase();
+      if (full.length > 2 && q.indexOf(full) > -1) return full;
+    }
+    for (i = 0; i < names.length; i++) {
+      first = names[i].split(' ')[0].toLowerCase();
+      if (wordMatch(q, first)) return first;
+    }
+    for (i = 0; i < names.length; i++) {
+      first = names[i].split(' ').pop().toLowerCase();
+      if (wordMatch(q, first)) return first;
     }
     return null;
+  }
+
+  function detectClient(q, deals) {
+    var best = null;
+    var bestScore = 0;
+    deals.forEach(function (d) {
+      var name = (d.client_name || '').trim();
+      if (!name || name.length < 3) return;
+      var lower = name.toLowerCase();
+      var score = 0;
+      if (q.indexOf(lower) > -1) score = lower.length + 100;
+      else if (lower.indexOf(q) > -1 && q.length >= 3) score = q.length;
+      if (score > bestScore) {
+        bestScore = score;
+        best = name;
+      }
+    });
+    return best;
   }
 
   function detectLender(q, deals) {
@@ -323,10 +439,13 @@
   }
 
   function resolveRepName(repMatch, deals) {
-    var names = [];
-    deals.forEach(function (d) { if (d.rep_name && names.indexOf(d.rep_name) === -1) names.push(d.rep_name); });
-    for (var i = 0; i < names.length; i++) {
-      if (names[i].split(' ')[0].toLowerCase() === repMatch || names[i].toLowerCase().indexOf(repMatch) > -1) return names[i];
+    var names = uniqueRepNames(deals);
+    var i, lower;
+    for (i = 0; i < names.length; i++) {
+      lower = names[i].toLowerCase();
+      if (lower === repMatch || names[i].split(' ')[0].toLowerCase() === repMatch || names[i].split(' ').pop().toLowerCase() === repMatch) {
+        return names[i];
+      }
     }
     return cap(repMatch);
   }
@@ -381,6 +500,10 @@
 
     // ── Lender intents ───────────────────────────────────────────────────────
     if (lenderMatch) return lenderOverview(filtered, lenderMatch, timeLabel);
+
+    // ── Business / client intents ────────────────────────────────────────────
+    var clientMatch = detectClient(q, deals);
+    if (clientMatch) return clientOverview(filtered, clientMatch, timeLabel);
 
     // ── Team intents ─────────────────────────────────────────────────────────
     if (/who funded the most|top funder|most funded|leaderboard/.test(q)) return topFunders(filtered, timeLabel);
@@ -594,6 +717,24 @@
       insight: sources.length>1 ? sources.length+' sources total.' : null,
       chart:   { data:sources.slice(0,8).map(function(s){return{name:s.name,value:s.funded};}), label:'Funded Deals by Source' },
       table:   { cols:['Source','Apps','Funded','Rate','Volume'], rows:sources.map(function(s){return[s.name,s.total,s.funded,(s.total?Math.round(s.funded/s.total*100):0)+'%',fmt(s.volume)];}) },
+    };
+  }
+
+  function clientOverview(filtered, clientMatch, timeLabel) {
+    var clientDeals = filtered.filter(function (d) {
+      return (d.client_name || '').toLowerCase() === clientMatch.toLowerCase();
+    });
+    var funded = clientDeals.filter(function (d) { return d.approval_status === 'funded' && d.funded_amount > 0; });
+    var volume = funded.reduce(function (s, d) { return s + d.funded_amount; }, 0);
+    var top = funded.sort(function (a, b) { return b.funded_amount - a.funded_amount; })[0];
+    return {
+      title:   clientMatch + ' — ' + timeLabel,
+      answer:  funded.length
+        ? clientMatch + ' has ' + funded.length + ' funded deal' + (funded.length !== 1 ? 's' : '') + ' totaling ' + fmt(volume) + '.'
+        : clientMatch + ' has no funded deals in this period.',
+      insight: top ? 'Largest: ' + fmt(top.funded_amount) + ' via ' + (top.lender_name || 'Unknown') + ' (' + (top.rep_name || 'Unknown') + ').' : null,
+      chart:   funded.length ? { data: funded.slice(0, 8).map(function (d) { return { name: (d.lender_name || 'Deal').substring(0, 12), value: d.funded_amount }; }), label: 'Funded Amount' } : null,
+      table:   { cols: ['Date', 'Amount', 'Lender', 'Rep'], rows: funded.slice(0, 10).map(function (d) { return [(d.funded_at || d.application_submitted_at || '').substring(0, 10), fmt(d.funded_amount), d.lender_name || '-', d.rep_name || '-']; }) },
     };
   }
 
@@ -908,12 +1049,19 @@
     });
   }
 
+  function applyLiveRows(rows) {
+    _deals = rows.map(mapLiveDeal).filter(function (d) { return d.client_name || d.rep_name; });
+    _loaded = true;
+  }
+
   // ── Init ───────────────────────────────────────────────────────────────────
   function init() {
     injectStyles();
     buildOverlay();
     wireSearch();
-    // Pre-fetch data in background so first search is instant
+    window.addEventListener('capmuse:deals-updated', function (e) {
+      if (e.detail && e.detail.length) applyLiveRows(e.detail);
+    });
     loadData(function () {});
   }
 
