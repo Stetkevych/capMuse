@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CapMuse</title>
+  <title>Live Data — CapMuse</title>
+  <link rel="preconnect" href="https://capmuse-data-882611632216.s3.amazonaws.com" crossorigin />
+  <link rel="dns-prefetch" href="https://capmuse-data-882611632216.s3.amazonaws.com" />
+  <script src="capmuse-data.js"></script>
+  <script>if(window.CapMuseData)window.CapMuseData.prefetch();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -502,14 +506,6 @@
       flex-shrink: 0;
     }
 
-    .avatar-wrap { position: relative; }
-    .avatar-menu { position: absolute; top: calc(100% + 8px); right: 0; min-width: 160px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease; z-index: 200; }
-    .avatar-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-    .avatar-menu-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--text-primary); cursor: pointer; text-decoration: none; transition: background 0.12s ease; }
-    .avatar-menu-item:hover { background: var(--nav-hover-bg); }
-    .avatar-menu-item.danger { color: #EF4444; }
-    .avatar-menu-item.danger:hover { background: rgba(239,68,68,0.1); }
-
     /* Theme toggle */
     .icon-moon { display: block; }
     .icon-sun  { display: none; }
@@ -567,6 +563,223 @@
       display: grid;
       grid-template-columns: 1fr 380px;
       gap: 16px;
+    }
+
+    /* ── Analytics-only live data layout (distinct from dashboard bento) ── */
+    .analytics-page .content-grid {
+      grid-template-columns: 1fr 340px;
+      align-items: start;
+    }
+
+    .analytics-main-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .analytics-hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 4px 2px 2px;
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #10B981;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 999px;
+      padding: 5px 12px 5px 10px;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+      animation: livePulse 2s ease-out infinite;
+    }
+
+    @keyframes livePulse {
+      0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
+      70%  { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .analytics-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+      margin-top: 8px;
+    }
+
+    .analytics-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .analytics-stats.is-loading .analytics-skeleton-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .sk-card {
+      height: 96px;
+      border-radius: 14px;
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: skShimmer 1.2s ease-in-out infinite;
+      border: 1px solid var(--border);
+    }
+
+    @keyframes skShimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .analytics-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .analytics-kpi {
+      --kpi-accent: #10B981;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--kpi-accent);
+      border-radius: 14px;
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .analytics-kpi::after {
+      content: '';
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in srgb, var(--kpi-accent) 18%, transparent) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .analytics-kpi:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--card-shadow);
+    }
+
+    .analytics-kpi-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--kpi-accent);
+    }
+
+    .analytics-kpi-value {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-top: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .analytics-kpi-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .analytics-tables {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .analytics-table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      border-top: 2px solid #06B6D4;
+    }
+
+    .analytics-table-head {
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+
+    .analytics-table-scroll {
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .analytics-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .analytics-table th {
+      padding: 7px 12px;
+      text-align: left;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--table-head);
+      position: sticky;
+      top: 0;
+    }
+
+    .analytics-table td {
+      padding: 8px 12px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--table-border);
+    }
+
+    .analytics-table td.primary {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .analytics-table td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    @media (max-width: 1100px) {
+      .analytics-kpi-grid,
+      .analytics-stats.is-loading .analytics-skeleton-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analytics-tables { grid-template-columns: 1fr; }
+      .analytics-page .content-grid { grid-template-columns: 1fr; }
     }
 
     /* ── Left: stat cards bento grid ── */
@@ -1217,11 +1430,17 @@
     .rep-row.r-silver .rep-amt   { color: rgba(226,232,240,0.62); }
     .rep-row.r-bronze .rep-name  { color: #FCA044; font-weight: 600; }
     .rep-row.r-bronze .rep-amt   { color: rgba(252,160,68,0.62); }
-
+    .avatar-wrap { position: relative; }
+    .avatar-menu { position: absolute; top: calc(100% + 8px); right: 0; min-width: 160px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease; z-index: 200; }
+    .avatar-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .avatar-menu-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--text-primary); cursor: pointer; text-decoration: none; transition: background 0.12s ease; }
+    .avatar-menu-item:hover { background: var(--nav-hover-bg); }
+    .avatar-menu-item.danger { color: #EF4444; }
+    .avatar-menu-item.danger:hover { background: rgba(239,68,68,0.1); }
   </style>
   <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
-<body>
+<body class="analytics-page">
 <div class="layout">
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -1247,8 +1466,7 @@
         Home
       </a>
 
-      <!-- Expandable: Overview (like "Home" in StatMuse) -->
-      <div class="nav-section-toggle open active" id="overviewToggle" role="button" tabindex="0" aria-expanded="true">
+      <div class="nav-section-toggle open" id="overviewToggle" role="button" tabindex="0" aria-expanded="true">
         <div class="toggle-left">
           <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
             <rect x="2" y="2" width="7" height="7" rx="1.5"/>
@@ -1262,23 +1480,85 @@
           <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-
       <div class="nav-sub open" id="overviewSub">
-        <a class="nav-sub-item active" href="dashboard.html" aria-current="page">
-          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/>
-          </svg>
+        <a class="nav-sub-item" href="dashboard.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/></svg>
           Dashboard
         </a>
-        <a class="nav-sub-item" href="analytics.html">
-          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M2 14l4-6 3 4 3-5 4 7H2z" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        <a class="nav-sub-item active" href="analytics.html" aria-current="page">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 14l4-6 3 4 3-5 4 7H2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Live Data
         </a>
       </div>
 
-      <!-- CRM Section -->
+      <div class="nav-section-toggle open active" id="dataToggle" role="button" tabindex="0" aria-expanded="true">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/>
+          </svg>
+          Data Views
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="nav-sub open" id="dataSub">
+        <a class="nav-sub-item active" href="#" data-page="dashboard" aria-current="page">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/></svg>
+          Summary
+        </a>
+        <a class="nav-sub-item" href="#" data-page="applications">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 2h7l4 4v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke-linecap="round"/><path d="M12 2v4h4" stroke-linecap="round"/></svg>
+          Applications
+        </a>
+        <a class="nav-sub-item" href="#" data-page="businesses">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" stroke-linecap="round"/></svg>
+          Businesses
+        </a>
+        <a class="nav-sub-item" href="#" data-page="statements">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 14l4-6 3 4 3-5 4 7H2z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Statements
+        </a>
+        <a class="nav-sub-item" href="#" data-page="reports">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2" stroke-linecap="round"/><path d="M7 7h6M7 10h6M7 13h4" stroke-linecap="round"/></svg>
+          Reports
+        </a>
+      </div>
+
+      <a class="nav-item" href="#" data-page="funding">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <circle cx="10" cy="10" r="7.5"/>
+          <path d="m7 10 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Funding
+      </a>
+
+      <a class="nav-item" href="#" data-page="alerts">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke-linecap="round"/>
+          <path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke-linecap="round"/>
+        </svg>
+        Alerts
+      </a>
+
+      <div class="nav-section-toggle" id="trendingToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 15l5-5 3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 7h3v3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Trending
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="nav-sub" id="trendingSub">
+        <a class="nav-sub-item" href="#" data-page="topfunded">Top Funded</a>
+        <a class="nav-sub-item" href="#" data-page="fastest">Fastest Growing</a>
+        <a class="nav-sub-item" href="#" data-page="mostapplications">Most Applications</a>
+      </div>
+
       <div class="nav-section-toggle" id="crmToggle" role="button" tabindex="0" aria-expanded="false">
         <div class="toggle-left">
           <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
@@ -1292,36 +1572,10 @@
         </svg>
       </div>
       <div class="nav-sub" id="crmSub">
-        <a class="nav-sub-item" href="lead.html">
-          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <circle cx="10" cy="6.5" r="3"/>
-            <path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/>
-          </svg>
-          Leads
-        </a>
-        <a class="nav-sub-item" href="pipeline.html">
-          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M3 5h14M3 9.5h10M3 14h6" stroke-linecap="round"/>
-            <circle cx="15" cy="14" r="2.5"/>
-          </svg>
-          Pipeline
-        </a>
-        <a class="nav-sub-item" href="funding_book.html">
-          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M4 3h9l4 4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>
-            <path d="M13 3v4h4" stroke-linecap="round"/>
-            <path d="M7 9h6M7 12h6M7 15h3" stroke-linecap="round"/>
-          </svg>
-          Funding Book
-        </a>
-        <a class="nav-sub-item" href="lender_recommendation.html">
-          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <rect x="2" y="5" width="16" height="11" rx="2"/>
-            <path d="M2 9h16" stroke-linecap="round"/>
-            <path d="M6 13h2M10 13h2" stroke-linecap="round"/>
-          </svg>
-          Lender Match
-        </a>
+        <a class="nav-sub-item" href="lead.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="6.5" r="3"/><path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/></svg>Leads</a>
+        <a class="nav-sub-item" href="pipeline.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h14M3 9.5h10M3 14h6" stroke-linecap="round"/><circle cx="15" cy="14" r="2.5"/></svg>Pipeline</a>
+        <a class="nav-sub-item" href="funding_book.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 3h9l4 4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M13 3v4h4" stroke-linecap="round"/><path d="M7 9h6M7 12h6M7 15h3" stroke-linecap="round"/></svg>Funding Book</a>
+        <a class="nav-sub-item" href="lender_recommendation.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="5" width="16" height="11" rx="2"/><path d="M2 9h16" stroke-linecap="round"/><path d="M6 13h2M10 13h2" stroke-linecap="round"/></svg>Lender Match</a>
       </div>
 
       <div class="nav-section-toggle" id="dialerToggle" role="button" tabindex="0" aria-expanded="false">
@@ -1337,9 +1591,7 @@
       </div>
       <div class="nav-sub" id="dialerSub">
         <a class="nav-sub-item" href="convoso.html">
-          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
-            <path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Convoso
         </a>
       </div>
@@ -1349,10 +1601,10 @@
     <!-- User strip -->
     <div class="sidebar-footer">
       <div class="sidebar-user" role="button" tabindex="0" aria-label="User menu">
-        <div class="user-avatar">GP</div>
+        <div class="user-avatar" id="sidebarAvatar">GP</div>
         <div class="user-info">
-          <div class="user-name">Gustavo Prieto</div>
-          <div class="user-role">Software Engineer</div>
+          <div class="user-name" id="sidebarName">Loading…</div>
+          <div class="user-role" id="sidebarRole"></div>
         </div>
         <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0" aria-hidden="true">
           <path d="M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1381,7 +1633,7 @@
         <svg class="search-icon-l" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
           <circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/>
         </svg>
-        <input class="search-input" type="search" placeholder="Search reps, deals, lenders, or ask anything…" aria-label="Search" />
+        <input class="search-input" type="search" placeholder="Search oddly specific or unspecific things" aria-label="Search" readonly />
         <svg class="search-icon-r" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
           <circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/>
         </svg>
@@ -1424,7 +1676,7 @@
       <!-- Ticker bar (StatMuse score bar) -->
       <div class="ticker-bar">
         <span class="ticker-msg">No new applications today</span>
-        <a class="ticker-link" href="#" tabindex="0">
+        <a class="ticker-link" href="pipeline.html" tabindex="0">
           View Pipeline
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
             <path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1435,128 +1687,32 @@
       <!-- Main grid: stat cards (left) + right panel -->
       <div class="content-grid" id="mainContent">
 
-        <!-- ── Left: Colored stat cards (StatMuse style) ── -->
-        <div class="cards-col">
+        <!-- ── Left: Live analytics (distinct from dashboard bento) ── -->
+        <div class="analytics-main-col">
 
-          <!-- Tile 1: Rep of the Month Leaderboard — full width, top -->
-          <div class="stat-card rep-leader-card">
-
-            <!-- Left: Anderson hero — click to open stats card -->
-            <div class="rep-hero" data-person-id="anderson">
-              <div class="rep-crown">🥇</div>
-              <div class="rep-photo-wrap">
-                <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Anderson" class="rep-photo" />
-              </div>
-              <div class="rep-hero-name">Anderson</div>
-              <div class="rep-hero-label">Most Funded · June</div>
-              <div class="rep-hero-amount"></div>
-            </div>
-
-            <!-- Right: leaderboard -->
-            <div class="rep-board">
-              <div class="rep-board-head">Monthly Rep Leaderboard</div>
-              <div class="rep-grid">
-                <div class="rep-row r-gold"   data-person-id="anderson"><span class="rep-pos medal">🥇</span><span class="rep-name">Anderson</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="matthew"> <span class="rep-pos num"></span><span class="rep-name">Matthew</span><span class="rep-amt"></span></div>
-                <div class="rep-row r-silver"  data-person-id="frank">   <span class="rep-pos medal">🥈</span><span class="rep-name">Frank</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="santi">   <span class="rep-pos num"></span><span class="rep-name">Santi</span><span class="rep-amt"></span></div>
-                <div class="rep-row r-bronze"  data-person-id="blake">   <span class="rep-pos medal">🥉</span><span class="rep-name">Blake</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="rondon">  <span class="rep-pos num"></span><span class="rep-name">Rondon</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="colin">   <span class="rep-pos num"></span><span class="rep-name">Colin</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="ray">     <span class="rep-pos num"></span><span class="rep-name">Ray</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="kip">     <span class="rep-pos num"></span><span class="rep-name">Kip</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="pina">    <span class="rep-pos num"></span><span class="rep-name">Pina</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="juan">    <span class="rep-pos num"></span><span class="rep-name">Juan</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="dominic"> <span class="rep-pos num"></span><span class="rep-name">Dominic</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="rio">     <span class="rep-pos num"></span><span class="rep-name">Rio</span><span class="rep-amt"></span></div>
-                <div class="rep-row"           data-person-id="gabriel"> <span class="rep-pos num"></span><span class="rep-name">Gabriel</span><span class="rep-amt"></span></div>
-              </div>
-            </div>
-
-          </div>
-
-
-
-
-
-
-
-
-          <!-- Tile 2: Cipriani — biggest avg deal (right next to Anderson leaderboard) -->
-          <div class="stat-card plum" data-person-id="cipriani">
-            <div class="card-left">
-              <p class="card-headline">Biggest avg deal<br />size this month:</p>
-              <div class="card-names">
-                <span class="card-name" style="color:#C084FC">Cipriani</span>
-              </div>
-              <span class="card-big-single" style="font-size:28px;background:linear-gradient(135deg,#F0ABFC,#C084FC,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(232,121,249,0.55));letter-spacing:-0.02em"></span>
-            </div>
-            <div class="card-right">
-              <div class="card-rep-photo-wrap">
-                <img src="Assets/reps/Cartoon/cipriani.png" alt="Cipriani" class="card-rep-photo" />
-              </div>
+          <div class="analytics-hero">
+            <div>
+              <span class="live-pill"><span class="live-dot"></span> Live</span>
+              <h1 class="analytics-title">Funding Analytics</h1>
+              <p class="analytics-subtitle">Real-time metrics from the funding book</p>
             </div>
           </div>
 
-          <!-- Tile 3: Navy — narrow, short (middle right) -->
-          <div class="stat-card navy">
-            <div class="card-left">
-              <p class="card-headline">
-                Businesses funded<br />with A+ credit:
-              </p>
-              <div class="card-names">
-                <span class="card-name">Metro Holdings</span>
-                <span class="card-name">BlueStar Capital</span>
-              </div>
-            </div>
-            <div class="card-right">
-              <div class="card-icon-decor" style="background:rgba(255,255,255,0.05)">
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" style="color:rgba(255,255,255,0.2)" aria-hidden="true">
-                  <circle cx="10" cy="10" r="7.5"/>
-                  <path d="m7 10 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tile 4: Teal — narrow, big number (bottom left) -->
-          <div class="stat-card teal">
-            <div class="card-left">
-              <p class="card-headline">Average deal size<br />funded this year:</p>
-              <span class="card-big-single"></span>
-            </div>
-            <div class="card-right">
-              <div class="card-icon-decor" style="background:rgba(255,255,255,0.08)">
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" style="color:rgba(255,255,255,0.3)" aria-hidden="true">
-                  <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke-linecap="round"/>
-                  <circle cx="10" cy="10" r="4"/>
-                  <path d="M10 8v2l1.5 1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tile 5: Ivan — wide spotlight -->
-          <div class="stat-card crimson" data-person-id="ivan">
-            <div class="card-left">
-              <p class="card-headline" style="color:rgba(252,165,165,0.85);font-size:13.5px;max-width:280px">
-                Highest close rate on the team<br />this quarter:
-              </p>
-              <div class="card-names" style="margin-bottom:10px">
-                <span class="card-name" style="color:#FCA5A5;font-size:18px">Ivan</span>
-              </div>
-              <span class="card-big-single" style="font-size:42px;background:linear-gradient(135deg,#FCA5A5,#F87171,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 10px rgba(239,68,68,0.6));letter-spacing:-0.03em"></span>
-              <p class="card-footer-text" style="color:rgba(252,165,165,0.75);font-size:13px;margin-top:6px"></p>
-            </div>
-            <div class="card-right">
-              <div class="ivan-photo-wrap">
-                <img src="Assets/reps/Cartoon/IvanCartoon.png" alt="Ivan" class="card-rep-photo" style="object-position:center 8%" />
+          <div id="capmuseStats" class="analytics-stats is-loading" aria-label="Live funding statistics">
+            <div class="analytics-skeleton">
+              <div class="analytics-skeleton-kpis">
+                <div class="sk-card"></div>
+                <div class="sk-card"></div>
+                <div class="sk-card"></div>
+                <div class="sk-card"></div>
+                <div class="sk-card"></div>
+                <div class="sk-card"></div>
               </div>
             </div>
           </div>
 
         </div>
-        <!-- END cards-col -->
+        <!-- END analytics-main-col -->
 
         <!-- ── Right column ── -->
         <div class="right-col">
@@ -1675,8 +1831,6 @@
 </div>
 <!-- END LAYOUT -->
 
-<!-- Profile stats modal is injected by Assets/profile-stats.js -->
-
 <script>
   /* ─── Theme ─── */
   (function () {
@@ -1707,6 +1861,8 @@
       });
     }
     bindToggle('overviewToggle', 'overviewSub');
+    bindToggle('dataToggle', 'dataSub');
+    bindToggle('trendingToggle', 'trendingSub');
     bindToggle('crmToggle', 'crmSub');
     bindToggle('dialerToggle', 'dialerSub');
   })();
@@ -1722,7 +1878,17 @@
     overlay.addEventListener('click', close);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
   })();
+</script>
 
+<script>
+  (function () {
+    var btn  = document.getElementById('avatarBtn');
+    var menu = document.getElementById('avatarMenu');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', function () { menu.classList.remove('open'); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.classList.remove('open'); });
+  })();
 </script>
 <script src="Assets/profile-stats.js"></script>
 <script src="Assets/capmuse-auth.js"></script>
@@ -1731,121 +1897,7 @@
     if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
   })();
 </script>
-
-<script>
-/* ─── Load real data from S3 ─── */
-(async function() {
-  const BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
-  try {
-    const res = await fetch(`${BUCKET}/Accounts.csv`);
-    if (!res.ok) return;
-    const text = await res.text();
-    const data = parseCSV(text);
-    if (data.length > 0) populateDashboard(data);
-  } catch(e) { console.log('[CapMuse] S3 fetch failed, using static data'); }
-
-  function parseCSV(text) {
-    const lines = []; let cur = '', inQ = false;
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      if (ch === '"') inQ = !inQ;
-      else if (ch === '\n' && !inQ) { lines.push(cur.replace(/\r$/,'')); cur = ''; }
-      else cur += ch;
-    }
-    if (cur.trim()) lines.push(cur.replace(/\r$/,''));
-    if (lines.length < 2) return [];
-    const headers = splitRow(lines[0]);
-    return lines.slice(1).filter(l => l.trim()).map(line => {
-      const vals = splitRow(line); const obj = {};
-      headers.forEach((h,i) => { obj[h] = vals[i] || ''; });
-      return obj;
-    });
-  }
-
-  function splitRow(line) {
-    const res = []; let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') inQ = !inQ;
-      else if (ch === ',' && !inQ) { res.push(cur.trim()); cur = ''; }
-      else cur += ch;
-    }
-    res.push(cur.trim()); return res;
-  }
-
-  function populateDashboard(rows) {
-    // Map rows
-    const deals = rows.map(r => ({
-      name: r.Account_Name || r.DBA || r.Business_Legal_Name || '',
-      stage: r.Stage_of_Package || '',
-      amount: parseFloat(String(r.Amount||'').replace(/[$,]/g,'')) || 0,
-      funded: r.Date_Funded || '',
-      applied: r.Date_Applied || r.Created_Time || '',
-      rep: r.Bizz_Owner_Name || '',
-      lender: r.Funder_2 || '',
-      source: r.Lead_Source || r.Original_Lead_Source || '',
-      industry: r.Industry || r.I_Stated_Industry || '',
-      state: r.State || r.Business_State || '',
-      revenue: parseFloat(String(r.Monthly_Revenue||r.Monthly_Revenue1||'').replace(/[$,]/g,'')) || 0,
-    })).filter(d => d.name);
-
-    const funded = deals.filter(d => d.stage && d.stage.toLowerCase().includes('fund') && !d.stage.toLowerCase().includes('decline'));
-    const totalFunded = funded.reduce((s,d) => s + d.amount, 0);
-    const totalDeals = deals.length;
-    const approvalRate = totalDeals ? Math.round((funded.length / totalDeals) * 100) : 0;
-
-    // Update pipeline table (amounts left empty until live metrics are enabled)
-    const tbody = document.querySelector('.pipeline-table tbody');
-    if (tbody) {
-      const top10 = deals.slice(0, 10);
-      tbody.innerHTML = top10.map((d, i) => {
-        const initials = d.name.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
-        const chipClass = d.stage.toLowerCase().includes('fund') ? 'chip-green' : d.stage.toLowerCase().includes('review') || d.stage.toLowerCase().includes('approv') ? 'chip-blue' : 'chip-gray';
-        const stageLabel = d.stage.toLowerCase().includes('fund') ? 'Funded' : d.stage.toLowerCase().includes('approv') ? 'Approved' : d.stage.toLowerCase().includes('review') || d.stage.toLowerCase().includes('underw') ? 'Review' : 'Pending';
-        return `<tr>
-          <td></td>
-          <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#10B981)">${initials}</div><span class="biz-cell-name">${d.name.substring(0,20)}</span></div></td>
-          <td></td>
-          <td></td>
-          <td><span class="status-chip ${chipClass}">${stageLabel}</span></td>
-        </tr>`;
-      }).join('');
-    }
-
-    console.log(`[CapMuse] Dashboard loaded: ${deals.length} deals, ${funded.length} funded, $${fmt(totalFunded)} volume`);
-  }
-
-  function fmt(n) {
-    if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-    if (n >= 1000) return (n/1000).toFixed(0) + 'K';
-    return n.toString();
-  }
-})();
-</script>
-
-<script>
-(function () {
-    var btn = document.getElementById('avatarBtn');
-    var menu = document.getElementById('avatarMenu');
-
-    if (!btn || !menu) return;
-
-    btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        menu.classList.toggle('open');
-    });
-
-    document.addEventListener('click', function () {
-        menu.classList.remove('open');
-    });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            menu.classList.remove('open');
-        }
-    });
-})();
-</script>
-<script src="Assets/capmuse-search.js"></script>
+<script src="capmuse-stats.js"></script>
+<script src="capmuse-engine.js"></script>
 </body>
 </html>

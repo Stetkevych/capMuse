@@ -314,6 +314,7 @@
       </div>
       <div class="nav-sub" id="overviewSub">
         <a class="nav-sub-item" href="dashboard.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/></svg>Dashboard</a>
+        <a class="nav-sub-item" href="analytics.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 14l4-6 3 4 3-5 4 7H2z" stroke-linecap="round" stroke-linejoin="round"/></svg>Live Data</a>
       </div>
 
       <!-- CRM — open, Pipeline active -->
@@ -329,6 +330,17 @@
         <a class="nav-sub-item active" href="pipeline.html" aria-current="page"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h14M3 9.5h10M3 14h6" stroke-linecap="round"/><circle cx="15" cy="14" r="2.5"/></svg>Pipeline</a>
         <a class="nav-sub-item" href="funding_book.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 3h9l4 4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M13 3v4h4" stroke-linecap="round"/><path d="M7 9h6M7 12h6M7 15h3" stroke-linecap="round"/></svg>Funding Book</a>
         <a class="nav-sub-item" href="lender_recommendation.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="5" width="16" height="11" rx="2"/><path d="M2 9h16" stroke-linecap="round"/><path d="M6 13h2M10 13h2" stroke-linecap="round"/></svg>Lender Match</a>
+      </div>
+
+      <div class="nav-section-toggle" id="dialerToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5.5 3.5h2.2a1.5 1.5 0 0 1 1.4 1l1.1 3.3a1.5 1.5 0 0 1-.4 1.5l-1.6 1.6a11 11 0 0 0 5 5l1.6-1.6a1.5 1.5 0 0 1 1.5-.4l3.3 1.1a1.5 1.5 0 0 1 1 1.4V16a1.5 1.5 0 0 1-1.5 1.5A13 13 0 0 1 4 5.5 1.5 1.5 0 0 1 5.5 4z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Dialer
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="nav-sub" id="dialerSub">
+        <a class="nav-sub-item" href="convoso.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/></svg>Convoso</a>
       </div>
 
     </nav>
@@ -370,7 +382,7 @@
     <main class="page-content" role="main">
 
       <div class="ticker-bar">
-        <span class="ticker-msg">8 deals awaiting review &nbsp;·&nbsp; $14.2M in active pipeline &nbsp;·&nbsp; 3 approvals expected this week</span>
+        <span class="ticker-msg">Deals awaiting review &nbsp;·&nbsp; Active pipeline &nbsp;·&nbsp; Approvals expected this week</span>
         <a class="ticker-link" href="funding_book.html">
           Funding Book
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -398,23 +410,23 @@
       <div class="kpi-strip">
         <div class="kpi-card kc-purple">
           <div class="kpi-label">Active Deals</div>
-          <div class="kpi-value">42</div>
-          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>+5 vs last week</div>
+          <div class="kpi-value"></div>
+          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="kpi-card kc-blue">
           <div class="kpi-label">Pipeline Value</div>
-          <div class="kpi-value">$14.2M</div>
-          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>+$2.1M vs last month</div>
+          <div class="kpi-value"></div>
+          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
         <div class="kpi-card kc-amber">
           <div class="kpi-label">Avg Deal Size</div>
-          <div class="kpi-value">$338K</div>
-          <div class="kpi-delta neu">— vs last month</div>
+          <div class="kpi-value"></div>
+          <div class="kpi-delta neu"></div>
         </div>
         <div class="kpi-card kc-green">
           <div class="kpi-label">Funded This Month</div>
-          <div class="kpi-value">12</div>
-          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>+3 vs last month</div>
+          <div class="kpi-value"></div>
+          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         </div>
       </div>
 
@@ -428,7 +440,7 @@
             <div class="card-names">
               <span class="card-name">Matt</span>
             </div>
-            <span class="card-big-single">15 pulls</span>
+            <span class="card-big-single"></span>
           </div>
           <div class="card-right">
             <div class="photo-wrap-blue">
@@ -444,7 +456,7 @@
             <div class="card-names">
               <span class="card-name" style="color:#C084FC">Gabe</span>
             </div>
-            <span class="card-big-single" style="background:linear-gradient(135deg,#F0ABFC,#C084FC,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(232,121,249,0.55))">12 deals</span>
+            <span class="card-big-single" style="background:linear-gradient(135deg,#F0ABFC,#C084FC,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(232,121,249,0.55))"></span>
           </div>
           <div class="card-right">
             <div class="card-rep-photo-wrap">
@@ -463,7 +475,7 @@
                 <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Gabriel" class="vs-rep-photo" />
                 <span class="vs-rep-name">Gabe</span>
               </div>
-              <span class="vs-count">9</span>
+              <span class="vs-count"></span>
             </div>
             <div class="vs-divider"></div>
             <div class="vs-row">
@@ -472,7 +484,7 @@
                 <img src="Assets/reps/Cartoon/IvanCartoon.png" alt="Jason" class="vs-rep-photo" />
                 <span class="vs-rep-name">Jason</span>
               </div>
-              <span class="vs-count" style="color:#34D399">10</span>
+              <span class="vs-count" style="color:#34D399"></span>
             </div>
           </div>
         </div>
@@ -484,7 +496,7 @@
             <div class="card-names">
               <span class="card-name" style="color:#34D399">Gabe</span>
             </div>
-            <span class="card-big-single" style="background:linear-gradient(135deg,#6EE7B7,#34D399,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(52,211,153,0.55))">34 deals</span>
+            <span class="card-big-single" style="background:linear-gradient(135deg,#6EE7B7,#34D399,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(52,211,153,0.55))"></span>
           </div>
           <div class="card-right">
             <div class="photo-wrap-teal" style="width:72px;height:72px;">
@@ -500,40 +512,40 @@
       <div class="funnel-row">
         <div class="funnel-step fs-new">
           <div class="funnel-step-label">New App</div>
-          <div class="funnel-step-count">18</div>
-          <div class="funnel-step-amt">$4.1M</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
         </div>
         <div class="funnel-step fs-review">
           <div class="funnel-step-label">Under Review</div>
-          <div class="funnel-step-count">24</div>
-          <div class="funnel-step-amt">$6.8M</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
         </div>
         <div class="funnel-step fs-approv">
           <div class="funnel-step-label">Approved</div>
-          <div class="funnel-step-count">15</div>
-          <div class="funnel-step-amt">$5.2M</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
         </div>
         <div class="funnel-step fs-funded">
           <div class="funnel-step-label">Funded</div>
-          <div class="funnel-step-count">23</div>
-          <div class="funnel-step-amt">$8.4M</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
         </div>
         <div class="funnel-step fs-decl">
           <div class="funnel-step-label">Declined</div>
-          <div class="funnel-step-count">9</div>
-          <div class="funnel-step-amt">$1.9M</div>
+          <div class="funnel-step-count"></div>
+          <div class="funnel-step-amt"></div>
         </div>
       </div>
 
       <!-- Controls -->
       <div class="controls-row">
         <div class="tab-bar" role="tablist">
-          <a class="tab active" href="#" role="tab">All <span class="tab-count">89</span></a>
-          <a class="tab" href="#" role="tab">New App <span class="tab-count">18</span></a>
-          <a class="tab" href="#" role="tab">Under Review <span class="tab-count">24</span></a>
-          <a class="tab" href="#" role="tab">Approved <span class="tab-count">15</span></a>
-          <a class="tab" href="#" role="tab">Funded <span class="tab-count">23</span></a>
-          <a class="tab" href="#" role="tab">Declined <span class="tab-count">9</span></a>
+          <a class="tab active" href="#" role="tab">All <span class="tab-count"></span></a>
+          <a class="tab" href="#" role="tab">New App <span class="tab-count"></span></a>
+          <a class="tab" href="#" role="tab">Under Review <span class="tab-count"></span></a>
+          <a class="tab" href="#" role="tab">Approved <span class="tab-count"></span></a>
+          <a class="tab" href="#" role="tab">Funded <span class="tab-count"></span></a>
+          <a class="tab" href="#" role="tab">Declined <span class="tab-count"></span></a>
         </div>
         <div class="filter-bar">
           <div class="filter-search-wrap">
@@ -568,11 +580,11 @@
             <tr>
               <td>1</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#34D399)">MH</div><span class="biz-cell-name">Metro Holdings</span></div></td>
-              <td>$8.1M</td>
+              <td></td>
               <td>Credibly</td>
               <td>Anderson</td>
               <td><span class="status-chip chip-green">Funded</span></td>
-              <td><span class="factor-rate">1.28</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>1st</td>
               <td>May 15</td>
               <td><button class="action-btn">View</button></td>
@@ -580,11 +592,11 @@
             <tr>
               <td>2</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#2563EB)">AF</div><span class="biz-cell-name">Apex Financial</span></div></td>
-              <td>$4.2M</td>
+              <td></td>
               <td>BlueVine</td>
               <td>Frank</td>
               <td><span class="status-chip chip-amber">Approved</span></td>
-              <td><span class="factor-rate">1.35</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>1st</td>
               <td>May 22</td>
               <td><button class="action-btn">View</button></td>
@@ -592,11 +604,11 @@
             <tr>
               <td>3</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#34D399,#2563EB)">BC</div><span class="biz-cell-name">BlueStar Capital</span></div></td>
-              <td>$7.8M</td>
+              <td></td>
               <td>OnDeck</td>
               <td>Blake</td>
               <td><span class="status-chip chip-blue">Under Review</span></td>
-              <td><span class="factor-rate">TBD</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>1st</td>
               <td>May 28</td>
               <td><button class="action-btn">View</button></td>
@@ -604,11 +616,11 @@
             <tr>
               <td>4</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#6366F1,#2563EB)">NT</div><span class="biz-cell-name">NovaTech LLC</span></div></td>
-              <td>$1.8M</td>
+              <td></td>
               <td>Kabbage</td>
               <td>Ivan</td>
               <td><span class="status-chip chip-blue">Under Review</span></td>
-              <td><span class="factor-rate">TBD</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>2nd</td>
               <td>Jun 1</td>
               <td><button class="action-btn">View</button></td>
@@ -616,11 +628,11 @@
             <tr>
               <td>5</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#10B981)">SD</div><span class="biz-cell-name">Sierra Dynamics</span></div></td>
-              <td>$3.1M</td>
+              <td></td>
               <td>Rapid Finance</td>
               <td>Colin</td>
               <td><span class="status-chip chip-purple">New App</span></td>
-              <td><span class="factor-rate">TBD</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>1st</td>
               <td>Jun 3</td>
               <td><button class="action-btn">View</button></td>
@@ -628,11 +640,11 @@
             <tr>
               <td>6</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#10B981,#0F4C81)">CP</div><span class="biz-cell-name">Capital Partners</span></div></td>
-              <td>$5.5M</td>
+              <td></td>
               <td>Credibly</td>
               <td>Kip</td>
               <td><span class="status-chip chip-amber">Approved</span></td>
-              <td><span class="factor-rate">1.42</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>2nd</td>
               <td>May 18</td>
               <td><button class="action-btn">View</button></td>
@@ -640,11 +652,11 @@
             <tr>
               <td>7</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#6366F1)">VS</div><span class="biz-cell-name">Vertex Solutions</span></div></td>
-              <td>$2.4M</td>
+              <td></td>
               <td>Fundbox</td>
               <td>Santi</td>
               <td><span class="status-chip chip-blue">Under Review</span></td>
-              <td><span class="factor-rate">TBD</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>1st</td>
               <td>Jun 2</td>
               <td><button class="action-btn">View</button></td>
@@ -652,11 +664,11 @@
             <tr>
               <td>8</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#34D399)">PV</div><span class="biz-cell-name">Pacific Ventures</span></div></td>
-              <td>$2.1M</td>
+              <td></td>
               <td>OnDeck</td>
               <td>Matthew</td>
               <td><span class="status-chip chip-purple">New App</span></td>
-              <td><span class="factor-rate">TBD</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>1st</td>
               <td>Jun 4</td>
               <td><button class="action-btn">View</button></td>
@@ -664,11 +676,11 @@
             <tr>
               <td>9</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">SH</div><span class="biz-cell-name">Summit Holdings</span></div></td>
-              <td>$6.2M</td>
+              <td></td>
               <td>BlueVine</td>
               <td>Anderson</td>
               <td><span class="status-chip chip-green">Funded</span></td>
-              <td><span class="factor-rate">1.31</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>1st</td>
               <td>Apr 30</td>
               <td><button class="action-btn">View</button></td>
@@ -676,11 +688,11 @@
             <tr>
               <td>10</td>
               <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#EF4444,#6366F1)">HF</div><span class="biz-cell-name">Harbor Finance</span></div></td>
-              <td>$1.5M</td>
+              <td></td>
               <td>Kabbage</td>
               <td>Rio</td>
               <td><span class="status-chip chip-red">Declined</span></td>
-              <td><span class="factor-rate">—</span></td>
+              <td><span class="factor-rate"></span></td>
               <td>2nd</td>
               <td>May 25</td>
               <td><button class="action-btn">View</button></td>
@@ -714,6 +726,7 @@
     }
     bindToggle('overviewToggle', 'overviewSub');
     bindToggle('crmToggle', 'crmSub');
+    bindToggle('dialerToggle', 'dialerSub');
   })();
   (function () {
     const sidebar = document.getElementById('sidebar'), overlay = document.getElementById('sidebarOverlay'), burger = document.getElementById('burgerBtn');
@@ -734,5 +747,12 @@
   })();
 </script>
 <script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-auth.js"></script>
+<script>
+  (function () {
+    if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
+  })();
+</script>
+<script src="Assets/capmuse-search.js"></script>
 </body>
 </html>
