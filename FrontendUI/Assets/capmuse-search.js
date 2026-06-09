@@ -6,10 +6,21 @@
   'use strict';
 
   var BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
-  var _deals  = [];
-  var _loaded = false;
-  var _loading = false;
-  var _queue  = [];
+  var _deals        = [];
+  var _loaded       = false;
+  var _loading      = false;
+  var _queue        = [];
+  var _currentQuery = '';
+
+  var NOW = new Date();
+  var FILTER_CHIPS = [
+    { label: 'All Time', filter: { label: 'All Time',        allTime: true } },
+    { label: 'YTD',      filter: { type: 'year', year: NOW.getFullYear(), label: 'YTD ' + NOW.getFullYear() } },
+    { label: String(NOW.getFullYear() - 1), filter: { type: 'year', year: NOW.getFullYear() - 1, label: String(NOW.getFullYear() - 1) } },
+    { label: String(NOW.getFullYear() - 2), filter: { type: 'year', year: NOW.getFullYear() - 2, label: String(NOW.getFullYear() - 2) } },
+    { label: 'Last 90d', filter: { label: 'Last 90 Days',    days: 90  } },
+    { label: 'Last 30d', filter: { label: 'Last 30 Days',    days: 30  } },
+  ];
 
   // ── CSV utilities ──────────────────────────────────────────────────────────
   function parseCSV(text) {
@@ -374,13 +385,21 @@
   }
 
   // ── Query router ───────────────────────────────────────────────────────────
-  function processQuery(query, deals) {
+  function processQuery(query, deals, filterOverride) {
     var q = query.toLowerCase().trim();
     var repMatch    = detectRep(q, deals);
     var lenderMatch = detectLender(q, deals);
-    var periodFilter = detectPeriod(q);
-    var timeFilter   = detectTimeWindow(q);
-    var intent       = classifyIntent(q);
+    var intent      = classifyIntent(q);
+
+    var periodFilter, timeFilter;
+    if (filterOverride) {
+      if (filterOverride.allTime)  { periodFilter = null; timeFilter = { label: 'All Time', days: null }; }
+      else if (filterOverride.type){ periodFilter = filterOverride; timeFilter = { label: filterOverride.label, days: null }; }
+      else                         { periodFilter = null; timeFilter = filterOverride; }
+    } else {
+      periodFilter = detectPeriod(q);
+      timeFilter   = detectTimeWindow(q);
+    }
 
     var filtered = deals;
     if (periodFilter)         filtered = applyPeriodFilter(filtered, periodFilter);
@@ -1020,6 +1039,10 @@
     .cms-insight { display:flex; align-items:flex-start; gap:8px; padding:12px 14px; background:#F0FDF4; border-radius:10px; font-size:13px; color:#166534; }
     .cms-insight-dot { flex-shrink:0; font-size:10px; margin-top:2px; }
     .cms-empty { text-align:center; padding:40px; color:#999; font-size:14px; }
+    .cms-filters { display:flex; gap:6px; padding:10px 20px; border-bottom:1px solid #f0f0f0; flex-wrap:wrap; flex-shrink:0; }
+    .cms-chip { padding:4px 13px; border-radius:100px; border:1.5px solid #e0e0e0; background:#fff; font-size:12px; font-weight:500; color:#555; cursor:pointer; transition:all 0.12s; white-space:nowrap; }
+    .cms-chip:hover { border-color:#2563EB; color:#2563EB; }
+    .cms-chip.active { background:#2563EB; border-color:#2563EB; color:#fff; }
 
     @media (prefers-color-scheme: dark) {
       html[data-theme="dark"] #cms-panel { background:#141C28; }
@@ -1039,6 +1062,10 @@
       html[data-theme="dark"] .cms-bar-val { color:#CBD5E1; }
       html[data-theme="dark"] .cms-chart-label { color:#4A5F78; }
       html[data-theme="dark"] .cms-query-text { color:#7A8FA8; }
+      html[data-theme="dark"] .cms-filters { border-color:#1A2435; }
+      html[data-theme="dark"] .cms-chip { background:#0C0F14; border-color:#1A2435; color:#7A8FA8; }
+      html[data-theme="dark"] .cms-chip:hover { border-color:#2563EB; color:#93C5FD; }
+      html[data-theme="dark"] .cms-chip.active { background:#2563EB; border-color:#2563EB; color:#fff; }
     }
   `;
 
@@ -1058,6 +1085,7 @@
           '<span class="cms-query-text" id="cms-query-display"></span>' +
           '<button class="cms-close" id="cms-close-btn" aria-label="Close">✕</button>' +
         '</div>' +
+        '<div class="cms-filters" id="cms-filters"></div>' +
         '<div class="cms-panel-body" id="cms-panel-body"></div>' +
       '</div>';
     document.body.appendChild(el);
@@ -1067,27 +1095,60 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeOverlay(); });
   }
 
-  function openOverlay(query) {
-    var overlay = document.getElementById('cms-overlay');
-    var body    = document.getElementById('cms-panel-body');
-    var display = document.getElementById('cms-query-display');
-    display.textContent = '"' + query + '"';
+  function renderBody(query, filterOverride) {
+    var body = document.getElementById('cms-panel-body');
     body.innerHTML = '<div class="cms-loading"><div class="cms-spinner"></div>Analyzing your query…</div>';
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-
     loadData(function (deals) {
-      var result = processQuery(query, deals);
+      var result = processQuery(query, deals, filterOverride);
       body.innerHTML = renderResult(result, query);
-      // Animate bars in after paint
       setTimeout(function () {
         body.querySelectorAll('.cms-bar-fill').forEach(function (bar) {
-          var w = bar.style.width;
-          bar.style.width = '0';
+          var w = bar.style.width; bar.style.width = '0';
           setTimeout(function () { bar.style.width = w; }, 10);
         });
       }, 20);
     });
+  }
+
+  function renderChips(query, activeIdx) {
+    var container = document.getElementById('cms-filters');
+    container.innerHTML = FILTER_CHIPS.map(function (chip, i) {
+      return '<button class="cms-chip' + (i === activeIdx ? ' active' : '') + '" data-idx="' + i + '">' + chip.label + '</button>';
+    }).join('');
+    container.querySelectorAll('.cms-chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var idx = parseInt(btn.getAttribute('data-idx'));
+        container.querySelectorAll('.cms-chip').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        renderBody(_currentQuery, FILTER_CHIPS[idx].filter);
+      });
+    });
+  }
+
+  function detectActiveChip(q) {
+    var pf = detectPeriod(q);
+    var tf = detectTimeWindow(q);
+    if (!pf && !tf.days) return 0; // All Time
+    if (pf && pf.type === 'year') {
+      for (var i = 0; i < FILTER_CHIPS.length; i++) {
+        var fc = FILTER_CHIPS[i].filter;
+        if (fc.type === 'year' && fc.year === pf.year) return i;
+      }
+    }
+    if (tf.days === 90) return 4;
+    if (tf.days === 30) return 5;
+    return -1; // no chip matches — none active
+  }
+
+  function openOverlay(query) {
+    _currentQuery = query;
+    var overlay = document.getElementById('cms-overlay');
+    var display = document.getElementById('cms-query-display');
+    display.textContent = '"' + query + '"';
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    renderChips(query, detectActiveChip(query.toLowerCase().trim()));
+    renderBody(query, null);
   }
 
   function closeOverlay() {
