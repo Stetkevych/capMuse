@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Funding Book — CapMuse</title>
+  <link rel="preconnect" href="https://capmuse-data-882611632216.s3.amazonaws.com" crossorigin />
+  <link rel="dns-prefetch" href="https://capmuse-data-882611632216.s3.amazonaws.com" />
+  <script src="capmuse-data.js"></script>
+  <script>if (window.CapMuseData) window.CapMuseData.prefetch();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -259,7 +263,7 @@
   </style>
   <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
-<body>
+<body class="funding-book-page">
 <div class="layout">
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -795,5 +799,6 @@
     if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
   })();
 </script>
+<script src="capmuse-funding-book.js"></script>
 </body>
 </html>
