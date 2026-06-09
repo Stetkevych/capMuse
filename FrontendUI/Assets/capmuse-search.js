@@ -47,51 +47,40 @@
 
   function nn(v) { return parseFloat(String(v || '').replace(/[$,]/g, '')) || 0; }
 
-  // ── Data mappers ───────────────────────────────────────────────────────────
-  function mapAccount(r) {
-    var stage = r.Stage_of_Package || '';
-    var s = stage.toLowerCase();
-    var status = s.indexOf('fund') > -1 && s.indexOf('decline') === -1 ? 'funded'
-               : s.indexOf('approv') > -1 ? 'approved'
-               : s.indexOf('decline') > -1 || s.indexOf('lost') > -1 ? 'declined'
-               : 'submitted';
-    var funded = nn(r.Amount);
+  // ── Data mapper — handles both live JSON and legacy CSV field names ──────────
+  function mapRecord(r) {
+    var stage     = r.Stage || r.Stage_of_Package || r.stage || '';
+    var s         = stage.toLowerCase();
+    var fundedAmt = nn(r.Funded_Amount || r.funding || r.Amount || 0);
+    // Match analytics page logic: funding amount present = funded, unless explicitly declined/lost
+    var status;
+    if (s.indexOf('decline') > -1 || s.indexOf('lost') > -1) {
+      status = 'declined';
+    } else if (fundedAmt > 0) {
+      status = 'funded';
+    } else if (s.indexOf('approv') > -1) {
+      status = 'approved';
+    } else {
+      status = 'submitted';
+    }
+    var applied  = r.Created_Time || r.created_time || r.Date_Applied || r.created_at || '';
+    var fundedAt = r.Date_Funded  || r.date_funded  || '';
     return {
-      client_name:            r.Account_Name || r.DBA || r.Business_Legal_Name || '',
-      rep_name:               r.Bizz_Owner_Name || r.First_Name || '',
-      lender_name:            r.Funder_2 || '',
-      lead_source:            r.Lead_Source || r.Original_Lead_Source || '',
-      industry:               r.Industry || r.I_Stated_Industry || '',
-      state:                  r.State || r.Business_State || '',
-      approval_status:        status,
-      funded_amount:          status === 'funded' ? funded : 0,
-      requested_amount:       nn(r.Requested_Funding_Amount),
-      application_submitted_at: r.Date_Applied || r.Created_Time || '',
-      funded_at:              r.Date_Funded || '',
-      days_total_to_fund:     calcDays(r.Date_Applied, r.Date_Funded),
-    };
-  }
-
-  function mapDeal(r) {
-    var stage = r.Stage || '';
-    var s = stage.toLowerCase();
-    var status = s.indexOf('won') > -1 || (s.indexOf('fund') > -1 && s.indexOf('decline') === -1) ? 'funded'
-               : s.indexOf('approv') > -1 ? 'approved'
-               : s.indexOf('decline') > -1 || s.indexOf('lost') > -1 ? 'declined'
-               : 'submitted';
-    return {
-      client_name:            r.Deal_Name || '',
-      rep_name:               r['Owner.name'] || r['Package_Owner.name'] || '',
-      lender_name:            r.Lender || '',
-      lead_source:            r.Lead_Source2 || r.Lead_Source || '',
-      industry:               r.Industry || '',
-      state:                  r.State || '',
-      approval_status:        status,
-      funded_amount:          status === 'funded' ? nn(r.Funded_Amount) : 0,
-      requested_amount:       nn(r.Amount),
-      application_submitted_at: r.Created_Time || r.Date_Applied || '',
-      funded_at:              r.Date_Funded || '',
-      days_total_to_fund:     calcDays(r.Created_Time, r.Date_Funded),
+      client_name:             r.Deal_Name || r.company || r.Account_Name || r.DBA || '',
+      rep_name:                r['Owner.name'] || r['Package_Owner.name'] || r.package_owner || r.puller || r.Bizz_Owner_Name || r.First_Name || '',
+      lender_name:             r.Lender || r.lender || r.Funder_2 || '',
+      lead_source:             r.Lead_Source2 || r.Lead_Source || r.lead_source || r.Original_Lead_Source || '',
+      industry:                r.Industry || r.industry || r.I_Stated_Industry || '',
+      state:                   r.State || r.state || r.Business_State || '',
+      approval_status:         status,
+      funded_amount:           status === 'funded' ? fundedAmt : 0,
+      application_submitted_at: applied,
+      funded_at:               fundedAt,
+      days_total_to_fund:      calcDays(applied, fundedAt),
+      position:                r.position  || r.Position  || '',
+      deal_type:               r.deal_type || r.Deal_Type || '',
+      revenue:                 nn(r.revenue || r.Total_rev || 0),
+      buy_rate:                nn(r.buy_rate || r.Buy_Rate || 0),
     };
   }
 
@@ -103,37 +92,32 @@
     } catch (e) { return null; }
   }
 
-  // ── Data loading ───────────────────────────────────────────────────────────
-  function fetchCSV(file, cb) {
-    fetch(BUCKET + '/' + file)
-      .then(function (r) { return r.ok ? r.text() : ''; })
-      .then(function (t) { cb(t ? parseCSV(t) : []); })
-      .catch(function () { cb([]); });
-  }
-
+  // ── Data loading — prefers window.CapMuseData (live JSON), falls back to CSV ─
   function loadData(cb) {
     if (_loaded) { cb(_deals); return; }
     _queue.push(cb);
     if (_loading) return;
     _loading = true;
-    fetchCSV('Accounts.csv', function (rows) {
-      if (rows.length) {
-        _deals = rows.map(mapAccount).filter(function (d) { return d.client_name; });
-      }
-      // Also try funding_book.csv to supplement
-      fetchCSV('funding_book.csv', function (rows2) {
-        if (rows2.length && !_deals.length) {
-          _deals = rows2.map(mapDeal).filter(function (d) { return d.client_name; });
-        } else if (rows2.length) {
-          var extra = rows2.map(mapDeal).filter(function (d) { return d.client_name; });
-          _deals = _deals.concat(extra);
-        }
-        _loaded = true;
-        console.log('[CapMuse Search] Loaded ' + _deals.length + ' records');
-        _queue.forEach(function (fn) { fn(_deals); });
-        _queue = [];
-      });
-    });
+
+    function finish(raw) {
+      _deals  = (raw || []).map(mapRecord).filter(function (d) { return d.client_name; });
+      _loaded = true;
+      console.log('[CapMuse Search] Loaded ' + _deals.length + ' records');
+      _queue.forEach(function (fn) { fn(_deals); });
+      _queue  = [];
+    }
+
+    // Use the shared live-data loader if available (funding_book_live.json)
+    if (window.CapMuseData) {
+      window.CapMuseData.getRawDeals().then(finish).catch(function () { finish([]); });
+      return;
+    }
+
+    // Fallback: fetch funding_book_live.json directly
+    fetch(BUCKET + '/funding_book_live.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) { if (data && data.length) { finish(data); } else { finish([]); } })
+      .catch(function () { finish([]); });
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -257,6 +241,28 @@
       return { type:'month', month:lm.getMonth()+1, year:lm.getFullYear(), label:'Last Month' };
     }
 
+    // ── "this year" / "ytd" — calendar year, not rolling 365 days ──
+    if (/this year|ytd/i.test(q)) {
+      return { type:'year', year:now.getFullYear(), label:'YTD ' + now.getFullYear() };
+    }
+
+    // ── "this month" — current calendar month ──
+    if (/this month/i.test(q)) {
+      var labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return { type:'month', month:now.getMonth()+1, year:now.getFullYear(), label:'This Month (' + labels[now.getMonth()] + ')' };
+    }
+
+    // ── "this quarter" — current calendar quarter ──
+    if (/this quarter/i.test(q)) {
+      var qn = Math.ceil((now.getMonth()+1)/3);
+      return { type:'quarter', quarter:qn, year:now.getFullYear(), startMonth:(qn-1)*3+1, endMonth:qn*3, label:'Q'+qn+' '+now.getFullYear() };
+    }
+
+    // ── "last year" — previous calendar year ──
+    if (/last year/i.test(q)) {
+      return { type:'year', year:now.getFullYear()-1, label:(now.getFullYear()-1).toString() };
+    }
+
     return null;
   }
 
@@ -343,6 +349,30 @@
     return Object.keys(map).sort().map(function (k) { return map[k]; });
   }
 
+  // ── Intent classifier — extracts metric, direction, subject from any phrasing ──
+  function classifyIntent(q) {
+    var metric =
+      /which month|what month|best month|peak month|top month|biggest month|worst month/.test(q) ? 'best_month' :
+      /approv|conversion rate|win rate|success rate/.test(q)               ? 'approval'    :
+      /fast|speed|quick|how long|days?.*(to fund|to close)|time.*(fund|close)/.test(q) ? 'speed' :
+      /commission|earn|pay|compens|bonus/.test(q)                          ? 'commission'  :
+      /revenue|how much.*make|factor fee|rev by rep|rev\/deal/.test(q)     ? 'revenue'     :
+      /trend|over time|month.by.month|monthly|histor|progress/.test(q)     ? 'trend'       :
+      /source|where.*come from|lead.*source|referr/.test(q)                ? 'lead_source' :
+      /largest|biggest deal|highest deal|max deal|single deal/.test(q)     ? 'largest'     :
+      /pipeline|funnel|stage|in progress|outstanding/.test(q)              ? 'pipeline'    :
+      /\blender\b|\bfunder\b|financing|which bank/.test(q)                 ? 'lender'      :
+      /\bstate\b|region|geography|by state|which state|top state/.test(q)  ? 'state'       :
+      /\bposition\b|1st pos|2nd pos|3rd pos|stacking/.test(q)              ? 'position'    :
+      /deal type|type of deal|renewal|new deal|what kind|deal mix/.test(q) ? 'deal_type'   :
+      /deal.*count|number of deal|how many deal/.test(q)                   ? 'deal_count'  :
+      'volume';
+
+    var direction = /least|worst|bottom|fewest|lowest|min\b|last.?place|slow|weak/.test(q) ? 'bottom' : 'top';
+
+    return { metric: metric, direction: direction };
+  }
+
   // ── Query router ───────────────────────────────────────────────────────────
   function processQuery(query, deals) {
     var q = query.toLowerCase().trim();
@@ -350,6 +380,7 @@
     var lenderMatch = detectLender(q, deals);
     var periodFilter = detectPeriod(q);
     var timeFilter   = detectTimeWindow(q);
+    var intent       = classifyIntent(q);
 
     var filtered = deals;
     if (periodFilter)         filtered = applyPeriodFilter(filtered, periodFilter);
@@ -368,32 +399,46 @@
       if (/best month|peak month|top month|biggest month/.test(q)) return repBestMonth(allRepDeals, repName);
       if (/worst month|lowest month|slowest month/.test(q))        return repWorstMonth(allRepDeals, repName);
       if (periodFilter)                                              return repInMonth(allRepDeals, repName, periodFilter);
-      if (/largest deal|biggest deal|top deal/.test(q))            return repLargestDeal(repDeals, repName, timeLabel);
-      if (/lender|who fund|which lender/.test(q))                  return repLenders(repDeals, repName, timeLabel);
-      if (/approval rate|approval|rate/.test(q))                   return repApprovalRate(repDeals, repName, timeLabel);
-      if (/fastest|speed|days.*fund|time.*fund/.test(q))           return repSpeed(repDeals, repName, timeLabel);
-      if (/commission|earn/.test(q))                                return repCommission(repDeals, repName, timeLabel);
-      if (/trend|by month|monthly/.test(q))                        return repMonthlyTrend(allRepDeals, repName, timeLabel);
-      if (/lead source|source/.test(q))                            return repLeadSource(repDeals, repName, timeLabel);
       if (/vs\b|versus|compare/.test(q))                           return compareReps(q, filtered, timeLabel, deals);
+      // Route by classified intent
+      if (intent.metric === 'best_month') return repBestMonth(allRepDeals, repName);
+      if (intent.metric === 'lender')     return repLenders(repDeals, repName, timeLabel);
+      if (intent.metric === 'approval')   return repApprovalRate(repDeals, repName, timeLabel);
+      if (intent.metric === 'speed')      return repSpeed(repDeals, repName, timeLabel);
+      if (intent.metric === 'commission') return repCommission(repDeals, repName, timeLabel);
+      if (intent.metric === 'revenue')    return revenueByRep(repDeals, timeLabel);
+      if (intent.metric === 'trend')      return repMonthlyTrend(allRepDeals, repName, timeLabel);
+      if (intent.metric === 'lead_source')return repLeadSource(repDeals, repName, timeLabel);
+      if (intent.metric === 'largest')    return repLargestDeal(repDeals, repName, timeLabel);
+      if (intent.metric === 'state')      return topStates(repDeals, repName + ' — ' + timeLabel);
+      if (intent.metric === 'position')   return topPositions(repDeals, repName + ' — ' + timeLabel);
+      if (intent.metric === 'deal_type')  return dealTypes(repDeals, repName + ' — ' + timeLabel);
       return repOverview(repDeals, repName, timeLabel);
     }
 
-    // ── Lender intents ───────────────────────────────────────────────────────
+    // ── Specific lender intents ───────────────────────────────────────────────
     if (lenderMatch) return lenderOverview(filtered, lenderMatch, timeLabel);
 
-    // ── Team intents ─────────────────────────────────────────────────────────
-    if (/who funded the most|top funder|most funded|leaderboard/.test(q)) return topFunders(filtered, timeLabel);
-    if (/approval rate|highest approval/.test(q))                          return approvalRates(filtered, timeLabel);
-    if (/fastest|speed|days.*fund/.test(q))                                return fundingSpeed(filtered, timeLabel);
-    if (/largest deal|biggest deal|top deal/.test(q))                      return largestDeals(filtered, timeLabel);
-    if (/compare|vs\b|versus/.test(q))                                     return compareReps(q, filtered, timeLabel, deals);
-    if (/lead source/.test(q))                                             return leadSources(filtered, timeLabel);
-    if (/trend|over time|monthly/.test(q))                                 return trend(filtered, timeLabel);
-    if (/pipeline|funnel/.test(q))                                         return pipeline(filtered, timeLabel);
-    if (/commission/.test(q))                                              return commissions(filtered, timeLabel);
+    // ── Compare intent ────────────────────────────────────────────────────────
+    if (/vs\b|versus|compare/.test(q)) return compareReps(q, filtered, timeLabel, deals);
 
-    return topFunders(filtered, timeLabel);
+    // ── Route all other queries by classified intent ──────────────────────────
+    if (intent.metric === 'best_month')  return teamBestMonth(filtered, timeLabel);
+    if (intent.metric === 'lender')      return intent.direction === 'bottom' ? bottomLenders(filtered, timeLabel) : topLenders(filtered, timeLabel);
+    if (intent.metric === 'approval')    return approvalRates(filtered, timeLabel);
+    if (intent.metric === 'speed')       return fundingSpeed(filtered, timeLabel);
+    if (intent.metric === 'commission')  return commissions(filtered, timeLabel);
+    if (intent.metric === 'revenue')     return revenueByRep(filtered, timeLabel);
+    if (intent.metric === 'trend')       return trend(filtered, timeLabel);
+    if (intent.metric === 'lead_source') return leadSources(filtered, timeLabel);
+    if (intent.metric === 'largest')     return largestDeals(filtered, timeLabel);
+    if (intent.metric === 'pipeline')    return pipeline(filtered, timeLabel);
+    if (intent.metric === 'state')       return topStates(filtered, timeLabel);
+    if (intent.metric === 'position')    return topPositions(filtered, timeLabel);
+    if (intent.metric === 'deal_type')   return dealTypes(filtered, timeLabel);
+
+    // Default: rep leaderboard, direction-aware
+    return intent.direction === 'bottom' ? bottomFunders(filtered, timeLabel) : topFunders(filtered, timeLabel);
   }
 
   // ── Result builders ────────────────────────────────────────────────────────
@@ -627,6 +672,163 @@
       insight: top&&ranked[1] ? top.name+' is ahead of '+ranked[1].name+' by '+fmt(top.amount-ranked[1].amount)+'.' : null,
       chart:   { data:ranked.slice(0,8).map(function(r){return{name:r.name.split(' ')[0],value:r.amount};}), label:'Funded Amount' },
       table:   { cols:['Rank','Rep','Funded','Deals'], rows:ranked.slice(0,10).map(function(r,i){return[i+1,r.name,fmt(r.amount),r.count];}) },
+    };
+  }
+
+  function topLenders(deals, timeLabel) {
+    var funded = deals.filter(function(d){return d.approval_status==='funded'&&d.lender_name;});
+    var byLender = {};
+    funded.forEach(function(d){
+      var l = d.lender_name;
+      if(!byLender[l])byLender[l]={name:l,amount:0,count:0};
+      byLender[l].amount+=d.funded_amount||0;
+      byLender[l].count++;
+    });
+    var ranked = Object.keys(byLender).map(function(k){return byLender[k];}).sort(function(a,b){return b.amount-a.amount;});
+    var top = ranked[0];
+    return {
+      title:   'Top Lenders — ' + timeLabel,
+      answer:  top ? top.name+' funded the most with '+fmt(top.amount)+' across '+top.count+' deals.' : 'No funded deals.',
+      insight: top&&ranked[1] ? top.name+' is ahead of '+ranked[1].name+' by '+fmt(top.amount-ranked[1].amount)+'.' : null,
+      chart:   { data:ranked.slice(0,8).map(function(r){return{name:r.name,value:r.amount};}), label:'Funded Amount by Lender' },
+      table:   { cols:['Rank','Lender','Funded','Deals'], rows:ranked.slice(0,10).map(function(r,i){return[i+1,r.name,fmt(r.amount),r.count];}) },
+    };
+  }
+
+  function bottomLenders(deals, timeLabel) {
+    var funded = deals.filter(function(d){return d.approval_status==='funded'&&d.lender_name;});
+    var byLender = {};
+    funded.forEach(function(d){
+      var l = d.lender_name;
+      if(!byLender[l])byLender[l]={name:l,amount:0,count:0};
+      byLender[l].amount+=d.funded_amount||0;
+      byLender[l].count++;
+    });
+    var ranked = Object.keys(byLender).map(function(k){return byLender[k];}).sort(function(a,b){return a.amount-b.amount;});
+    var bottom = ranked[0];
+    return {
+      title:   'Least Used Lenders — ' + timeLabel,
+      answer:  bottom ? bottom.name+' was used the least with '+fmt(bottom.amount)+' across '+bottom.count+' deals.' : 'No funded deals.',
+      insight: ranked.length > 1 ? ranked.length+' lenders total. Next: '+ranked[1].name+' ('+fmt(ranked[1].amount)+').' : null,
+      chart:   { data:ranked.slice(0,8).map(function(r){return{name:r.name,value:r.amount};}), label:'Funded Amount by Lender (Ascending)' },
+      table:   { cols:['Rank','Lender','Funded','Deals'], rows:ranked.slice(0,10).map(function(r,i){return[i+1,r.name,fmt(r.amount),r.count];}) },
+    };
+  }
+
+  function bottomFunders(deals, timeLabel) {
+    var funded = deals.filter(function(d){return d.approval_status==='funded'&&d.rep_name;});
+    var byRep  = {};
+    funded.forEach(function(d){if(!byRep[d.rep_name])byRep[d.rep_name]={name:d.rep_name,amount:0,count:0};byRep[d.rep_name].amount+=d.funded_amount||0;byRep[d.rep_name].count++;});
+    var ranked = Object.keys(byRep).map(function(k){return byRep[k];}).sort(function(a,b){return a.amount-b.amount;});
+    var bottom = ranked[0];
+    return {
+      title:   'Bottom Funders — ' + timeLabel,
+      answer:  bottom ? bottom.name+' funded the least with '+fmt(bottom.amount)+' across '+bottom.count+' deals.' : 'No funded deals.',
+      insight: ranked.length > 1 ? ranked[ranked.length-1].name+' leads with '+fmt(ranked[ranked.length-1].amount)+'.' : null,
+      chart:   { data:ranked.slice(0,8).map(function(r){return{name:r.name.split(' ')[0],value:r.amount};}), label:'Funded Amount (Ascending)' },
+      table:   { cols:['Rank','Rep','Funded','Deals'], rows:ranked.slice(0,10).map(function(r,i){return[i+1,r.name,fmt(r.amount),r.count];}) },
+    };
+  }
+
+  function teamBestMonth(deals, timeLabel) {
+    var funded = deals.filter(function(d){return d.approval_status==='funded';});
+    var byMonth = {};
+    funded.forEach(function(d){
+      var key = monthKey(d.funded_at || d.application_submitted_at || '');
+      if(!key)return;
+      if(!byMonth[key])byMonth[key]={month:key,count:0,volume:0};
+      byMonth[key].count++;
+      byMonth[key].volume+=d.funded_amount||0;
+    });
+    var months = Object.keys(byMonth).map(function(k){return byMonth[k];}).sort(function(a,b){return b.count-a.count;});
+    if(!months.length) return {title:'Best Month — '+timeLabel,answer:'No funded deals.',insight:null,chart:null,table:null};
+    var best   = months[0];
+    var sorted = Object.keys(byMonth).sort().map(function(k){return byMonth[k];});
+    return {
+      title:   'Best Month — ' + timeLabel,
+      answer:  labelFromKey(best.month)+' was the best month with '+best.count+' deals funded, totaling '+fmt(best.volume)+'.',
+      insight: months[1] ? 'Runner-up: '+labelFromKey(months[1].month)+' — '+months[1].count+' deals ('+fmt(months[1].volume)+').' : null,
+      chart:   { data:sorted.slice(-12).map(function(m){return{name:m.month.substring(5),value:m.count};}), label:'Funded Deals / Month' },
+      table:   { cols:['Month','Deals','Volume','Avg Deal'], rows:months.slice(0,15).map(function(m){return[labelFromKey(m.month),m.count,fmt(m.volume),fmt(Math.round(m.volume/m.count))];}) },
+    };
+  }
+
+  function topStates(deals, timeLabel) {
+    var byState = {};
+    deals.forEach(function(d){
+      var s = d.state || 'Unknown';
+      if(!byState[s])byState[s]={name:s,count:0,volume:0};
+      byState[s].count++;
+      byState[s].volume+=d.funded_amount||0;
+    });
+    var ranked = Object.keys(byState).map(function(k){return byState[k];}).sort(function(a,b){return b.volume-a.volume;});
+    var top = ranked[0];
+    return {
+      title:   'By State — ' + timeLabel,
+      answer:  top ? top.name+' leads with '+top.count+' deals totaling '+fmt(top.volume)+'.' : 'No data.',
+      insight: ranked.length > 1 ? ranked.length+' states total. Runner-up: '+ranked[1].name+' ('+fmt(ranked[1].volume)+').' : null,
+      chart:   { data:ranked.slice(0,8).map(function(r){return{name:r.name,value:r.volume};}), label:'Volume by State' },
+      table:   { cols:['Rank','State','Deals','Volume'], rows:ranked.slice(0,15).map(function(r,i){return[i+1,r.name,r.count,fmt(r.volume)];}) },
+    };
+  }
+
+  function topPositions(deals, timeLabel) {
+    var byPos = {};
+    deals.forEach(function(d){
+      var p = d.position || 'Unknown';
+      if(!byPos[p])byPos[p]={name:p,count:0,volume:0};
+      byPos[p].count++;
+      byPos[p].volume+=d.funded_amount||0;
+    });
+    var ranked = Object.keys(byPos).map(function(k){return byPos[k];}).sort(function(a,b){return b.count-a.count;});
+    var top = ranked[0];
+    var total = deals.length;
+    return {
+      title:   'By Position — ' + timeLabel,
+      answer:  top ? top.name+' position is most common — '+top.count+' deals ('+Math.round(top.count/total*100)+'% of total), '+fmt(top.volume)+' funded.' : 'No data.',
+      insight: ranked.length > 1 ? 'Runner-up: '+ranked[1].name+' position — '+ranked[1].count+' deals, '+fmt(ranked[1].volume)+'.' : null,
+      chart:   { data:ranked.slice(0,8).map(function(r){return{name:r.name,value:r.count};}), label:'Deals by Position' },
+      table:   { cols:['Position','Deals','Volume','% of Total'], rows:ranked.map(function(r){return[r.name,r.count,fmt(r.volume),(total?Math.round(r.count/total*100):0)+'%'];}) },
+    };
+  }
+
+  function dealTypes(deals, timeLabel) {
+    var byType = {};
+    deals.forEach(function(d){
+      var t = d.deal_type || 'Unknown';
+      if(!byType[t])byType[t]={name:t,count:0,volume:0};
+      byType[t].count++;
+      byType[t].volume+=d.funded_amount||0;
+    });
+    var ranked = Object.keys(byType).map(function(k){return byType[k];}).sort(function(a,b){return b.count-a.count;});
+    var top = ranked[0];
+    var total = deals.length;
+    return {
+      title:   'Deal Types — ' + timeLabel,
+      answer:  top ? top.name+' is the most common deal type — '+top.count+' deals ('+Math.round(top.count/total*100)+'%), '+fmt(top.volume)+' funded.' : 'No data.',
+      insight: ranked.length > 1 ? ranked.length+' deal types. Runner-up: '+ranked[1].name+' ('+ranked[1].count+' deals).' : null,
+      chart:   { data:ranked.slice(0,8).map(function(r){return{name:r.name,value:r.count};}), label:'Deals by Type' },
+      table:   { cols:['Type','Deals','Volume','% of Total'], rows:ranked.map(function(r){return[r.name,r.count,fmt(r.volume),(total?Math.round(r.count/total*100):0)+'%'];}) },
+    };
+  }
+
+  function revenueByRep(deals, timeLabel) {
+    var byRep = {};
+    deals.filter(function(d){return d.rep_name&&d.revenue>0;}).forEach(function(d){
+      var r = d.rep_name;
+      if(!byRep[r])byRep[r]={name:r,revenue:0,count:0};
+      byRep[r].revenue+=d.revenue;
+      byRep[r].count++;
+    });
+    var ranked = Object.keys(byRep).map(function(k){return byRep[k];}).sort(function(a,b){return b.revenue-a.revenue;});
+    var top = ranked[0];
+    var totalRev = ranked.reduce(function(s,r){return s+r.revenue;},0);
+    return {
+      title:   'Revenue by Rep — ' + timeLabel,
+      answer:  top ? top.name+' generated the most revenue — '+fmt(top.revenue)+' across '+top.count+' deals ('+fmt(Math.round(top.revenue/top.count))+'/deal).' : 'No data.',
+      insight: totalRev > 0 ? 'Total team revenue: '+fmt(totalRev)+'. Avg per deal: '+fmt(Math.round(totalRev/deals.length))+'.' : null,
+      chart:   { data:ranked.slice(0,8).map(function(r){return{name:r.name.split(' ')[0],value:r.revenue};}), label:'Revenue by Rep' },
+      table:   { cols:['Rank','Rep','Revenue','Deals','Rev/Deal'], rows:ranked.slice(0,10).map(function(r,i){return[i+1,r.name,fmt(r.revenue),r.count,fmt(Math.round(r.revenue/r.count))];}) },
     };
   }
 
