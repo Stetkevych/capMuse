@@ -18,9 +18,17 @@
     Object.keys(window.REPS).forEach(function (id) {
       var rep = window.REPS[id];
       if (!rep || !rep.name) return;
-      var first = rep.name.split(' ')[0].toLowerCase();
+      var parts = rep.name.split(/\s+/).filter(Boolean);
+      var first = parts[0].toLowerCase();
       map[first] = id;
       map[id] = id;
+      if (rep.bookName) {
+        map[rep.bookName.toLowerCase()] = id;
+        map[rep.bookName.toLowerCase().replace(/\s+/g, '')] = id;
+      }
+      if (parts.length > 1) {
+        map[parts.join('').toLowerCase()] = id;
+      }
     });
     map.jimmy = 'gimmy';
     map['thecapmuse123'] = 'anderson';
