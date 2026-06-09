@@ -1,29 +1,58 @@
-// Funding Book — live CRM metrics from funding_book_live.json
+// Funding Book — filterable rep leaderboard from funding_book_live.json
 (function () {
   if (!document.body.classList.contains('funding-book-page')) return;
 
   var DEALS = [];
-  var REP_PHOTOS = {
-    anderson: 'Assets/reps/anderson.png',
-    matthew: 'Assets/reps/matthew.png',
-    frank: 'Assets/reps/frank.png',
-    blake: 'Assets/reps/blake.png',
-    ivan: 'Assets/reps/ivan.png',
-    colin: 'Assets/reps/colin.png',
-    gabriel: 'Assets/reps/gabriel.png',
-    dominic: 'Assets/reps/dominic.png',
-    cipriani: 'Assets/reps/Cartoon/cipriani.png',
-    kip: 'Assets/reps/kip.png',
-    santi: 'Assets/reps/santi.png',
-    rondon: 'Assets/reps/rondon.png',
-    rio: 'Assets/reps/rio.png',
-    juan: 'Assets/reps/juan.png',
-    pina: 'Assets/reps/pina.png',
-    ray: 'Assets/reps/ray.png'
+  var FILTERS = {
+    leadSource: '',
+    marketingAssist: '',
+    state: '',
+    dateRange: 'ytd',
+    customFrom: '',
+    customTo: '',
+    lender: '',
+    funder: '',
+    productType: '',
+    dealType: ''
+  };
+
+  var FILTER_DEFS = [
+    { key: 'leadSource', label: 'Lead Source', field: 'leadSource', searchable: true },
+    { key: 'marketingAssist', label: 'Marketing Assist', disabled: true },
+    { key: 'state', label: 'State', field: 'state', searchable: true },
+    { key: 'dateRange', label: 'Date Range', type: 'date' },
+    { key: 'lender', label: 'Lender', field: 'lender', searchable: true },
+    { key: 'funder', label: 'Funder', field: 'packageOwner', searchable: true },
+    { key: 'productType', label: 'Product Type', disabled: true },
+    { key: 'dealType', label: 'Deal Type', field: 'dealType', searchable: true }
+  ];
+
+  var DATE_PRESETS = [
+    { id: 'ytd', label: 'Year to date' },
+    { id: 'last_month', label: 'Last month' },
+    { id: 'last_3_months', label: 'Last 3 months' },
+    { id: 'last_6_months', label: 'Last 6 months' },
+    { id: 'this_month', label: 'This month' },
+    { id: 'all_time', label: 'All time' },
+    { id: 'custom', label: 'Custom range' }
+  ];
+
+  var popupKey = null;
+  var popupDraft = '';
+
+  // Mis-synced records where puller was copied into package_owner (Package Owner is House in Zoho).
+  // Remove entries after S3 data is repaired or webhook sends Package_Owner.name.
+  var PACKAGE_OWNER_RECORD_FIXES = {
+    '3793076000601237337': 'House .',
+    '3793076000605384128': 'House .',
+    '3793076000606189343': 'House .',
+    '3793076000624144182': 'House .',
+    '3793076000649034499': 'House .'
   };
 
   function nn(v) { return parseFloat(String(v || '').replace(/[$,]/g, '')) || 0; }
   function fmt(v) {
+    if (!v) return '$0';
     if (v >= 1e6) return '$' + (v / 1e6).toFixed(1) + 'M';
     if (v >= 1e3) return '$' + (v / 1e3).toFixed(0) + 'K';
     return '$' + Math.round(v).toLocaleString();
@@ -33,339 +62,538 @@
   }
   function parseDate(s) {
     if (!s) return null;
-    var d = new Date(s.length === 10 ? s + 'T12:00:00' : s);
+    var d = new Date(String(s).length === 10 ? String(s) + 'T12:00:00' : s);
     return isNaN(d.getTime()) ? null : d;
   }
-  function formatDate(s) {
-    var d = parseDate(s);
-    if (!d) return s || '—';
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  function normState(s) {
+    return String(s || '').trim().toUpperCase();
   }
-  function firstName(name) {
-    return (name || '').split(' ')[0] || name || '—';
+  function normStr(s) {
+    return String(s || '').trim().toLowerCase();
   }
-  function repPersonId(name) {
-    var n = (name || '').toLowerCase();
-    var keys = Object.keys(REP_PHOTOS);
-    for (var i = 0; i < keys.length; i++) {
-      if (n.indexOf(keys[i]) > -1) return keys[i];
+
+  var LEAD_SOURCE_GROUP_FACEBOOK = '__group:facebook';
+  var LEAD_SOURCE_GROUP_FB_SPO = '__group:facebook-spo';
+
+  function normLeadKey(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  function looksLikeFacebook(leadSource) {
+    var n = normLeadKey(leadSource);
+    return n.indexOf('facebook') > -1 || n.indexOf('faceboook') > -1;
+  }
+
+  function isFacebookSpo(leadSource) {
+    return looksLikeFacebook(leadSource) && normLeadKey(leadSource).indexOf('spo') > -1;
+  }
+
+  function isFacebookNonSpo(leadSource) {
+    return looksLikeFacebook(leadSource) && !isFacebookSpo(leadSource);
+  }
+
+  function leadSourceFilterLabel(val) {
+    if (val === LEAD_SOURCE_GROUP_FACEBOOK) return 'Facebook';
+    if (val === LEAD_SOURCE_GROUP_FB_SPO) return 'Facebook - SPO';
+    return val || 'All';
+  }
+
+  function leadSourceMatchesFilter(dealSource, filterValue) {
+    if (!filterValue) return true;
+    if (filterValue === LEAD_SOURCE_GROUP_FACEBOOK) return isFacebookNonSpo(dealSource);
+    if (filterValue === LEAD_SOURCE_GROUP_FB_SPO) return isFacebookSpo(dealSource);
+    return normStr(dealSource) === normStr(filterValue);
+  }
+
+  function buildLeadSourceOptions(deals) {
+    var hasFacebook = false;
+    var hasFacebookSpo = false;
+    var others = {};
+    deals.forEach(function (d) {
+      var ls = d.leadSource;
+      if (!ls) return;
+      if (isFacebookSpo(ls)) {
+        hasFacebookSpo = true;
+        return;
+      }
+      if (isFacebookNonSpo(ls)) {
+        hasFacebook = true;
+        return;
+      }
+      if (!others[ls]) others[ls] = ls;
+    });
+    var opts = [];
+    if (hasFacebook) opts.push({ value: LEAD_SOURCE_GROUP_FACEBOOK, label: 'Facebook' });
+    if (hasFacebookSpo) opts.push({ value: LEAD_SOURCE_GROUP_FB_SPO, label: 'Facebook - SPO' });
+    Object.values(others).sort(function (a, b) {
+      return String(a).localeCompare(String(b));
+    }).forEach(function (o) {
+      opts.push({ value: o, label: o });
+    });
+    return opts;
+  }
+
+  function isHouseName(name) {
+    var n = normStr(name).replace(/\./g, '').trim();
+    return n === 'house';
+  }
+
+  function fundingBookOwnerFromRecord(r) {
+    return (r.funding_book_owner || r.Funding_Book_Owner || r['Funding_Book_Owner.name'] || r.Owner || r['Owner.name'] || '').trim();
+  }
+
+  function packageOwnerFromRecord(r) {
+    var recordId = String(r.record_id || '');
+    if (PACKAGE_OWNER_RECORD_FIXES[recordId]) return PACKAGE_OWNER_RECORD_FIXES[recordId];
+
+    var fromLookup = (r['Package_Owner.name'] || (r.Package_Owner && r.Package_Owner.name) || r.package_owner_name || '').trim();
+    if (fromLookup) return fromLookup;
+
+    var flat = (r.package_owner || '').trim();
+    var puller = (r.puller || r.Puller || r['Puller.name'] || '').trim();
+    var fbOwner = fundingBookOwnerFromRecord(r);
+
+    if (flat && puller && normStr(flat) === normStr(puller) && fbOwner && isHouseName(fbOwner)) {
+      return fbOwner;
     }
-    return null;
+
+    return flat;
   }
+
   function mapRecord(r) {
     return {
       company: r.company || r.Deal_Name || '',
       funding: nn(r.funding || r.Funded_Amount),
-      dateFunded: r.date_funded || r.Date_Funded || '',
-      lender: r.lender || r.Lender || '',
-      rep: r.package_owner || r.puller || r['Owner.name'] || '',
-      rate: r.buy_rate || r.Buy_Rate || '',
-      industry: r.industry || r.Industry || '',
-      state: r.state || r.State || '',
-      position: r.position || r.Position || '',
+      revenue: nn(r.revenue || r.Total_rev),
+      leadSource: (r.lead_source || r.Lead_Source2 || '').trim(),
+      state: (r.state || r.State || '').trim(),
+      lender: (r.lender || r.Lender || '').trim(),
+      packageOwner: packageOwnerFromRecord(r),
+      dealType: (r.deal_type || r.Deal_Type || '').trim(),
       date: parseDate(r.date_funded || r.Date_Funded || '')
     };
   }
-  function isToday(d) {
-    var n = new Date();
-    return d && d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
-  }
-  function isThisWeek(d) {
-    if (!d) return false;
-    var n = new Date();
-    var start = new Date(n.getFullYear(), n.getMonth(), n.getDate() - n.getDay());
-    return d >= start;
-  }
-  function isThisMonth(d) {
-    var n = new Date();
-    return d && d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth();
-  }
-  function isYtd(d) {
-    return d && d.getFullYear() === new Date().getFullYear();
-  }
-  function isQ2(d) {
-    return d && d.getFullYear() === new Date().getFullYear() && d.getMonth() >= 3 && d.getMonth() <= 5;
-  }
-  function sameDay(a, b) {
-    return a && b &&
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate();
-  }
-  function mostRecentDate(list) {
-    var max = null;
-    list.forEach(function (d) {
-      if (d.date && (!max || d.date > max)) max = d.date;
+
+  function buildFacetOptions(deals, field) {
+    var seen = {};
+    deals.forEach(function (d) {
+      var val = d[field];
+      if (!val) return;
+      var key = field === 'state' ? normState(val) : val;
+      if (!seen[key]) seen[key] = field === 'state' ? normState(val) : val;
     });
-    return max;
-  }
-  function dealsOnDay(list, day) {
-    if (!day) return [];
-    return list.filter(function (d) { return sameDay(d.date, day); });
-  }
-  function shortDayLabel(d) {
-    if (!d) return 'today';
-    if (isToday(d)) return 'today';
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  function sumFunding(list) {
-    return list.reduce(function (s, d) { return s + d.funding; }, 0);
-  }
-
-  function topRep(list) {
-    var by = {};
-    list.forEach(function (d) {
-      if (!d.rep) return;
-      if (!by[d.rep]) by[d.rep] = 0;
-      by[d.rep] += d.funding;
+    return Object.values(seen).sort(function (a, b) {
+      return String(a).localeCompare(String(b));
     });
-    var entries = Object.keys(by).map(function (k) { return { name: k, volume: by[k] }; });
-    entries.sort(function (a, b) { return b.volume - a.volume; });
-    return entries[0] || null;
   }
 
-  function topLender(list) {
-    var by = {};
-    list.forEach(function (d) {
-      if (!d.lender) return;
-      if (!by[d.lender]) by[d.lender] = 0;
-      by[d.lender] += d.funding;
-    });
-    var entries = Object.keys(by).map(function (k) { return { name: k, volume: by[k] }; });
-    entries.sort(function (a, b) { return b.volume - a.volume; });
-    return entries[0] || null;
-  }
+  function dateRangeBounds() {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = now.getMonth();
+    var start, end;
 
-  function lenderRank(list) {
-    var by = {};
-    list.forEach(function (d) {
-      if (!d.lender) return;
-      if (!by[d.lender]) by[d.lender] = { name: d.lender, volume: 0 };
-      by[d.lender].volume += d.funding;
-    });
-    return Object.values(by).sort(function (a, b) { return b.volume - a.volume; });
-  }
-
-  function topCompany(list) {
-    var by = {};
-    list.forEach(function (d) {
-      if (!d.company) return;
-      by[d.company] = (by[d.company] || 0) + 1;
-    });
-    var entries = Object.keys(by).map(function (k) { return { name: k, count: by[k] }; });
-    entries.sort(function (a, b) { return b.count - a.count; });
-    return entries[0] || null;
-  }
-
-  function setKpis() {
-    var ytd = DEALS.filter(function (d) { return isYtd(d.date); });
-    var mtd = DEALS.filter(function (d) { return isThisMonth(d.date); });
-    var totalVol = sumFunding(DEALS);
-    var values = document.querySelectorAll('.kpi-strip .kpi-value');
-    if (values[0]) values[0].textContent = fmt(sumFunding(ytd));
-    if (values[1]) values[1].textContent = fmt(sumFunding(mtd));
-    if (values[2]) values[2].textContent = DEALS.length.toLocaleString();
-    if (values[3]) values[3].textContent = DEALS.length ? fmt(totalVol / DEALS.length) : '—';
-  }
-
-  function setText(el, text) {
-    if (el) el.textContent = text;
-  }
-
-  function updateRepCard(card, rep, volume) {
-    if (!card || !rep) return;
-    var pid = repPersonId(rep);
-    if (pid) card.setAttribute('data-person-id', pid);
-    setText(card.querySelector('.card-name'), firstName(rep));
-    setText(card.querySelector('.card-big-single'), fmt(volume));
-    var img = card.querySelector('.card-rep-photo');
-    if (img && pid && REP_PHOTOS[pid]) {
-      img.src = REP_PHOTOS[pid];
-      img.alt = firstName(rep);
+    switch (FILTERS.dateRange) {
+      case 'ytd':
+        start = new Date(y, 0, 1);
+        end = new Date(y, m, now.getDate(), 23, 59, 59);
+        break;
+      case 'last_month':
+        start = new Date(y, m - 1, 1);
+        end = new Date(y, m, 0, 23, 59, 59);
+        break;
+      case 'last_3_months':
+        start = new Date(y, m - 2, 1);
+        end = new Date(y, m, now.getDate(), 23, 59, 59);
+        break;
+      case 'last_6_months':
+        start = new Date(y, m - 5, 1);
+        end = new Date(y, m, now.getDate(), 23, 59, 59);
+        break;
+      case 'this_month':
+        start = new Date(y, m, 1);
+        end = new Date(y, m, now.getDate(), 23, 59, 59);
+        break;
+      case 'all_time':
+        return null;
+      case 'custom':
+        start = FILTERS.customFrom ? parseDate(FILTERS.customFrom) : null;
+        end = FILTERS.customTo ? parseDate(FILTERS.customTo) : null;
+        if (end) end.setHours(23, 59, 59, 999);
+        if (!start && !end) return null;
+        return { start: start, end: end };
+      default:
+        start = new Date(y, 0, 1);
+        end = new Date(y, m, now.getDate(), 23, 59, 59);
     }
+    return { start: start, end: end };
   }
 
-  function updateLenderCard(card, lender, volume) {
-    if (!card || !lender) return;
-    setText(card.querySelector('.card-name'), lender);
-    setText(card.querySelector('.card-big-single'), fmt(volume));
+  function inDateRange(d) {
+    if (!d.date) return false;
+    var bounds = dateRangeBounds();
+    if (!bounds) return true;
+    if (bounds.start && d.date < bounds.start) return false;
+    if (bounds.end && d.date > bounds.end) return false;
+    return true;
   }
 
-  function renderLeaderboard() {
-    var rank = {};
-    DEALS.forEach(function (d) {
-      if (!d.rep) return;
-      if (!rank[d.rep]) rank[d.rep] = { name: d.rep, volume: 0 };
-      rank[d.rep].volume += d.funding;
+  function applyFilters(deals) {
+    return deals.filter(function (d) {
+      if (!inDateRange(d)) return false;
+      if (FILTERS.leadSource && !leadSourceMatchesFilter(d.leadSource, FILTERS.leadSource)) return false;
+      if (FILTERS.state && normState(d.state) !== normState(FILTERS.state)) return false;
+      if (FILTERS.lender && normStr(d.lender) !== normStr(FILTERS.lender)) return false;
+      if (FILTERS.funder && normStr(d.packageOwner) !== normStr(FILTERS.funder)) return false;
+      if (FILTERS.dealType && normStr(d.dealType) !== normStr(FILTERS.dealType)) return false;
+      return true;
     });
-    var sorted = Object.values(rank).sort(function (a, b) { return b.volume - a.volume; }).slice(0, 8);
-    if (!sorted.length) return;
+  }
 
-    var hero = document.querySelector('.rep-hero');
-    if (hero) {
-      var top = sorted[0];
-      var pid = repPersonId(top.name);
-      if (pid) hero.setAttribute('data-person-id', pid);
-      setText(hero.querySelector('.rep-hero-name'), firstName(top.name));
-      setText(hero.querySelector('.rep-hero-amount'), fmt(top.volume));
-      var img = hero.querySelector('.rep-photo');
-      if (img && pid && REP_PHOTOS[pid]) {
-        img.src = REP_PHOTOS[pid];
-        img.alt = firstName(top.name);
+  function aggregateByRep(deals) {
+    var by = {};
+    deals.forEach(function (d) {
+      var name = d.packageOwner;
+      if (!name) return;
+      if (!by[name]) {
+        by[name] = { name: name, volume: 0, revenue: 0, count: 0 };
       }
-    }
+      by[name].volume += d.funding;
+      by[name].revenue += d.revenue;
+      by[name].count += 1;
+    });
+    return Object.values(by)
+      .map(function (r) {
+        r.avg = r.count ? r.volume / r.count : 0;
+        r.avgRev = r.count ? r.revenue / r.count : 0;
+        return r;
+      })
+      .sort(function (a, b) { return b.volume - a.volume; });
+  }
 
-    var grid = document.querySelector('.rep-grid');
+  function repPersonId(name) {
+    if (!window.REPS || !name) return null;
+    var n = name.toLowerCase();
+    var keys = Object.keys(window.REPS);
+    for (var i = 0; i < keys.length; i++) {
+      var rep = window.REPS[keys[i]];
+      if (!rep) continue;
+      var book = (rep.bookName || rep.name || '').toLowerCase();
+      if (book && n.indexOf(book) > -1) return keys[i];
+      if (n.indexOf(keys[i]) > -1) return keys[i];
+      var first = (rep.name || '').split(' ')[0].toLowerCase();
+      if (first && first.length > 2 && n.indexOf(first) > -1) return keys[i];
+    }
+    return null;
+  }
+
+  function repTeam(name) {
+    var id = repPersonId(name);
+    if (id && window.REPS[id] && window.REPS[id].company) return window.REPS[id].company;
+    return 'Capital Infusion';
+  }
+
+  function filterDisplayValue(key) {
+    if (key === 'dateRange') {
+      var preset = DATE_PRESETS.filter(function (p) { return p.id === FILTERS.dateRange; })[0];
+      if (FILTERS.dateRange === 'custom' && (FILTERS.customFrom || FILTERS.customTo)) {
+        return (FILTERS.customFrom || '…') + ' – ' + (FILTERS.customTo || '…');
+      }
+      return preset ? preset.label : 'Year to date';
+    }
+    if (key === 'leadSource') return leadSourceFilterLabel(FILTERS.leadSource);
+    var val = FILTERS[key];
+    return val || 'All';
+  }
+
+  function dateRangeMetaLabel() {
+    var preset = DATE_PRESETS.filter(function (p) { return p.id === FILTERS.dateRange; })[0];
+    return preset ? preset.label : 'Year to date';
+  }
+
+  function renderFilterChips() {
+    var grid = document.getElementById('fbFilterGrid');
     if (!grid) return;
-    var medals = ['r-gold', 'r-silver', 'r-bronze'];
-    var icons = ['🥇', '🥈', '🥉'];
-    grid.innerHTML = sorted.map(function (r, i) {
-      var pid = repPersonId(r.name);
-      var cls = i < 3 ? 'rep-row ' + medals[i] : 'rep-row';
-      var pos = i < 3
-        ? '<span class="rep-pos medal">' + icons[i] + '</span>'
-        : '<span class="rep-pos num">' + (i + 1) + '</span>';
-      return '<div class="' + cls + '"' + (pid ? ' data-person-id="' + pid + '"' : '') + '>' +
-        pos + '<span class="rep-name">' + esc(r.name) + '</span><span class="rep-amt">' + fmt(r.volume) + '</span></div>';
+    grid.innerHTML = FILTER_DEFS.map(function (def) {
+      var active = def.type === 'date'
+        ? FILTERS.dateRange !== 'ytd' || FILTERS.customFrom || FILTERS.customTo
+        : !!FILTERS[def.key];
+      if (def.key === 'dateRange' && FILTERS.dateRange === 'ytd') active = false;
+      var val = def.disabled ? 'Coming soon' : filterDisplayValue(def.key);
+      return '<button type="button" class="fb-filter-chip' + (active ? ' active' : '') + '"' +
+        ' data-filter-key="' + def.key + '"' +
+        (def.disabled ? ' disabled title="Coming soon — field not in live sync yet"' : '') + '>' +
+        '<span class="fb-filter-chip-name">' + esc(def.label) + '</span>' +
+        '<span class="fb-filter-chip-val">' + esc(val) + '</span>' +
+        '</button>';
     }).join('');
+
+    grid.querySelectorAll('.fb-filter-chip:not([disabled])').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        openFilterPopup(btn.getAttribute('data-filter-key'));
+      });
+    });
   }
 
-  function renderStatCards() {
-    var cards = document.querySelectorAll('#statCards > .stat-card');
-    var todayDeals = DEALS.filter(function (d) { return isToday(d.date); });
-    var todayDay = new Date();
-    if (!todayDeals.length) {
-      var latest = mostRecentDate(DEALS);
-      if (latest) {
-        todayDeals = dealsOnDay(DEALS, latest);
-        todayDay = latest;
+  function renderActiveTags() {
+    var wrap = document.getElementById('fbActiveFilters');
+    if (!wrap) return;
+    var tags = [];
+
+    FILTER_DEFS.forEach(function (def) {
+      if (def.disabled) return;
+      if (def.key === 'dateRange') {
+        if (FILTERS.dateRange !== 'ytd' || FILTERS.customFrom || FILTERS.customTo) {
+          tags.push({ key: def.key, label: def.label + ': ' + filterDisplayValue(def.key) });
+        }
+        return;
       }
-    }
-    var week = DEALS.filter(function (d) { return isThisWeek(d.date); });
-    var month = DEALS.filter(function (d) { return isThisMonth(d.date); });
-
-    var repToday = topRep(todayDeals);
-    var repWeek = topRep(week);
-    var repMonth = topRep(month);
-    if (cards[1]) {
-      var headline = cards[1].querySelector('.card-headline');
-      if (headline) {
-        headline.innerHTML = isToday(todayDay)
-          ? 'Most funded<br />today:'
-          : 'Most funded<br />' + shortDayLabel(todayDay) + ':';
+      if (FILTERS[def.key]) {
+        tags.push({ key: def.key, label: def.label + ': ' + filterDisplayValue(def.key) });
       }
-      if (repToday) updateRepCard(cards[1], repToday.name, repToday.volume);
-      else setText(cards[1].querySelector('.card-big-single'), '—');
-    }
-    if (cards[2] && repWeek) updateRepCard(cards[2], repWeek.name, repWeek.volume);
-    if (cards[3] && repMonth) updateRepCard(cards[3], repMonth.name, repMonth.volume);
+    });
 
-    var company = topCompany(DEALS);
-    if (cards[4] && company) {
-      setText(cards[4].querySelector('.card-name'), company.name.length > 28 ? company.name.substring(0, 28) + '…' : company.name);
-      setText(cards[4].querySelector('.card-big-single'), company.count + ' deals');
+    if (!tags.length) {
+      wrap.innerHTML = '';
+      return;
     }
 
-    var lenderAll = topLender(DEALS);
-    var lenderMonth = topLender(month);
-    var lenderWeek = topLender(week);
-    if (cards[5] && lenderAll) updateLenderCard(cards[5], lenderAll.name, lenderAll.volume);
-    if (cards[6] && lenderMonth) updateLenderCard(cards[6], lenderMonth.name, lenderMonth.volume);
-    if (cards[7] && lenderWeek) updateLenderCard(cards[7], lenderWeek.name, lenderWeek.volume);
-  }
-
-  function renderLenderBars() {
-    var ytd = DEALS.filter(function (d) { return isYtd(d.date); });
-    var rank = lenderRank(ytd.length ? ytd : DEALS).slice(0, 6);
-    var total = sumFunding(ytd.length ? ytd : DEALS);
-    var container = document.querySelector('.lender-bars');
-    if (!container || !rank.length) return;
-    var max = rank[0].volume || 1;
-    var gradients = [
-      'linear-gradient(90deg,#2563EB,#34D399)',
-      'linear-gradient(90deg,#0F4C81,#2563EB)',
-      'linear-gradient(90deg,#10B981,#0F4C81)',
-      'linear-gradient(90deg,#F59E0B,#EF4444)',
-      'linear-gradient(90deg,#8B5CF6,#2563EB)',
-      'linear-gradient(90deg,#6366F1,#8B5CF6)'
-    ];
-    container.innerHTML = rank.map(function (l, i) {
-      var width = Math.max(8, Math.round(l.volume / max * 100));
-      var pct = total ? Math.round(l.volume / total * 100) : 0;
-      return '<div class="lender-bar-row">' +
-        '<span class="lender-bar-name">' + esc(l.name) + '</span>' +
-        '<div class="lender-bar-track"><div class="lender-bar-fill" style="width:' + width + '%;background:' + gradients[i % gradients.length] + '"></div></div>' +
-        '<span class="lender-bar-amt">' + fmt(l.volume) + '</span>' +
-        '<span class="lender-bar-pct">' + pct + '%</span></div>';
+    wrap.innerHTML = tags.map(function (t) {
+      return '<span class="fb-active-tag">' + esc(t.label) +
+        '<button type="button" data-clear-key="' + t.key + '" aria-label="Remove ' + esc(t.label) + '">&times;</button></span>';
     }).join('');
+
+    wrap.querySelectorAll('[data-clear-key]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        clearFilterKey(btn.getAttribute('data-clear-key'));
+        render();
+      });
+    });
   }
 
-  function positionChip(pos) {
-    var p = String(pos || '').replace(/[^0-9]/g, '');
-    if (!p) return { cls: 'chip-gray', label: '—' };
-    var suffix = p === '1' ? 'st' : p === '2' ? 'nd' : p === '3' ? 'rd' : 'th';
-    var cls = p === '1' ? 'chip-green' : p === '2' ? 'chip-amber' : 'chip-gray';
-    return { cls: cls, label: p + suffix };
+  function clearFilterKey(key) {
+    if (key === 'dateRange') {
+      FILTERS.dateRange = 'ytd';
+      FILTERS.customFrom = '';
+      FILTERS.customTo = '';
+    } else {
+      FILTERS[key] = '';
+    }
   }
 
-  function renderTable() {
-    var tbody = document.querySelector('.data-table tbody');
+  function renderHeroKpis(filtered) {
+    var vol = filtered.reduce(function (s, d) { return s + d.funding; }, 0);
+    var reps = aggregateByRep(filtered);
+    var elVol = document.getElementById('fbKpiVolume');
+    var elDeals = document.getElementById('fbKpiDeals');
+    var elAvg = document.getElementById('fbKpiAvg');
+    var elReps = document.getElementById('fbKpiReps');
+    if (elVol) elVol.textContent = fmt(vol);
+    if (elDeals) elDeals.textContent = filtered.length.toLocaleString();
+    if (elAvg) elAvg.textContent = filtered.length ? fmt(vol / filtered.length) : '$0';
+    if (elReps) elReps.textContent = reps.length.toLocaleString();
+  }
+
+  function renderTable(rows) {
+    var tbody = document.getElementById('fbRepTableBody');
+    var empty = document.getElementById('fbEmptyState');
+    var table = document.getElementById('fbRepTable');
+    var meta = document.getElementById('fbTableMeta');
+    if (meta) meta.textContent = dateRangeMetaLabel() + ' · ' + rows.length + ' rep' + (rows.length === 1 ? '' : 's');
+
     if (!tbody) return;
-    var rows = DEALS.slice().sort(function (a, b) {
-      var da = a.date ? a.date.getTime() : 0;
-      var db = b.date ? b.date.getTime() : 0;
-      return db - da;
-    }).slice(0, 75);
-    tbody.innerHTML = rows.map(function (d, i) {
-      var ini = esc((d.company || '??').substring(0, 2).toUpperCase());
-      var chip = positionChip(d.position);
+    if (!rows.length) {
+      tbody.innerHTML = '';
+      if (table) table.hidden = true;
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (table) table.hidden = false;
+    if (empty) empty.hidden = true;
+
+    tbody.innerHTML = rows.map(function (r, i) {
+      var pid = repPersonId(r.name);
+      var nameCell = pid
+        ? '<span class="fb-rep-name" data-person-id="' + pid + '" role="button" tabindex="0">' + esc(r.name) + '</span>'
+        : '<span class="fb-rep-name">' + esc(r.name) + '</span>';
       return '<tr>' +
         '<td>' + (i + 1) + '</td>' +
-        '<td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#34D399)">' + ini + '</div>' +
-        '<span class="biz-cell-name">' + esc(d.company) + '</span></div></td>' +
-        '<td><span class="amount-cell">' + fmt(d.funding) + '</span></td>' +
-        '<td>' + formatDate(d.dateFunded) + '</td>' +
-        '<td>' + esc(d.lender) + '</td>' +
-        '<td>' + esc(firstName(d.rep)) + '</td>' +
-        '<td><span class="factor-rate">' + esc(d.rate || '—') + '</span></td>' +
-        '<td>' + esc(d.industry) + '</td>' +
-        '<td>' + esc(d.state) + '</td>' +
-        '<td><span class="status-chip ' + chip.cls + '">' + chip.label + '</span></td>' +
+        '<td>' + nameCell + '</td>' +
+        '<td><span class="fb-money">' + fmt(r.volume) + '</span></td>' +
+        '<td>' + esc(repTeam(r.name)) + '</td>' +
+        '<td>' + r.count + '</td>' +
+        '<td><span class="fb-money">' + fmt(r.avg) + '</span></td>' +
+        '<td><span class="fb-money">' + fmt(r.avgRev) + '</span></td>' +
         '</tr>';
     }).join('');
   }
 
-  function renderTabCounts() {
-    var tabs = document.querySelectorAll('.tab-bar .tab');
-    var counts = [
-      DEALS.length,
-      DEALS.filter(function (d) { return isThisMonth(d.date); }).length,
-      DEALS.filter(function (d) { return isQ2(d.date); }).length,
-      DEALS.filter(function (d) { return d.date && d.date.getFullYear() === new Date().getFullYear(); }).length
-    ];
-    tabs.forEach(function (tab, i) {
-      var el = tab.querySelector('.tab-count');
-      if (el && counts[i] !== undefined) el.textContent = counts[i].toLocaleString();
+  function render() {
+    var filtered = applyFilters(DEALS);
+    var rows = aggregateByRep(filtered);
+    renderFilterChips();
+    renderActiveTags();
+    renderHeroKpis(filtered);
+    renderTable(rows);
+  }
+
+  function openFilterPopup(key) {
+    var def = FILTER_DEFS.filter(function (d) { return d.key === key; })[0];
+    if (!def || def.disabled) return;
+
+    popupKey = key;
+    popupDraft = FILTERS[key] || (key === 'dateRange' ? FILTERS.dateRange : '');
+
+    var overlay = document.getElementById('fbFilterOverlay');
+    var title = document.getElementById('fbFilterModalTitle');
+    var searchWrap = document.getElementById('fbFilterSearchWrap');
+    var searchInput = document.getElementById('fbFilterSearch');
+    var options = document.getElementById('fbFilterOptions');
+
+    if (title) title.textContent = def.label;
+    if (searchWrap) searchWrap.hidden = def.type !== 'date' && !def.searchable;
+    if (searchInput) searchInput.value = '';
+
+    if (def.type === 'date') {
+      renderDateOptions(options);
+    } else {
+      renderFieldOptions(options, def, '');
+    }
+
+    if (searchInput && def.searchable) {
+      searchInput.oninput = function () {
+        renderFieldOptions(options, def, searchInput.value);
+      };
+    }
+
+    if (overlay) {
+      overlay.hidden = false;
+      requestAnimationFrame(function () { overlay.classList.add('open'); });
+    }
+    document.body.style.overflow = 'hidden';
+  }
+
+  function renderDateOptions(container) {
+    if (!container) return;
+    var html = '<div class="fb-date-presets">';
+    DATE_PRESETS.forEach(function (p) {
+      var sel = (popupDraft || FILTERS.dateRange) === p.id ? ' selected' : '';
+      html += '<button type="button" class="fb-filter-option' + sel + '" data-date-preset="' + p.id + '">' + esc(p.label) + '</button>';
+    });
+    html += '</div>';
+    html += '<div class="fb-date-custom">' +
+      '<label>From<input type="date" id="fbCustomFrom" value="' + esc(FILTERS.customFrom) + '" /></label>' +
+      '<label>To<input type="date" id="fbCustomTo" value="' + esc(FILTERS.customTo) + '" /></label>' +
+      '</div>';
+    container.innerHTML = html;
+
+    container.querySelectorAll('[data-date-preset]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        popupDraft = btn.getAttribute('data-date-preset');
+        container.querySelectorAll('[data-date-preset]').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+      });
     });
   }
 
-  function renderTicker() {
-    var ytd = sumFunding(DEALS.filter(function (d) { return isYtd(d.date); }));
-    var msg = document.querySelector('.ticker-msg');
-    if (msg) {
-      msg.textContent = 'YTD ' + fmt(ytd) + ' funded · ' + DEALS.length.toLocaleString() + ' deals · Live from Zoho';
+  function renderFieldOptions(container, def, query) {
+    if (!container || !def.field) return;
+    var opts;
+    if (def.key === 'leadSource') {
+      opts = buildLeadSourceOptions(DEALS);
+    } else {
+      opts = buildFacetOptions(DEALS, def.field).map(function (o) {
+        return { value: o, label: o };
+      });
     }
+    var q = normStr(query);
+    if (q) {
+      opts = opts.filter(function (o) { return normStr(o.label).indexOf(q) > -1; });
+    }
+
+    var html = '<button type="button" class="fb-filter-option' + (!popupDraft ? ' selected' : '') + '" data-opt="">All</button>';
+    opts.slice(0, 200).forEach(function (o) {
+      var sel = popupDraft === o.value ? ' selected' : '';
+      html += '<button type="button" class="fb-filter-option' + sel + '" data-opt="' + esc(o.value) + '">' + esc(o.label) + '</button>';
+    });
+    if (opts.length > 200) {
+      html += '<div style="padding:10px 12px;font-size:12px;color:var(--text-muted)">Showing first 200 — use search to narrow.</div>';
+    }
+    container.innerHTML = html;
+
+    container.querySelectorAll('.fb-filter-option').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        popupDraft = btn.getAttribute('data-opt') || '';
+        container.querySelectorAll('.fb-filter-option').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+      });
+    });
   }
 
-  function render() {
-    setKpis();
-    renderLeaderboard();
-    renderStatCards();
-    renderLenderBars();
-    renderTable();
-    renderTabCounts();
-    renderTicker();
+  function closeFilterPopup() {
+    var overlay = document.getElementById('fbFilterOverlay');
+    if (overlay) {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      setTimeout(function () { overlay.hidden = true; }, 200);
+    }
+    popupKey = null;
+    popupDraft = '';
+  }
+
+  function applyFilterPopup() {
+    if (!popupKey) return;
+    if (popupKey === 'dateRange') {
+      FILTERS.dateRange = popupDraft || 'ytd';
+      var fromEl = document.getElementById('fbCustomFrom');
+      var toEl = document.getElementById('fbCustomTo');
+      if (fromEl) FILTERS.customFrom = fromEl.value;
+      if (toEl) FILTERS.customTo = toEl.value;
+      if (FILTERS.dateRange === 'custom' && !FILTERS.customFrom && !FILTERS.customTo) {
+        FILTERS.dateRange = 'ytd';
+      }
+    } else {
+      FILTERS[popupKey] = popupDraft || '';
+    }
+    closeFilterPopup();
+    render();
+  }
+
+  function clearFilterPopup() {
+    if (!popupKey) return;
+    if (popupKey === 'dateRange') {
+      popupDraft = 'ytd';
+      FILTERS.dateRange = 'ytd';
+      FILTERS.customFrom = '';
+      FILTERS.customTo = '';
+      renderDateOptions(document.getElementById('fbFilterOptions'));
+    } else {
+      popupDraft = '';
+      FILTERS[popupKey] = '';
+      var def = FILTER_DEFS.filter(function (d) { return d.key === popupKey; })[0];
+      if (def) renderFieldOptions(document.getElementById('fbFilterOptions'), def, '');
+    }
+    closeFilterPopup();
+    render();
+  }
+
+  function wireModal() {
+    var overlay = document.getElementById('fbFilterOverlay');
+    var closeBtn = document.getElementById('fbFilterClose');
+    var applyBtn = document.getElementById('fbFilterApply');
+    var clearBtn = document.getElementById('fbFilterClear');
+
+    if (closeBtn) closeBtn.addEventListener('click', closeFilterPopup);
+    if (applyBtn) applyBtn.addEventListener('click', applyFilterPopup);
+    if (clearBtn) clearBtn.addEventListener('click', clearFilterPopup);
+    if (overlay) {
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeFilterPopup();
+      });
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && popupKey) closeFilterPopup();
+    });
   }
 
   function load(raw) {
@@ -375,6 +603,8 @@
   }
 
   function init() {
+    wireModal();
+    renderFilterChips();
     if (!window.CapMuseData) return;
     window.CapMuseData.getRawDeals().then(load);
     window.addEventListener('capmuse:deals-updated', function (e) {

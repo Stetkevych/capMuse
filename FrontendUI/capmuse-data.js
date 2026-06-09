@@ -1,7 +1,7 @@
 // Shared funding-book loader — single fetch, session cache, stale-while-revalidate
 (function () {
   var BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
-  var CACHE_KEY = 'capmuse:funding_book_live:v1';
+  var CACHE_KEY = 'capmuse:funding_book_live:v4';
   var CACHE_TTL = 5 * 60 * 1000;
   var inflight = null;
 

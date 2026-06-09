@@ -58,6 +58,22 @@
 
   function nn(v) { return parseFloat(String(v || '').replace(/[$,]/g, '')) || 0; }
 
+  var PACKAGE_OWNER_RECORD_FIXES = {
+    '3793076000601237337': 'House .',
+    '3793076000605384128': 'House .',
+    '3793076000606189343': 'House .',
+    '3793076000624144182': 'House .',
+    '3793076000649034499': 'House .'
+  };
+
+  function packageOwnerFromRecord(r) {
+    var recordId = String(r.record_id || '');
+    if (PACKAGE_OWNER_RECORD_FIXES[recordId]) return PACKAGE_OWNER_RECORD_FIXES[recordId];
+    var fromLookup = (r['Package_Owner.name'] || (r.Package_Owner && r.Package_Owner.name) || r.package_owner_name || '').trim();
+    if (fromLookup) return fromLookup;
+    return (r.package_owner || '').trim();
+  }
+
   // ── Data mapper — handles both live JSON and legacy CSV field names ──────────
   function mapRecord(r) {
     var stage     = r.Stage || r.Stage_of_Package || r.stage || '';
@@ -78,7 +94,7 @@
     var fundedAt = r.Date_Funded  || r.date_funded  || '';
     return {
       client_name:             r.Deal_Name || r.company || r.Account_Name || r.DBA || '',
-      rep_name:                r['Owner.name'] || r['Package_Owner.name'] || r.package_owner || r.puller || r.Bizz_Owner_Name || r.First_Name || '',
+      rep_name:                packageOwnerFromRecord(r) || r.Bizz_Owner_Name || r.First_Name || '',
       lender_name:             r.Lender || r.lender || r.Funder_2 || '',
       lead_source:             r.Lead_Source2 || r.Lead_Source || r.lead_source || r.Original_Lead_Source || '',
       industry:                r.Industry || r.industry || r.I_Stated_Industry || '',
@@ -111,23 +127,22 @@
     _loading = true;
 
     function finish(raw) {
-      _deals  = (raw || []).map(mapRecord).filter(function (d) { return d.client_name; });
-      _loaded = true;
+      _deals   = (raw || []).map(mapRecord).filter(function (d) { return d.client_name; });
+      _loaded  = true;
+      _loading = false;
       console.log('[CapMuse Search] Loaded ' + _deals.length + ' records');
       _queue.forEach(function (fn) { fn(_deals); });
-      _queue  = [];
+      _queue = [];
     }
 
-    // Use the shared live-data loader if available (funding_book_live.json)
     if (window.CapMuseData) {
       window.CapMuseData.getRawDeals().then(finish).catch(function () { finish([]); });
       return;
     }
 
-    // Fallback: fetch funding_book_live.json directly
     fetch(BUCKET + '/funding_book_live.json')
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (data) { if (data && data.length) { finish(data); } else { finish([]); } })
+      .then(function (data) { finish(data && data.length ? data : []); })
       .catch(function () { finish([]); });
   }
 
@@ -319,15 +334,59 @@
     });
   }
 
+  function escapeReg(s) {
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function wordMatch(haystack, needle) {
+    if (!needle || needle.length < 3) return false;
+    return new RegExp('\\b' + escapeReg(needle) + '\\b', 'i').test(haystack);
+  }
+
+  function uniqueRepNames(deals) {
+    var names = [];
+    deals.forEach(function (d) {
+      if (d.rep_name && names.indexOf(d.rep_name) === -1) names.push(d.rep_name);
+    });
+    return names.sort(function (a, b) { return b.length - a.length; });
+  }
+
   // ── Entity detection ───────────────────────────────────────────────────────
   function detectRep(q, deals) {
-    var names = [];
-    deals.forEach(function (d) { if (d.rep_name && names.indexOf(d.rep_name) === -1) names.push(d.rep_name); });
-    for (var i = 0; i < names.length; i++) {
-      var first = names[i].split(' ')[0].toLowerCase();
-      if (first.length > 2 && q.indexOf(first) > -1) return first;
+    var names = uniqueRepNames(deals);
+    var i, full, first;
+
+    for (i = 0; i < names.length; i++) {
+      full = names[i].toLowerCase();
+      if (full.length > 2 && q.indexOf(full) > -1) return full;
+    }
+    for (i = 0; i < names.length; i++) {
+      first = names[i].split(' ')[0].toLowerCase();
+      if (wordMatch(q, first)) return first;
+    }
+    for (i = 0; i < names.length; i++) {
+      first = names[i].split(' ').pop().toLowerCase();
+      if (wordMatch(q, first)) return first;
     }
     return null;
+  }
+
+  function detectClient(q, deals) {
+    var best = null;
+    var bestScore = 0;
+    deals.forEach(function (d) {
+      var name = (d.client_name || '').trim();
+      if (!name || name.length < 3) return;
+      var lower = name.toLowerCase();
+      var score = 0;
+      if (q.indexOf(lower) > -1) score = lower.length + 100;
+      else if (lower.indexOf(q) > -1 && q.length >= 3) score = q.length;
+      if (score > bestScore) {
+        bestScore = score;
+        best = name;
+      }
+    });
+    return best;
   }
 
   function detectLender(q, deals) {
@@ -340,10 +399,13 @@
   }
 
   function resolveRepName(repMatch, deals) {
-    var names = [];
-    deals.forEach(function (d) { if (d.rep_name && names.indexOf(d.rep_name) === -1) names.push(d.rep_name); });
-    for (var i = 0; i < names.length; i++) {
-      if (names[i].split(' ')[0].toLowerCase() === repMatch || names[i].toLowerCase().indexOf(repMatch) > -1) return names[i];
+    var names = uniqueRepNames(deals);
+    var i, lower;
+    for (i = 0; i < names.length; i++) {
+      lower = names[i].toLowerCase();
+      if (lower === repMatch || names[i].split(' ')[0].toLowerCase() === repMatch || names[i].split(' ').pop().toLowerCase() === repMatch) {
+        return names[i];
+      }
     }
     return cap(repMatch);
   }
@@ -437,6 +499,10 @@
 
     // ── Specific lender intents ───────────────────────────────────────────────
     if (lenderMatch) return lenderOverview(filtered, lenderMatch, timeLabel);
+
+    // ── Business / client intents ────────────────────────────────────────────
+    var clientMatch = detectClient(q, deals);
+    if (clientMatch) return clientOverview(filtered, clientMatch, timeLabel);
 
     // ── Compare intent ────────────────────────────────────────────────────────
     if (/vs\b|versus|compare/.test(q)) return compareReps(q, filtered, timeLabel, deals);
@@ -658,6 +724,24 @@
       insight: sources.length>1 ? sources.length+' sources total.' : null,
       chart:   { data:sources.slice(0,8).map(function(s){return{name:s.name,value:s.funded};}), label:'Funded Deals by Source' },
       table:   { cols:['Source','Apps','Funded','Rate','Volume'], rows:sources.map(function(s){return[s.name,s.total,s.funded,(s.total?Math.round(s.funded/s.total*100):0)+'%',fmt(s.volume)];}) },
+    };
+  }
+
+  function clientOverview(filtered, clientMatch, timeLabel) {
+    var clientDeals = filtered.filter(function (d) {
+      return (d.client_name || '').toLowerCase() === clientMatch.toLowerCase();
+    });
+    var funded = clientDeals.filter(function (d) { return d.approval_status === 'funded' && d.funded_amount > 0; });
+    var volume = funded.reduce(function (s, d) { return s + d.funded_amount; }, 0);
+    var top = funded.sort(function (a, b) { return b.funded_amount - a.funded_amount; })[0];
+    return {
+      title:   clientMatch + ' — ' + timeLabel,
+      answer:  funded.length
+        ? clientMatch + ' has ' + funded.length + ' funded deal' + (funded.length !== 1 ? 's' : '') + ' totaling ' + fmt(volume) + '.'
+        : clientMatch + ' has no funded deals in this period.',
+      insight: top ? 'Largest: ' + fmt(top.funded_amount) + ' via ' + (top.lender_name || 'Unknown') + ' (' + (top.rep_name || 'Unknown') + ').' : null,
+      chart:   funded.length ? { data: funded.slice(0, 8).map(function (d) { return { name: (d.lender_name || 'Deal').substring(0, 12), value: d.funded_amount }; }), label: 'Funded Amount' } : null,
+      table:   { cols: ['Date', 'Amount', 'Lender', 'Rep'], rows: funded.slice(0, 10).map(function (d) { return [(d.funded_at || d.application_submitted_at || '').substring(0, 10), fmt(d.funded_amount), d.lender_name || '-', d.rep_name || '-']; }) },
     };
   }
 
@@ -1171,12 +1255,19 @@
     });
   }
 
+  function applyLiveRows(rows) {
+    _deals = rows.map(mapRecord).filter(function (d) { return d.client_name || d.rep_name; });
+    _loaded = true;
+  }
+
   // ── Init ───────────────────────────────────────────────────────────────────
   function init() {
     injectStyles();
     buildOverlay();
     wireSearch();
-    // Pre-fetch data in background so first search is instant
+    window.addEventListener('capmuse:deals-updated', function (e) {
+      if (e.detail && e.detail.length) applyLiveRows(e.detail);
+    });
     loadData(function () {});
   }
 

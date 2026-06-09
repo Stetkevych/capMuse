@@ -547,6 +547,7 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
 /* ── Main populate ── */
 (function () {
   if (!window.CapMuseAuth.requireLogin()) return;
+  window.CapMuseAuth.guardDemoPage();
 
   var userId = window.CapMuseAuth.getUserId();
   if (window.ensureRepProfile) userId = window.ensureRepProfile(userId);
@@ -594,6 +595,7 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
 
   window.CapMuseAuth.populateSidebar(rep);
   window.CapMuseAuth.wireLogoutLinks();
+  window.CapMuseAuth.applyDemoNav();
 
   if (window.renderTodayPerfPanel) {
     window.renderTodayPerfPanel(document.getElementById('perfGrid'), userId, { animate: true });
