@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Convoso — CapMuse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html[data-theme="dark"] {
+      --page-bg:        #0C0F14;
+      --sidebar-bg:     #111720;
+      --sidebar-border: #1A2435;
+      --topbar-bg:      rgba(17,23,32,0.96);
+      --topbar-border:  #1A2435;
+      --surface:        #141C28;
+      --surface-2:      #1A2435;
+      --text-primary:   #F1F5F9;
+      --text-secondary: #7A8FA8;
+      --text-muted:     #4A5F78;
+      --nav-item-color: #8A9EBB;
+      --nav-sub-color:  #7A8FA8;
+      --nav-active:     #60A5FA;
+      --nav-hover-bg:   rgba(255,255,255,0.04);
+      --nav-box-bg:     rgba(255,255,255,0.04);
+      --nav-box-border: rgba(255,255,255,0.07);
+      --border:         #1A2435;
+      --search-bg:      #141C28;
+      --search-border:  #1A2435;
+      --ticker-bg:      #141C28;
+      --ticker-border:  #1A2435;
+      --card-shadow:    0 1px 3px rgba(0,0,0,.5), 0 4px 16px rgba(0,0,0,.4);
+    }
+
+    html[data-theme="light"] {
+      --page-bg:        #EBEBEB;
+      --sidebar-bg:     #FFFFFF;
+      --sidebar-border: #E8E8E8;
+      --topbar-bg:      rgba(255,255,255,0.97);
+      --topbar-border:  #E8E8E8;
+      --surface:        #FFFFFF;
+      --surface-2:      #F4F4F4;
+      --text-primary:   #111111;
+      --text-secondary: #555555;
+      --text-muted:     #999999;
+      --nav-item-color: #333333;
+      --nav-sub-color:  #444444;
+      --nav-active:     #2563EB;
+      --nav-hover-bg:   rgba(0,0,0,0.04);
+      --nav-box-bg:     #F4F4F4;
+      --nav-box-border: transparent;
+      --border:         #E8E8E8;
+      --search-bg:      #F4F4F4;
+      --search-border:  #E0E0E0;
+      --ticker-bg:      #FFFFFF;
+      --ticker-border:  #E8E8E8;
+      --card-shadow:    0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.07);
+    }
+
+    :root {
+      --blue:      #2563EB;
+      --green:     #10B981;
+      --sidebar-w: 215px;
+      --sidebar-gap: 16px;
+      --ease:      cubic-bezier(0.4,0,0.2,1);
+    }
+
+    html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; background: var(--page-bg); color: var(--text-primary); }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      position: fixed; left: var(--sidebar-gap); top: var(--sidebar-gap); bottom: var(--sidebar-gap);
+      background: var(--sidebar-bg); border: 1px solid var(--sidebar-border);
+      border-radius: 18px;
+      box-shadow: 0 18px 45px rgba(15,23,42,0.12), 0 3px 12px rgba(15,23,42,0.08);
+      display: flex; flex-direction: column; z-index: 300;
+      overflow-y: auto; overflow-x: hidden; scrollbar-width: none;
+      transition: transform 0.3s var(--ease);
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+
+    .sidebar-logo { display: flex; align-items: center; gap: 9px; padding: 18px 18px 14px; flex-shrink: 0; }
+    .sidebar-logo img { width: 30px; height: 30px; object-fit: contain; }
+    .sidebar-wordmark {
+      font-family: 'Orbitron', sans-serif; font-size: 14.5px; font-weight: 700; letter-spacing: 0.04em;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .sidebar-nav { flex: 1; padding: 6px 0 8px; display: flex; flex-direction: column; }
+
+    .nav-section-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 18px; cursor: pointer; color: var(--nav-item-color);
+      font-size: 14px; font-weight: 500; user-select: none; transition: color 0.15s ease;
+    }
+    .nav-section-toggle:hover { color: var(--text-primary); }
+    .nav-section-toggle.active { color: var(--nav-active); font-weight: 600; }
+    .toggle-left { display: flex; align-items: center; gap: 10px; }
+    .toggle-icon { width: 17px; height: 17px; opacity: 0.7; flex-shrink: 0; }
+    .toggle-chevron { width: 14px; height: 14px; color: var(--text-muted); transition: transform 0.2s ease; flex-shrink: 0; }
+    .nav-section-toggle.open .toggle-chevron { transform: rotate(180deg); }
+
+    .nav-sub { display: flex; flex-direction: column; overflow: hidden; max-height: 0; transition: max-height 0.25s var(--ease); }
+    .nav-sub.open { max-height: 400px; }
+
+    .nav-sub-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 18px 7px 42px; color: var(--nav-sub-color);
+      font-size: 13.5px; font-weight: 400; cursor: pointer; text-decoration: none;
+      transition: color 0.12s ease, background-color 0.12s ease;
+    }
+    .nav-sub-item:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .nav-sub-item.active { color: var(--nav-active); font-weight: 600; }
+    .sub-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.6; }
+    .nav-sub-item.active .sub-icon { opacity: 1; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 18px;
+      color: var(--nav-item-color); font-size: 14px; font-weight: 400; cursor: pointer;
+      text-decoration: none; transition: color 0.12s ease, background-color 0.12s ease;
+    }
+    .nav-item:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .nav-icon { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.65; }
+
+    .sidebar-footer { padding: 10px; border-top: 1px solid var(--sidebar-border); flex-shrink: 0; }
+    .sidebar-user { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; cursor: pointer; transition: background 0.15s ease; }
+    .sidebar-user:hover { background: var(--nav-hover-bg); }
+    .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #0F4C81, #10B981); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 10.5px; color: var(--text-muted); }
+
+    .main-wrapper { margin-left: calc(var(--sidebar-w) + 32px); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+    .topbar { position: sticky; top: 0; height: 72px; background: transparent; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 14px 28px 0; gap: 14px; }
+    .burger { display: none; width: 32px; height: 32px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; align-items: center; justify-content: center; border-radius: 6px; flex-shrink: 0; }
+    .search-wrap { flex: 0 1 640px; position: relative; max-width: 640px; min-width: 320px; }
+    .search-icon-l { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
+    .search-icon-r { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--blue); pointer-events: none; }
+    .search-input { width: 100%; height: 42px; background: var(--surface); border: 1px solid var(--search-border); border-radius: 100px; color: var(--text-primary); font-family: inherit; font-size: 13.5px; padding: 0 42px 0 40px; outline: none; box-shadow: 0 10px 30px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04); transition: border-color 0.18s ease; }
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
+    .topbar-right { display: flex; align-items: center; gap: 4px; padding: 4px; background: var(--surface); border: 1px solid var(--topbar-border); border-radius: 100px; box-shadow: 0 10px 30px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.04); flex-shrink: 0; }
+    .top-btn { width: 32px; height: 32px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 7px; position: relative; transition: background 0.13s ease, color 0.13s ease; }
+    .top-btn:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .top-btn svg { width: 18px; height: 18px; }
+    .notif-pip { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); }
+    .top-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #0F4C81, #10B981); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; cursor: pointer; flex-shrink: 0; }
+    .avatar-wrap { position: relative; }
+    .avatar-menu { position: absolute; top: calc(100% + 8px); right: 0; min-width: 160px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease; z-index: 200; }
+    .avatar-menu.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .avatar-menu-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--text-primary); cursor: pointer; text-decoration: none; transition: background 0.12s ease; }
+    .avatar-menu-item:hover { background: var(--nav-hover-bg); }
+    .avatar-menu-item.danger { color: #EF4444; }
+    .avatar-menu-item.danger:hover { background: rgba(239,68,68,0.1); }
+    .icon-moon { display: block; }
+    .icon-sun  { display: none; }
+    html[data-theme="light"] .icon-moon { display: none; }
+    html[data-theme="light"] .icon-sun  { display: block; }
+
+    .page-content { flex: 1; padding: 8px 28px 32px; display: flex; flex-direction: column; gap: 16px; }
+
+    .ticker-bar { background: var(--ticker-bg); border: 1px solid var(--ticker-border); border-radius: 14px; height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; box-shadow: var(--card-shadow); flex-shrink: 0; }
+    .ticker-msg { font-size: 13.5px; color: var(--text-secondary); font-weight: 400; }
+    .ticker-link { display: flex; align-items: center; gap: 5px; font-size: 13.5px; font-weight: 600; color: var(--text-secondary); cursor: pointer; text-decoration: none; transition: color 0.15s ease; }
+    .ticker-link:hover { color: var(--text-primary); }
+    .ticker-link svg { width: 14px; height: 14px; }
+
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 250; }
+
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 4px; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+    .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .page-header-actions { display: flex; align-items: center; gap: 8px; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 36px; padding: 0 16px; border-radius: 8px; border: none;
+      background: var(--blue); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.15s ease, transform 0.15s ease; text-decoration: none;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary svg { width: 14px; height: 14px; }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 6px;
+      height: 36px; padding: 0 14px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-secondary); font-family: inherit; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s ease, color 0.15s ease; text-decoration: none;
+    }
+    .btn-secondary:hover { background: var(--surface-2); color: var(--text-primary); }
+    .btn-secondary svg { width: 14px; height: 14px; }
+
+    .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .kpi-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px 20px; box-shadow: var(--card-shadow); border-top: 3px solid transparent;
+    }
+    .kpi-card.kc-blue   { border-top-color: #2563EB; }
+    .kpi-card.kc-green  { border-top-color: #10B981; }
+    .kpi-card.kc-amber  { border-top-color: #F59E0B; }
+    .kpi-card.kc-purple { border-top-color: #8B5CF6; }
+    .kpi-label { font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .kpi-value { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1; }
+    .kpi-delta { display: inline-flex; align-items: center; gap: 3px; margin-top: 6px; font-size: 12px; font-weight: 500; }
+    .kpi-delta.up   { color: #10B981; }
+    .kpi-delta.down { color: #EF4444; }
+    .kpi-delta.neu  { color: var(--text-muted); }
+
+    .funnel-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .funnel-step {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 14px; box-shadow: var(--card-shadow); text-align: center;
+      position: relative; cursor: pointer; transition: transform 0.15s ease;
+    }
+    .funnel-step:hover { transform: translateY(-2px); }
+    .funnel-step::after { content: '›'; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--text-muted); pointer-events: none; }
+    .funnel-step:last-child::after { display: none; }
+    .funnel-step-label { font-size: 10.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .funnel-step-count { font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
+    .funnel-step-amt { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .funnel-step.fs-connected .funnel-step-count { color: #10B981; }
+    .funnel-step.fs-voicemail .funnel-step-count { color: #8B5CF6; }
+    .funnel-step.fs-noanswer .funnel-step-count { color: #2563EB; }
+    .funnel-step.fs-busy     .funnel-step-count { color: #F59E0B; }
+    .funnel-step.fs-callback .funnel-step-count { color: #06B6D4; }
+
+    .cards-col { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); grid-auto-rows:minmax(110px,auto); gap:12px; align-items:stretch; margin:8px 0 4px; }
+    .stat-card { border-radius:16px; padding:24px 28px; display:flex; align-items:center; justify-content:space-between; gap:16px; position:relative; overflow:hidden; cursor:pointer; transition:transform 0.18s ease,box-shadow 0.18s ease; }
+    .stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 32px -4px rgba(0,0,0,0.25); }
+    .stat-card.blue-1 { background:linear-gradient(135deg,#1a3f9e 0%,#1D4ED8 100%); }
+    .stat-card.navy   { background:linear-gradient(135deg,#0F1F3D 0%,#162848 100%); }
+    .stat-card.teal   { background:linear-gradient(135deg,#064E3B 0%,#0D9488 100%); }
+    .stat-card.plum   { background:linear-gradient(135deg,#2D0F5E 0%,#4A1272 100%); }
+    .stat-card::after { content:''; position:absolute; right:-30px; bottom:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.06); pointer-events:none; }
+    .stat-card.rep-leader-card { grid-column:span 12; background:linear-gradient(135deg,#0D1520 0%,#111D2E 55%,#0C1A0F 100%); padding:0; align-items:stretch; justify-content:flex-start; gap:0; min-height:210px; }
+    .rep-hero { width:210px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px 20px; background:rgba(245,158,11,0.07); border-right:1px solid rgba(245,158,11,0.18); gap:7px; }
+    .rep-crown { font-size:26px; line-height:1; filter:drop-shadow(0 0 10px rgba(245,158,11,0.7)); }
+    .rep-photo-wrap { width:90px; height:90px; border-radius:50%; background:linear-gradient(135deg,#F59E0B,#D97706); padding:3px; box-shadow:0 0 28px rgba(245,158,11,0.5),0 4px 16px rgba(0,0,0,0.55); }
+    .rep-photo { width:100%; height:100%; border-radius:50%; object-fit:cover; object-position:center 8%; display:block; }
+    .rep-hero-name { font-size:16px; font-weight:700; color:#fff; letter-spacing:0.01em; margin-top:2px; }
+    .rep-hero-label { font-size:10px; font-weight:600; color:rgba(245,158,11,0.7); text-transform:uppercase; letter-spacing:0.09em; }
+    .rep-hero-amount { font-family:'Orbitron',sans-serif; font-size:21px; font-weight:800; color:#F59E0B; letter-spacing:-0.01em; line-height:1; }
+    .rep-board { flex:1; padding:16px 22px 16px 26px; display:flex; flex-direction:column; gap:7px; overflow:hidden; min-width:0; }
+    .rep-board-head { font-size:10px; font-weight:700; color:rgba(255,255,255,0.28); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:3px; }
+    .rep-grid { display:grid; grid-template-columns:1fr 1fr; column-gap:14px; row-gap:0; }
+    .rep-row { display:flex; align-items:center; gap:7px; padding:4px 7px; border-radius:6px; transition:background 0.12s ease; }
+    .rep-row:hover { background:rgba(255,255,255,0.05); }
+    .rep-pos { width:18px; text-align:center; flex-shrink:0; }
+    .rep-pos.medal { font-size:15px; line-height:1; }
+    .rep-pos.num { font-size:11px; font-weight:600; color:rgba(255,255,255,0.2); }
+    .rep-name { flex:1; font-size:13px; font-weight:500; color:rgba(255,255,255,0.62); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .rep-amt { font-size:12px; font-weight:600; color:rgba(255,255,255,0.32); flex-shrink:0; font-variant-numeric:tabular-nums; }
+    .rep-row.r-gold .rep-name   { color:#FCD34D; font-weight:700; }
+    .rep-row.r-gold .rep-amt    { color:rgba(252,211,77,0.78); }
+    .rep-row.r-silver .rep-name { color:#E2E8F0; font-weight:600; }
+    .rep-row.r-silver .rep-amt  { color:rgba(226,232,240,0.62); }
+    .rep-row.r-bronze .rep-name { color:#FCA044; font-weight:600; }
+    .rep-row.r-bronze .rep-amt  { color:rgba(252,160,68,0.62); }
+    .card-left { flex:1; position:relative; z-index:1; }
+    .card-right { flex-shrink:0; position:relative; z-index:1; }
+    .card-headline { font-size:14px; font-weight:500; line-height:1.45; color:rgba(255,221,80,0.88); margin-bottom:14px; max-width:320px; }
+    .stat-card.navy .card-headline { color:rgba(255,255,255,0.75); }
+    .card-names { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
+    .card-name { font-size:16px; font-weight:700; color:#FCD34D; line-height:1.3; }
+    .stat-card.navy .card-name { color:#FFFFFF; }
+    .card-big-single { display:block; font-family:'Orbitron',sans-serif; font-size:26px; font-weight:800; color:#fff; letter-spacing:-0.02em; margin-top:8px; line-height:1; }
+    .card-rep-photo-wrap { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#E879F9,#A855F7,#7C3AED); padding:3.5px; box-shadow:0 0 0 1px rgba(232,121,249,0.25),0 0 18px rgba(232,121,249,0.55),0 0 40px rgba(168,85,247,0.40),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
+    .card-rep-photo { width:100%; height:100%; border-radius:50%; object-fit:cover; object-position:center 5%; display:block; }
+    .photo-wrap-teal { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#34D399,#0D9488); padding:3px; box-shadow:0 0 18px rgba(16,185,129,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
+    .photo-wrap-blue { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#60A5FA,#2563EB); padding:3px; box-shadow:0 0 18px rgba(96,165,250,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
+    .vs-card-body { display:flex; flex-direction:column; gap:10px; width:100%; }
+    .vs-row { display:flex; align-items:center; gap:10px; }
+    .vs-label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:0.08em; width:80px; flex-shrink:0; }
+    .vs-rep-wrap { display:flex; align-items:center; gap:8px; flex:1; }
+    .vs-rep-photo { width:36px; height:36px; border-radius:50%; object-fit:cover; object-position:center 8%; border:2px solid rgba(255,255,255,0.25); }
+    .vs-rep-name { font-size:14px; font-weight:700; color:#fff; }
+    .vs-count { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:800; color:#FCD34D; margin-left:auto; }
+    .vs-divider { height:1px; background:rgba(255,255,255,0.1); margin:4px 0; }
+
+    .date-input { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 13px; cursor: pointer; outline: none; transition: border-color 0.15s ease; }
+    .date-input:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(37,99,235,0.10); }
+    .date-sep { color: var(--text-muted); font-size: 12px; padding: 0 2px; }
+    .cv-status { font-size: 12px; color: var(--text-muted); padding: 0 4px; min-width: 0; }
+
+    @media (max-width: 768px) {
+      .sidebar { width: min(var(--sidebar-w), calc(100vw - 32px)); transform: translateX(calc(-100% - 24px)); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.visible { display: block; }
+      .main-wrapper { margin-left: 0; }
+      .topbar { height: 66px; justify-content: flex-start; padding: 10px 16px 0; gap: 10px; }
+      .search-wrap { flex: 1 1 auto; min-width: 0; }
+      .burger { display: flex; }
+      .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+      .funnel-row { grid-template-columns: repeat(3, 1fr); }
+      .cards-col { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ── Convoso Rehaul ── */
+    .cv-hero { background: linear-gradient(135deg,#0D1520 0%,#111D2E 55%,#0C1A0F 100%); border-radius: 16px; padding: 28px 36px; display: flex; align-items: center; gap: 32px; position: relative; overflow: hidden; }
+    .cv-hero::after { content:''; position:absolute; right:-40px; bottom:-40px; width:160px; height:160px; border-radius:50%; background:rgba(37,99,235,0.07); pointer-events:none; }
+    .cv-hero-number { font-family:'Orbitron',sans-serif; font-size: 62px; font-weight: 800; color: #60A5FA; line-height: 1; position: relative; z-index: 1; }
+    .cv-hero-info { position: relative; z-index: 1; }
+    .cv-hero-eyebrow { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.35); margin-bottom: 4px; }
+    .cv-hero-title { font-size: 20px; font-weight: 700; color: #fff; }
+    .cv-hero-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+
+    .cv-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--card-shadow); }
+    .cv-card-head { padding: 13px 20px 11px; border-bottom: 1px solid var(--border); background: var(--surface-2); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .cv-card-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .cv-card-ts { font-size: 11px; color: var(--text-muted); }
+
+    .cv-4col { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .cv-col { padding: 14px 16px 16px; border-right: 1px solid var(--border); }
+    .cv-col:last-child { border-right: none; }
+    .cv-col-head { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+
+    .cv-rank-row { display: flex; align-items: center; gap: 9px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+    .cv-rank-row:last-child { border-bottom: none; }
+    .cv-rbadge { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+    .rb-1 { background: rgba(245,158,11,0.15); color: #F59E0B; }
+    .rb-2 { background: rgba(148,163,184,0.15); color: #94A3B8; }
+    .rb-3 { background: rgba(180,83,9,0.12); color: #B45309; }
+    .rb-n { background: var(--surface-2); color: var(--text-muted); }
+    .cv-rank-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .cv-rank-val { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
+    .cv-placeholder { font-size: 12px; color: var(--text-muted); padding: 12px 0; text-align: center; }
+
+    .cv-rep-head-row { padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface-2); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .cv-rep-select { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 13px; cursor: pointer; outline: none; min-width: 190px; transition: border-color 0.15s; }
+    .cv-rep-select:focus { border-color: var(--blue); }
+    .cv-rep-empty { padding: 36px; text-align: center; font-size: 13px; color: var(--text-muted); }
+    .cv-rep-profile { display: flex; align-items: center; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .cv-rep-photo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); flex-shrink: 0; }
+    .cv-rep-initials { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #fff; flex-shrink: 0; background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+    .cv-rep-profile-name { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+
+    .cv-period-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .cv-period-col { padding: 16px 18px; border-right: 1px solid var(--border); }
+    .cv-period-col:last-child { border-right: none; }
+    .cv-period-head { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+    .cv-stat-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .cv-stat-row:last-child { border-bottom: none; }
+    .cv-stat-badge { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 20px; border-radius: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.04em; flex-shrink: 0; }
+    .cv-stat-badge.inst { background: rgba(16,185,129,0.12); color: #10B981; }
+    .cv-stat-badge.ni   { background: rgba(245,158,11,0.12); color: #F59E0B; }
+    .cv-stat-badge.nc   { background: rgba(148,163,184,0.12); color: #94A3B8; }
+    .cv-stat-label { font-size: 12px; color: var(--text-secondary); flex: 1; padding: 0 8px; }
+    .cv-stat-val { font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-primary); }
+
+    .cv-status { font-size: 12px; color: var(--text-muted); }
+
+    @media (max-width: 960px) {
+      .cv-4col { grid-template-columns: repeat(2,1fr); }
+      .cv-period-grid { grid-template-columns: repeat(2,1fr); }
+      .cv-col:nth-child(2) { border-right: none; }
+      .cv-period-col:nth-child(2) { border-right: none; }
+    }
+    @media (max-width: 580px) {
+      .cv-4col { grid-template-columns: 1fr; }
+      .cv-period-grid { grid-template-columns: 1fr; }
+      .cv-col { border-right: none; border-bottom: 1px solid var(--border); }
+      .cv-period-col { border-right: none; border-bottom: 1px solid var(--border); }
+      .cv-hero { flex-direction: column; gap: 12px; padding: 22px 24px; }
+      .cv-hero-number { font-size: 48px; }
+    }
+  </style>
+  <link rel="stylesheet" href="Assets/profile-stats.css" />
+</head>
+<body>
+<div class="layout">
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <aside class="sidebar" id="sidebar" aria-label="Navigation">
+    <div class="sidebar-logo">
+      <img src="Assets/LogoUpdates.png" alt="CapMuse" />
+      <span class="sidebar-wordmark">CapMuse</span>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <a class="nav-item" href="home.html">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <path d="M3 9.5L10 3l7 6.5V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 18v-5h4v5" stroke-linecap="round"/>
+        </svg>
+        Home
+      </a>
+
+      <div class="nav-section-toggle" id="overviewToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <rect x="2" y="2" width="7" height="7" rx="1.5"/>
+            <rect x="11" y="2" width="7" height="7" rx="1.5"/>
+            <rect x="2" y="11" width="7" height="7" rx="1.5"/>
+            <rect x="11" y="11" width="7" height="7" rx="1.5"/>
+          </svg>
+          Overview
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="nav-sub" id="overviewSub">
+        <a class="nav-sub-item" href="dashboard.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 17V10M7 17V5M11 17V9M15 17V3" stroke-linecap="round"/></svg>
+          Dashboard
+        </a>
+        <a class="nav-sub-item" href="analytics.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 14l4-6 3 4 3-5 4 7H2z" stroke-linecap="round" stroke-linejoin="round"/></svg>Live Data</a>
+      </div>
+
+      <div class="nav-section-toggle" id="crmToggle" role="button" tabindex="0" aria-expanded="false">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="10" cy="6.5" r="3"/>
+            <path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/>
+          </svg>
+          CRM
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="nav-sub" id="crmSub">
+        <a class="nav-sub-item" href="lead.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <circle cx="10" cy="6.5" r="3"/>
+            <path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/>
+          </svg>
+          Leads
+        </a>
+        <a class="nav-sub-item" href="pipeline.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M3 5h14M3 9.5h10M3 14h6" stroke-linecap="round"/>
+            <circle cx="15" cy="14" r="2.5"/>
+          </svg>
+          Pipeline
+        </a>
+        <a class="nav-sub-item" href="funding_book.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M4 3h9l4 4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/>
+            <path d="M13 3v4h4" stroke-linecap="round"/>
+            <path d="M7 9h6M7 12h6M7 15h3" stroke-linecap="round"/>
+          </svg>
+          Funding Book
+        </a>
+        <a class="nav-sub-item" href="lender_recommendation.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <rect x="2" y="5" width="16" height="11" rx="2"/>
+            <path d="M2 9h16" stroke-linecap="round"/>
+            <path d="M6 13h2M10 13h2" stroke-linecap="round"/>
+          </svg>
+          Lender Match
+        </a>
+      </div>
+
+      <div class="nav-section-toggle open active" id="dialerToggle" role="button" tabindex="0" aria-expanded="true">
+        <div class="toggle-left">
+          <svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M5.5 3.5h2.2a1.5 1.5 0 0 1 1.4 1l1.1 3.3a1.5 1.5 0 0 1-.4 1.5l-1.6 1.6a11 11 0 0 0 5 5l1.6-1.6a1.5 1.5 0 0 1 1.5-.4l3.3 1.1a1.5 1.5 0 0 1 1 1.4V16a1.5 1.5 0 0 1-1.5 1.5A13 13 0 0 1 4 5.5 1.5 1.5 0 0 1 5.5 4z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Dialer
+        </div>
+        <svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="nav-sub open" id="dialerSub">
+        <a class="nav-sub-item active" href="convoso.html" aria-current="page">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Convoso
+        </a>
+        <a class="nav-sub-item" href="ringcentral.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 2a5 5 0 0 1 0 8" stroke-linecap="round"/></svg>
+          RingCentral
+        </a>
+      </div>
+
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" role="button" tabindex="0">
+        <div class="user-avatar">GP</div>
+        <div class="user-info">
+          <div class="user-name">Gustavo Prieto</div>
+          <div class="user-role">Software Engineer</div>
+        </div>
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);flex-shrink:0" aria-hidden="true"><path d="M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <header class="topbar" role="banner">
+      <button class="burger" id="burgerBtn" aria-label="Open navigation">
+        <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke-linecap="round"/></svg>
+      </button>
+      <div class="search-wrap">
+        <svg class="search-icon-l" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
+        <input class="search-input" type="search" placeholder="Search reps or call campaigns…" aria-label="Search" />
+        <svg class="search-icon-r" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="topbar-right">
+        <button class="top-btn" aria-label="Notifications">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M10 2a6 6 0 0 0-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 0 0-6-6z" stroke-linecap="round"/><path d="M8.5 16.5a1.5 1.5 0 0 0 3 0" stroke-linecap="round"/></svg>
+          <span class="notif-pip" aria-hidden="true"></span>
+        </button>
+        <button class="top-btn" id="themeBtn" aria-label="Toggle theme">
+          <svg class="icon-moon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M17.293 13.293A8 8 0 0 1 6.707 2.707a8.001 8.001 0 1 0 10.586 10.586z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke-linecap="round"/></svg>
+        </button>
+        <div class="avatar-wrap">
+          <div class="top-avatar" id="avatarBtn" role="button" tabindex="0" aria-label="User menu">GP</div>
+          <div class="avatar-menu" id="avatarMenu">
+            <a href="login.html" class="avatar-menu-item danger">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" width="16" height="16" aria-hidden="true"><path d="M13 15l4-5-4-5M17 10H7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 19H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h4" stroke-linecap="round"/></svg>
+              Log out
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content" role="main">
+
+      <div class="ticker-bar">
+        <span class="ticker-msg">Interested calls &nbsp;·&nbsp; All reps &nbsp;·&nbsp; Auto-refreshes on load</span>
+        <a class="ticker-link" href="ringcentral.html">
+          View RingCentral
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Convoso</h1>
+          <p class="page-subtitle">Interested call rankings · All reps</p>
+        </div>
+        <div class="page-header-actions">
+          <button id="cvRefreshBtn" class="btn-primary">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 4v5h5M16 16v-5h-5M16 4l-4 4M4 16l4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Refresh
+          </button>
+          <span id="cvStatus" class="cv-status"></span>
+        </div>
+      </div>
+
+      <!-- Hero: Total INST Today -->
+      <div class="cv-hero">
+        <div class="cv-hero-number" id="cvHeroNum">—</div>
+        <div class="cv-hero-info">
+          <div class="cv-hero-eyebrow">All Reps · Today</div>
+          <div class="cv-hero-title">Total Interested (INST) Calls</div>
+          <div class="cv-hero-sub" id="cvHeroSub">Loading data…</div>
+        </div>
+      </div>
+
+      <!-- Rankings: Today / This Week / Last Week / This Month -->
+      <div class="cv-card">
+        <div class="cv-card-head">
+          <span class="cv-card-title">Top 5 · Interested (INST) Calls · All Reps</span>
+          <span class="cv-card-ts" id="cvRankTs">Loading…</span>
+        </div>
+        <div class="cv-4col">
+          <div class="cv-col">
+            <div class="cv-col-head">Today</div>
+            <div id="cvRankToday"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">This Week</div>
+            <div id="cvRankWeek"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">Last Week</div>
+            <div id="cvRankLastWeek"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">This Month</div>
+            <div id="cvRankMonth"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Individual Rep Stats -->
+      <div class="cv-card">
+        <div class="cv-rep-head-row">
+          <span class="cv-card-title">Individual Rep Stats</span>
+          <select id="cvRepSelect" class="cv-rep-select" aria-label="Select rep">
+            <option value="">— Select a rep —</option>
+          </select>
+        </div>
+        <div class="cv-rep-empty" id="cvRepEmpty">Select a rep above to view their individual stats across all periods</div>
+        <div id="cvRepDetail" style="display:none">
+          <div class="cv-rep-profile">
+            <img id="cvRepPhoto" class="cv-rep-photo" src="" alt="" />
+            <div id="cvRepInitials" class="cv-rep-initials" style="display:none"></div>
+            <span id="cvRepProfileName" class="cv-rep-profile-name"></span>
+          </div>
+          <div class="cv-period-grid">
+          <div class="cv-period-col">
+            <div class="cv-period-head">Today</div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge inst">INST</span>
+              <span class="cv-stat-label">Interested</span>
+              <span class="cv-stat-val" id="cvRInstT">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge ni">NI</span>
+              <span class="cv-stat-label">Not Interested</span>
+              <span class="cv-stat-val" id="cvRNiT">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge nc">NC</span>
+              <span class="cv-stat-label">No Contact</span>
+              <span class="cv-stat-val" id="cvRNcT">—</span>
+            </div>
+          </div>
+          <div class="cv-period-col">
+            <div class="cv-period-head">This Week</div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge inst">INST</span>
+              <span class="cv-stat-label">Interested</span>
+              <span class="cv-stat-val" id="cvRInstW">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge ni">NI</span>
+              <span class="cv-stat-label">Not Interested</span>
+              <span class="cv-stat-val" id="cvRNiW">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge nc">NC</span>
+              <span class="cv-stat-label">No Contact</span>
+              <span class="cv-stat-val" id="cvRNcW">—</span>
+            </div>
+          </div>
+          <div class="cv-period-col">
+            <div class="cv-period-head">Last Week</div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge inst">INST</span>
+              <span class="cv-stat-label">Interested</span>
+              <span class="cv-stat-val" id="cvRInstLW">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge ni">NI</span>
+              <span class="cv-stat-label">Not Interested</span>
+              <span class="cv-stat-val" id="cvRNiLW">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge nc">NC</span>
+              <span class="cv-stat-label">No Contact</span>
+              <span class="cv-stat-val" id="cvRNcLW">—</span>
+            </div>
+          </div>
+          <div class="cv-period-col">
+            <div class="cv-period-head">This Month</div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge inst">INST</span>
+              <span class="cv-stat-label">Interested</span>
+              <span class="cv-stat-val" id="cvRInstM">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge ni">NI</span>
+              <span class="cv-stat-label">Not Interested</span>
+              <span class="cv-stat-val" id="cvRNiM">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge nc">NC</span>
+              <span class="cv-stat-label">No Contact</span>
+              <span class="cv-stat-val" id="cvRNcM">—</span>
+            </div>
+          </div>
+          </div><!-- /cv-period-grid -->
+        </div><!-- /cvRepDetail -->
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const html = document.documentElement;
+    const btn  = document.getElementById('themeBtn');
+    const KEY  = 'capmuse-theme';
+    const saved = localStorage.getItem(KEY);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    html.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+    btn.addEventListener('click', () => {
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem(KEY, next);
+    });
+  })();
+
+  (function () {
+    function bindToggle(toggleId, subId) {
+      const toggle = document.getElementById(toggleId);
+      const sub    = document.getElementById(subId);
+      if (!toggle || !sub) return;
+      toggle.addEventListener('click', () => {
+        const isOpen = sub.classList.contains('open');
+        sub.classList.toggle('open', !isOpen);
+        toggle.classList.toggle('open', !isOpen);
+        toggle.setAttribute('aria-expanded', String(!isOpen));
+      });
+    }
+    bindToggle('overviewToggle', 'overviewSub');
+    bindToggle('crmToggle', 'crmSub');
+    bindToggle('dialerToggle', 'dialerSub');
+  })();
+
+  (function () {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const burger  = document.getElementById('burgerBtn');
+    const open  = () => { sidebar.classList.add('open'); overlay.classList.add('visible'); document.body.style.overflow = 'hidden'; };
+    const close = () => { sidebar.classList.remove('open'); overlay.classList.remove('visible'); document.body.style.overflow = ''; };
+    burger.addEventListener('click', open);
+    overlay.addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  })();
+</script>
+<script>
+  (function () {
+    var btn  = document.getElementById('avatarBtn');
+    var menu = document.getElementById('avatarMenu');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
+    document.addEventListener('click', function () { menu.classList.remove('open'); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.classList.remove('open'); });
+  })();
+</script>
+<script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-auth.js"></script>
+<script>
+  (function () {
+    if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
+  })();
+</script>
+<script>
+/* ── Convoso Integration ── */
+(function () {
+  var CONVOSO = 'http://localhost:8001';
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+  function todayStr() { return isoDate(new Date()); }
+  function weekStartStr() {
+    var d = new Date(); var day = d.getDay();
+    d.setDate(d.getDate() - (day === 0 ? 6 : day - 1)); return isoDate(d);
+  }
+  function lastWeekStartStr() {
+    var d = new Date(); var day = d.getDay();
+    d.setDate(d.getDate() - (day === 0 ? 6 : day - 1) - 7); return isoDate(d);
+  }
+  function lastWeekEndStr() {
+    var d = new Date(); var day = d.getDay();
+    d.setDate(d.getDate() - (day === 0 ? 6 : day - 1) - 1); return isoDate(d);
+  }
+  function monthStartStr() {
+    var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-01';
+  }
+  function shortName(full) {
+    var p = (full||'').trim().split(/\s+/);
+    return p.length === 1 ? p[0] : p[0] + ' ' + p[p.length-1][0] + '.';
+  }
+  function badgeClass(i) { return ['rb-1','rb-2','rb-3','rb-n','rb-n'][i]||'rb-n'; }
+  function setText(id, val) { var el=document.getElementById(id); if(el) el.textContent=val; }
+
+  /* Cache: one array of users per period */
+  var cache = { today:[], week:[], lastWeek:[], month:[] };
+
+  async function fetchPeriod(start, end) {
+    var res = await fetch(CONVOSO + '/convoso/all-users-summary', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({start_date:start, end_date:end})
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var data = await res.json();
+    return data.users || [];
+  }
+
+  function renderRankList(id, users) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var sorted = users
+      .map(function(u){ return {name:u.user, val:u.inst||0}; })
+      .sort(function(a,b){ return b.val-a.val; })
+      .filter(function(r){ return r.val>0; })
+      .slice(0,5);
+    if (!sorted.length) { el.innerHTML='<div class="cv-placeholder">No data</div>'; return; }
+    el.innerHTML = sorted.map(function(r,i){
+      return '<div class="cv-rank-row">'
+        +'<div class="cv-rbadge '+badgeClass(i)+'">'+(i+1)+'</div>'
+        +'<div class="cv-rank-name">'+shortName(r.name)+'</div>'
+        +'<div class="cv-rank-val">'+r.val+'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  /* Always-present reps regardless of API activity */
+  var BASE_REPS = [
+    'Erik Anderson', 'Ivan Ortega', 'Matthew Birnholz', 'Michael Cifuentes',
+    'Ray Ortega', 'Rio Pampallona', 'Blake Fiorito', 'Dominic Basilio',
+    'Kip Langat', "Colin O'Bryan", 'Christian Quintana', 'Nikholas Lazo',
+    'Anthony Diaz', 'Ken Pflug'
+  ];
+
+  /* Photo mapping: exact full API name → filename in Assets/reps/ */
+  var PHOTO_MAP = {
+    'Alejandro Manuel':     null,
+    'Andy Balou':           null,
+    'Anthony Diaz':         'diaz.png',
+    'Blake Fiorito':        'blake.png',
+    'Brandon Gebauer':      null,
+    'Christian Quintana':   null,
+    'Cielo Gamarra':        null,
+    "Colin O'Bryan":        'colin.png',
+    'Cristian Pina':        'pina.png',
+    'Daniel Pineda':        'daniel.png',
+    'Dominic Basilio':      'dominic.png',
+    'Doyle Knodel':         null,
+    'Edward Jeudy':         'edward.png',
+    'Erik Anderson':        'anderson.png',
+    'Evan Kruer':           'evan.png',
+    'Frank Padilla':        'frank.png',
+    'Gimmy Cipriani':       'gimmy.png',
+    'Ivan Ortega':          'ivan.png',
+    'Jamar Johnson':        'jamar.png',
+    'Jason McGory':         null,
+    'Jonathan Montpeirous': 'jonathan.png',
+    'Joseph Hernandez':     'joseph.png',
+    'Juan Saldarriaga':     'juan.png',
+    'Ken Pflug':            'ken.png',
+    'Kevin Cohen':          'kevin.png',
+    'Kevin McManus':        null,
+    'Kip Langat':           'kip.png',
+    'Lorenzo Podolla':      null,
+    'Matthew Birnholz':     'matthew.png',
+    'Matthew Mejia':        'matthew.png',
+    'Michael Cifuentes':    'michael.png',
+    'Nikholas Lazo':        'nikholas.png',
+    'Olivia Demarco':       null,
+    'Ray Ortega':           'ray.png',
+    'Richard Calderin':     null,
+    'Rio Pampallona':       'rio.png',
+    'Steven Chatfield':     null,
+    'Vanessa Fernandez':    null
+  };
+  /* Fallback first-name lookup for any rep not in PHOTO_MAP */
+  var PHOTO_FIRST = {
+    'careem':    'careem.png',
+    'emilio':    'emilio.png',
+    'guillermo': 'guillermo.png',
+    'nicholas':  'nicholas.png',
+    'q':         'q.png',
+    'rondon':    'rondon.png',
+    'santi':     'santi.png'
+  };
+
+  function getPhotoFile(name) {
+    if (PHOTO_MAP.hasOwnProperty(name)) return PHOTO_MAP[name];
+    var first = (name || '').split(' ')[0].toLowerCase();
+    return PHOTO_FIRST[first] || null;
+  }
+  function getInitials(name) {
+    var parts = (name || '').trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  function buildDropdown() {
+    var repSel = document.getElementById('cvRepSelect');
+    if (!repSel) return;
+    var currentVal = repSel.value;
+    var nameSet = {};
+    /* Always include base reps */
+    BASE_REPS.forEach(function(n) { nameSet[n] = true; });
+    /* Add any reps found in API data */
+    [cache.today, cache.week, cache.lastWeek, cache.month].forEach(function(arr) {
+      arr.forEach(function(u) { if (u.user) nameSet[u.user] = true; });
+    });
+    var names = Object.keys(nameSet).sort();
+    repSel.innerHTML = '<option value="">— Select a rep —</option>';
+    names.forEach(function(n) {
+      var opt = document.createElement('option');
+      opt.value = n; opt.textContent = n;
+      if (n === currentVal) opt.selected = true;
+      repSel.appendChild(opt);
+    });
+  }
+
+  function renderHero() {
+    var total = cache.today.reduce(function(s,u){ return s+(u.inst||0); }, 0);
+    setText('cvHeroNum', total);
+    var ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    setText('cvHeroSub', 'Updated ' + ts + ' · ' + cache.today.length + ' reps active');
+  }
+
+  function renderRankings() {
+    renderRankList('cvRankToday',    cache.today);
+    renderRankList('cvRankWeek',     cache.week);
+    renderRankList('cvRankLastWeek', cache.lastWeek);
+    renderRankList('cvRankMonth',    cache.month);
+    var ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    setText('cvRankTs', 'Updated ' + ts);
+  }
+
+  function renderRepStats() {
+    var repSel  = document.getElementById('cvRepSelect');
+    var emptyEl = document.getElementById('cvRepEmpty');
+    var detailEl = document.getElementById('cvRepDetail');
+    if (!repSel || !repSel.value) {
+      if (emptyEl)  emptyEl.style.display  = '';
+      if (detailEl) detailEl.style.display = 'none';
+      return;
+    }
+    var name = repSel.value;
+
+    /* Exact match — no fuzzy */
+    function exact(arr) { return arr.find(function(u){ return u.user === name; }) || {inst:0,ni:0,nc:0}; }
+    var t  = exact(cache.today);
+    var w  = exact(cache.week);
+    var lw = exact(cache.lastWeek);
+    var m  = exact(cache.month);
+
+    setText('cvRInstT',  t.inst);  setText('cvRNiT',  t.ni);  setText('cvRNcT',  t.nc);
+    setText('cvRInstW',  w.inst);  setText('cvRNiW',  w.ni);  setText('cvRNcW',  w.nc);
+    setText('cvRInstLW', lw.inst); setText('cvRNiLW', lw.ni); setText('cvRNcLW', lw.nc);
+    setText('cvRInstM',  m.inst);  setText('cvRNiM',  m.ni);  setText('cvRNcM',  m.nc);
+
+    /* Profile photo */
+    var photoEl    = document.getElementById('cvRepPhoto');
+    var initialsEl = document.getElementById('cvRepInitials');
+    var nameEl     = document.getElementById('cvRepProfileName');
+    if (nameEl) nameEl.textContent = name;
+    var photoFile = getPhotoFile(name);
+    if (photoFile && photoEl) {
+      photoEl.onload  = function() { photoEl.style.display = ''; if (initialsEl) initialsEl.style.display = 'none'; };
+      photoEl.onerror = function() { photoEl.style.display = 'none'; if (initialsEl) { initialsEl.textContent = getInitials(name); initialsEl.style.display = ''; } };
+      photoEl.style.display = 'none';
+      photoEl.src = 'Assets/reps/' + photoFile;
+    } else {
+      if (photoEl) photoEl.style.display = 'none';
+      if (initialsEl) { initialsEl.textContent = getInitials(name); initialsEl.style.display = ''; }
+    }
+
+    if (emptyEl)  emptyEl.style.display  = 'none';
+    if (detailEl) detailEl.style.display = '';
+  }
+
+  async function loadAll() {
+    var statusEl = document.getElementById('cvStatus');
+    if (statusEl) statusEl.textContent = 'Loading…';
+    var refreshBtn = document.getElementById('cvRefreshBtn');
+    if (refreshBtn) refreshBtn.disabled = true;
+
+    var today    = todayStr();
+    var wStart   = weekStartStr();
+    var lwStart  = lastWeekStartStr();
+    var lwEnd    = lastWeekEndStr();
+    var mStart   = monthStartStr();
+
+    try {
+      var results = await Promise.all([
+        fetchPeriod(today,   today),
+        fetchPeriod(wStart,  today),
+        fetchPeriod(lwStart, lwEnd),
+        fetchPeriod(mStart,  today)
+      ]);
+      cache.today    = results[0];
+      cache.week     = results[1];
+      cache.lastWeek = results[2];
+      cache.month    = results[3];
+
+      buildDropdown();
+      renderHero();
+      renderRankings();
+      renderRepStats();
+      if (statusEl) statusEl.textContent = '';
+    } catch(e) {
+      if (statusEl) statusEl.textContent = 'Cannot reach Convoso server (port 8001)';
+      console.error('Convoso error:', e);
+    } finally {
+      if (refreshBtn) refreshBtn.disabled = false;
+    }
+  }
+
+  function init() {
+    var repSel = document.getElementById('cvRepSelect');
+    var refreshBtn = document.getElementById('cvRefreshBtn');
+    if (repSel)     repSel.addEventListener('change', renderRepStats);
+    if (refreshBtn) refreshBtn.addEventListener('click', loadAll);
+    loadAll();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
