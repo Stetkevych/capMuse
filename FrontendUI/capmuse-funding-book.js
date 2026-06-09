@@ -3,9 +3,25 @@
   if (!document.body.classList.contains('funding-book-page')) return;
 
   var DEALS = [];
+  var RAW_DEALS = [];
   var CSV_LOOKUP = {};
+  var CSV_URLS = [
+    'https://capmuse-data-882611632216.s3.amazonaws.com/funding_book.csv',
+    '../funding_book.csv',
+    'funding_book.csv'
+  ];
   var SORT_KEY = 'volume';
   var SORT_DIR = 'desc';
+
+  var SORT_LABELS = {
+    name: 'Name',
+    volume: 'Total Funding',
+    revenue: 'Total Revenue',
+    points: 'Points',
+    count: 'Count',
+    avg: 'Avg. Funding',
+    avgRev: 'Avg. Rev'
+  };
 
   var FILTERS = {
     leadSource: [],
@@ -25,7 +41,7 @@
     { key: 'state', label: 'State', field: 'state', searchable: true },
     { key: 'dateRange', label: 'Date Range', type: 'date' },
     { key: 'lender', label: 'Lender', field: 'lender', searchable: true },
-    { key: 'productType', label: 'Product Type', field: 'productType', searchable: true },
+    { key: 'productType', label: 'Product Type', field: 'productType', searchable: true, extraOptions: ['Reverse'] },
     { key: 'dealType', label: 'Deal Type', field: 'dealType', searchable: true, grouped: true }
   ];
 
@@ -105,6 +121,16 @@
     return raw;
   }
 
+  function normalizeProductType(raw, dealType) {
+    var s = String(raw || '').trim();
+    if (s && s !== '-') return s;
+    var dt = String(dealType || '').trim();
+    if (!dt || dt === '-') return '';
+    var m = dt.match(/^(?:renewal|new deal|add\s*[- ]?on)\s+(.+)$/i);
+    if (m) return m[1].trim();
+    return '';
+  }
+
   function normalizeDealType(type) {
     var raw = String(type || '').trim();
     if (!raw || raw === '-') return '';
@@ -181,7 +207,10 @@
       lender: normalizeLender(r.lender || r.Lender || ''),
       packageOwner: packageOwnerFromRecord(r),
       dealType: normalizeDealType(r.deal_type || r.Deal_Type || ''),
-      productType: extra.productType || normalizeDealType(r.product_type || r.Product_Type || ''),
+      productType: normalizeProductType(
+        extra.productType || (r.product_type || r.Product_Type || ''),
+        r.deal_type || r.Deal_Type || ''
+      ),
       marketingAssist: extra.marketingAssist || (r.marketing_assist || r.Marketing_Master || '').trim(),
       date: parseDate(r.date_funded || r.Date_Funded || '')
     };
@@ -207,32 +236,43 @@
     return out;
   }
 
+  function fetchCsvText(urlIndex) {
+    if (urlIndex >= CSV_URLS.length) return Promise.resolve('');
+    return fetch(CSV_URLS[urlIndex])
+      .then(function (res) {
+        if (res.ok) return res.text();
+        return fetchCsvText(urlIndex + 1);
+      })
+      .catch(function () { return fetchCsvText(urlIndex + 1); });
+  }
+
+  function parseCsvLookup(text) {
+    if (!text) return;
+    var lines = text.split(/\r?\n/);
+    if (!lines.length) return;
+    var headers = parseCsvLine(lines[0]);
+    var idIdx = headers.indexOf('id');
+    var ptIdx = headers.indexOf('Product_Type');
+    var mmIdx = headers.indexOf('Marketing_Master');
+    if (idIdx < 0) return;
+    for (var i = 1; i < lines.length; i++) {
+      if (!lines[i]) continue;
+      var cols = parseCsvLine(lines[i]);
+      var id = (cols[idIdx] || '').trim();
+      if (!id) continue;
+      var mm = mmIdx >= 0 ? (cols[mmIdx] || '').trim() : '';
+      if (mm === '-' || mm === '0.0%') mm = '';
+      CSV_LOOKUP[id] = {
+        productType: ptIdx >= 0 ? (cols[ptIdx] || '').trim() : '',
+        marketingAssist: mm
+      };
+    }
+  }
+
   function loadCsvLookup() {
-    return fetch('../funding_book.csv')
-      .then(function (res) { return res.ok ? res.text() : ''; })
-      .catch(function () { return ''; })
-      .then(function (text) {
-        if (!text) return;
-        var lines = text.split(/\r?\n/);
-        if (!lines.length) return;
-        var headers = parseCsvLine(lines[0]);
-        var idIdx = headers.indexOf('id');
-        var ptIdx = headers.indexOf('Product_Type');
-        var mmIdx = headers.indexOf('Marketing_Master');
-        if (idIdx < 0) return;
-        for (var i = 1; i < lines.length; i++) {
-          if (!lines[i]) continue;
-          var cols = parseCsvLine(lines[i]);
-          var id = (cols[idIdx] || '').trim();
-          if (!id) continue;
-          var mm = mmIdx >= 0 ? (cols[mmIdx] || '').trim() : '';
-          if (mm === '-' || mm === '0.0%') mm = '';
-          CSV_LOOKUP[id] = {
-            productType: ptIdx >= 0 ? (cols[ptIdx] || '').trim() : '',
-            marketingAssist: mm
-          };
-        }
-      });
+    return fetchCsvText(0).then(function (text) {
+      parseCsvLookup(text);
+    });
   }
 
   function expandFilterValues(field, selected) {
@@ -332,17 +372,21 @@
     return true;
   }
 
-  function applyFilters(deals) {
+  function applyFilters(deals, exceptKey) {
     return deals.filter(function (d) {
       if (!inDateRange(d)) return false;
-      if (!matchesMulti('leadSource', d.leadSource, FILTERS.leadSource)) return false;
-      if (!matchesMulti('marketingAssist', d.marketingAssist, FILTERS.marketingAssist)) return false;
-      if (!matchesMulti('state', d.state, FILTERS.state)) return false;
-      if (!matchesMulti('lender', d.lender, FILTERS.lender)) return false;
-      if (!matchesMulti('productType', d.productType, FILTERS.productType)) return false;
-      if (!matchesMulti('dealType', d.dealType, FILTERS.dealType)) return false;
+      if (exceptKey !== 'leadSource' && !matchesMulti('leadSource', d.leadSource, FILTERS.leadSource)) return false;
+      if (exceptKey !== 'marketingAssist' && !matchesMulti('marketingAssist', d.marketingAssist, FILTERS.marketingAssist)) return false;
+      if (exceptKey !== 'state' && !matchesMulti('state', d.state, FILTERS.state)) return false;
+      if (exceptKey !== 'lender' && !matchesMulti('lender', d.lender, FILTERS.lender)) return false;
+      if (exceptKey !== 'productType' && !matchesMulti('productType', d.productType, FILTERS.productType)) return false;
+      if (exceptKey !== 'dealType' && !matchesMulti('dealType', d.dealType, FILTERS.dealType)) return false;
       return true;
     });
+  }
+
+  function dealsForFacetOptions(excludeKey) {
+    return applyFilters(DEALS, excludeKey);
   }
 
   function aggregateByRep(deals) {
@@ -433,6 +477,19 @@
   function dateRangeMetaLabel() {
     var preset = DATE_PRESETS.filter(function (p) { return p.id === FILTERS.dateRange; })[0];
     return preset ? preset.label : 'Year to date';
+  }
+
+  function sortProductTypeFacets(values) {
+    var sorted = values.slice().sort(function (a, b) {
+      return String(a).localeCompare(String(b));
+    });
+    var reverseIdx = sorted.indexOf('Reverse');
+    if (reverseIdx === -1) return sorted;
+    sorted.splice(reverseIdx, 1);
+    var wcIdx = sorted.indexOf('Working Capital');
+    if (wcIdx === -1) sorted.push('Reverse');
+    else sorted.splice(wcIdx + 1, 0, 'Reverse');
+    return sorted;
   }
 
   function buildFacetValues(deals, field) {
@@ -566,6 +623,19 @@
     }
   }
 
+  function sortLabel() {
+    return SORT_LABELS[SORT_KEY] || SORT_KEY;
+  }
+
+  function renderHeroContext(rows) {
+    var el = document.getElementById('fbHeroContext');
+    if (!el) return;
+    var repPart = rows.length
+      ? rows.length + ' rep' + (rows.length === 1 ? '' : 's')
+      : 'No reps';
+    el.textContent = dateRangeMetaLabel() + ' · ' + repPart + ' · Sorted by ' + sortLabel();
+  }
+
   function renderHeroKpis(filtered) {
     var vol = filtered.reduce(function (s, d) { return s + d.funding; }, 0);
     var reps = aggregateByRep(filtered);
@@ -579,25 +649,67 @@
     if (elReps) elReps.textContent = reps.length.toLocaleString();
   }
 
+  var SPOT_STAT_LABELS = {
+    volume: 'Total funded',
+    revenue: 'Total revenue',
+    points: 'Points',
+    count: 'Deal count',
+    avg: 'Avg. funding',
+    avgRev: 'Avg. revenue'
+  };
+
+  function leaderForSortKey(rows) {
+    if (!rows.length || SORT_KEY === 'name') return null;
+    var key = SORT_KEY;
+    var leader = rows[0];
+    var best = leader[key] || 0;
+    for (var i = 1; i < rows.length; i++) {
+      var v = rows[i][key] || 0;
+      if (v > best) {
+        best = v;
+        leader = rows[i];
+      }
+    }
+    return leader;
+  }
+
+  function formatSpotlightValue(row) {
+    var v = row[SORT_KEY] || 0;
+    if (SORT_KEY === 'points') return fmtPts(v);
+    if (SORT_KEY === 'count') return v.toLocaleString();
+    return fmtFull(v);
+  }
+
   function renderHeroSpotlight(rows) {
     var el = document.getElementById('fbHeroSpotlight');
     if (!el) return;
-    if (!rows.length) {
+    var top = leaderForSortKey(rows);
+    if (!top) {
       el.innerHTML = '';
       el.hidden = true;
       return;
     }
     el.hidden = false;
-    var top = rows[0];
     var pid = repPersonId(top.name);
     var rep = pid && window.REPS ? window.REPS[pid] : null;
-    var photoHtml = '<div class="fb-spot-photo-ring" id="fbSpotPhotoRing">' +
+    var ringAttrs = ' class="fb-spot-photo-ring" id="fbSpotPhotoRing"';
+    if (pid) {
+      ringAttrs += ' data-person-id="' + esc(pid) + '" role="button" tabindex="0"' +
+        ' aria-label="View ' + esc(top.name) + ' stats card" title="View stats card"';
+    }
+    var photoHtml = '<div' + ringAttrs + '>' +
       '<img id="fbSpotPhoto" alt="" hidden />' +
       '<div class="hero-photo-placeholder" aria-hidden="true">?</div></div>';
 
     el.innerHTML =
       photoHtml +
-      '<div class="fb-spot-name">' + esc(top.name) + '</div>';
+      '<div class="fb-spot-info">' +
+        '<div class="fb-spot-lead">Leading rep</div>' +
+        '<div class="fb-spot-name">' + esc(top.name) + '</div>' +
+        '<div class="fb-spot-stat">' + formatSpotlightValue(top) + '</div>' +
+        '<div class="fb-spot-stat-lbl">' + esc(SPOT_STAT_LABELS[SORT_KEY] || sortLabel()) + '</div>' +
+        '<div class="fb-spot-meta">' + top.count + ' deal' + (top.count === 1 ? '' : 's') + '</div>' +
+      '</div>';
 
     if (window.setHeroRepPhoto && rep) {
       window.setHeroRepPhoto(
@@ -605,6 +717,16 @@
         document.getElementById('fbSpotPhoto'),
         rep
       );
+    }
+
+    var photoRing = document.getElementById('fbSpotPhotoRing');
+    if (photoRing && pid) {
+      photoRing.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          photoRing.click();
+        }
+      });
     }
   }
 
@@ -671,6 +793,7 @@
     var rows = sortRows(aggregateByRep(filtered));
     renderFilterChips();
     renderActiveTags();
+    renderHeroContext(rows);
     renderHeroKpis(filtered);
     renderTable(rows);
   }
@@ -710,7 +833,19 @@
   function renderCheckboxOptions(container, def, query) {
     if (!container || !def.field) return;
 
-    var tree = def.grouped ? buildGroupedTree(DEALS, def.field) : buildFacetValues(DEALS, def.field).map(function (v) {
+    var facetDeals = dealsForFacetOptions(def.key);
+    var facetValues = buildFacetValues(facetDeals, def.field);
+    if (def.extraOptions) {
+      def.extraOptions.forEach(function (v) {
+        if (facetValues.indexOf(v) === -1) facetValues.push(v);
+      });
+    }
+    if (def.key === 'productType') {
+      facetValues = sortProductTypeFacets(facetValues);
+    } else {
+      facetValues.sort(function (a, b) { return String(a).localeCompare(String(b)); });
+    }
+    var tree = def.grouped ? buildGroupedTree(facetDeals, def.field) : facetValues.map(function (v) {
       return { type: 'leaf', value: v, label: v };
     });
 
@@ -927,22 +1062,30 @@
     });
   }
 
+  function applyMappedDeals() {
+    if (!RAW_DEALS.length) return;
+    DEALS = RAW_DEALS.filter(function (r) { return r.company || r.Deal_Name; }).map(mapRecord);
+    render();
+  }
+
   function load(raw) {
     if (!raw || !raw.length) return;
-    DEALS = raw.filter(function (r) { return r.company || r.Deal_Name; }).map(mapRecord);
-    render();
+    RAW_DEALS = raw;
+    applyMappedDeals();
   }
 
   function init() {
     wireModal();
     wireSortHeaders();
     renderFilterChips();
-    loadCsvLookup().then(function () {
-      if (window.CapMuseData) {
-        return window.CapMuseData.getRawDeals().then(function (raw) {
-          if (raw && raw.length) load(raw);
-        });
-      }
+    var csvReady = loadCsvLookup();
+    var dealsReady = window.CapMuseData
+      ? window.CapMuseData.getRawDeals().then(function (raw) {
+          if (raw && raw.length) RAW_DEALS = raw;
+        })
+      : Promise.resolve();
+    Promise.all([csvReady, dealsReady]).then(function () {
+      applyMappedDeals();
     });
     window.addEventListener('capmuse:deals-updated', function (e) {
       if (e.detail && e.detail.length) load(e.detail);
