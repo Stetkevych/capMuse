@@ -318,6 +318,7 @@
     .cv-card-ts { font-size: 11px; color: var(--text-muted); }
 
     .cv-4col { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .cv-5col { display: grid; grid-template-columns: repeat(5, 1fr); }
     .cv-col { padding: 14px 16px 16px; border-right: 1px solid var(--border); }
     .cv-col:last-child { border-right: none; }
     .cv-col-head { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
@@ -342,7 +343,7 @@
     .cv-rep-initials { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #fff; flex-shrink: 0; background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
     .cv-rep-profile-name { font-size: 18px; font-weight: 600; color: var(--text-primary); }
 
-    .cv-period-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .cv-period-grid { display: grid; grid-template-columns: repeat(5, 1fr); }
     .cv-period-col { padding: 16px 18px; border-right: 1px solid var(--border); }
     .cv-period-col:last-child { border-right: none; }
     .cv-period-head { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
@@ -359,18 +360,48 @@
 
     @media (max-width: 960px) {
       .cv-4col { grid-template-columns: repeat(2,1fr); }
-      .cv-period-grid { grid-template-columns: repeat(2,1fr); }
+      .cv-5col { grid-template-columns: repeat(3,1fr); }
+      .cv-period-grid { grid-template-columns: repeat(3,1fr); }
       .cv-col:nth-child(2) { border-right: none; }
       .cv-period-col:nth-child(2) { border-right: none; }
     }
     @media (max-width: 580px) {
       .cv-4col { grid-template-columns: 1fr; }
+      .cv-5col { grid-template-columns: 1fr; }
       .cv-period-grid { grid-template-columns: 1fr; }
       .cv-col { border-right: none; border-bottom: 1px solid var(--border); }
       .cv-period-col { border-right: none; border-bottom: 1px solid var(--border); }
       .cv-hero { flex-direction: column; gap: 12px; padding: 22px 24px; }
       .cv-hero-number { font-size: 48px; }
     }
+
+    .cv-col-head-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .cv-fullscreen-btn { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; font-size: 10px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: background 0.12s, color 0.12s; flex-shrink: 0; }
+    .cv-fullscreen-btn:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .cv-fullscreen-btn svg { width: 11px; height: 11px; }
+
+    .cv-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); z-index: 800; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+    .cv-modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .cv-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; width: min(94vw, 560px); max-height: 86vh; display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(0,0,0,0.55); overflow: hidden; }
+    .cv-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 12px; }
+    .cv-modal-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .cv-modal-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .cv-modal-close { width: 30px; height: 30px; border: none; background: var(--surface-2); border-radius: 7px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.12s, color 0.12s; }
+    .cv-modal-close:hover { background: var(--border); color: var(--text-primary); }
+    .cv-modal-close svg { width: 15px; height: 15px; }
+    .cv-modal-body { overflow-y: auto; padding: 8px 10px 12px; flex: 1; scrollbar-width: thin; }
+    .cv-modal-row { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; transition: background 0.1s; }
+    .cv-modal-row:hover { background: var(--surface-2); }
+    .cv-modal-pos { width: 26px; text-align: center; font-size: 11px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+    .cv-modal-pos.medal { font-size: 16px; line-height: 1; }
+    .cv-modal-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border); }
+    .cv-modal-initials { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#3b82f6,#8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .cv-modal-name { flex: 1; font-size: 13.5px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .cv-modal-val { font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; color: var(--text-primary); flex-shrink: 0; }
+    .cv-modal-r1 .cv-modal-name { color: #FCD34D; font-weight: 700; }
+    .cv-modal-r1 .cv-modal-val  { color: #F59E0B; }
+    .cv-modal-r2 .cv-modal-name { color: var(--text-primary); font-weight: 600; }
+    .cv-modal-r3 .cv-modal-name { color: #FCA044; font-weight: 600; }
   </style>
   <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
@@ -565,13 +596,13 @@
         </div>
       </div>
 
-      <!-- Rankings: Today / This Week / Last Week / This Month -->
+      <!-- Rankings: Today / This Week / Last Week / This Month / All Time -->
       <div class="cv-card">
         <div class="cv-card-head">
-          <span class="cv-card-title">Top 5 · Interested (INST) Calls · All Reps</span>
+          <span class="cv-card-title">Top 5 · Interested (INST) Calls · Outbound · All Reps</span>
           <span class="cv-card-ts" id="cvRankTs">Loading…</span>
         </div>
-        <div class="cv-4col">
+        <div class="cv-5col">
           <div class="cv-col">
             <div class="cv-col-head">Today</div>
             <div id="cvRankToday"><div class="cv-placeholder">Loading…</div></div>
@@ -587,6 +618,34 @@
           <div class="cv-col">
             <div class="cv-col-head">This Month</div>
             <div id="cvRankMonth"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head-row">
+              <span class="cv-col-head" style="margin-bottom:0">All Time</span>
+              <button class="cv-fullscreen-btn" id="cvAllTimeFullscreen" aria-label="View all reps">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8V3h5M17 8V3h-5M3 12v5h5M17 12v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                All Reps
+              </button>
+            </div>
+            <div id="cvRankAllTime"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- All-Time Fullscreen Modal -->
+      <div class="cv-modal-overlay" id="cvAllTimeModal" role="dialog" aria-modal="true" aria-label="All Time INST Rankings">
+        <div class="cv-modal">
+          <div class="cv-modal-head">
+            <div>
+              <div class="cv-modal-title">All Time · INST Rankings · Outbound</div>
+              <div class="cv-modal-sub" id="cvModalSub">All reps · sorted by INST calls</div>
+            </div>
+            <button class="cv-modal-close" id="cvModalClose" aria-label="Close">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <div class="cv-modal-body" id="cvModalBody">
+            <div class="cv-placeholder">Loading…</div>
           </div>
         </div>
       </div>
@@ -611,17 +670,17 @@
             <div class="cv-period-head">Today</div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge inst">INST</span>
-              <span class="cv-stat-label">Interested</span>
+              <span class="cv-stat-label">INST Outbound</span>
               <span class="cv-stat-val" id="cvRInstT">—</span>
             </div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge ni">NI</span>
-              <span class="cv-stat-label">Not Interested</span>
+              <span class="cv-stat-label">NI Outbound</span>
               <span class="cv-stat-val" id="cvRNiT">—</span>
             </div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge nc">NC</span>
-              <span class="cv-stat-label">No Contact</span>
+              <span class="cv-stat-label">NC Outbound</span>
               <span class="cv-stat-val" id="cvRNcT">—</span>
             </div>
           </div>
@@ -629,17 +688,17 @@
             <div class="cv-period-head">This Week</div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge inst">INST</span>
-              <span class="cv-stat-label">Interested</span>
+              <span class="cv-stat-label">INST Outbound</span>
               <span class="cv-stat-val" id="cvRInstW">—</span>
             </div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge ni">NI</span>
-              <span class="cv-stat-label">Not Interested</span>
+              <span class="cv-stat-label">NI Outbound</span>
               <span class="cv-stat-val" id="cvRNiW">—</span>
             </div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge nc">NC</span>
-              <span class="cv-stat-label">No Contact</span>
+              <span class="cv-stat-label">NC Outbound</span>
               <span class="cv-stat-val" id="cvRNcW">—</span>
             </div>
           </div>
@@ -647,17 +706,17 @@
             <div class="cv-period-head">Last Week</div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge inst">INST</span>
-              <span class="cv-stat-label">Interested</span>
+              <span class="cv-stat-label">INST Outbound</span>
               <span class="cv-stat-val" id="cvRInstLW">—</span>
             </div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge ni">NI</span>
-              <span class="cv-stat-label">Not Interested</span>
+              <span class="cv-stat-label">NI Outbound</span>
               <span class="cv-stat-val" id="cvRNiLW">—</span>
             </div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge nc">NC</span>
-              <span class="cv-stat-label">No Contact</span>
+              <span class="cv-stat-label">NC Outbound</span>
               <span class="cv-stat-val" id="cvRNcLW">—</span>
             </div>
           </div>
@@ -665,18 +724,36 @@
             <div class="cv-period-head">This Month</div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge inst">INST</span>
-              <span class="cv-stat-label">Interested</span>
+              <span class="cv-stat-label">INST Outbound</span>
               <span class="cv-stat-val" id="cvRInstM">—</span>
             </div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge ni">NI</span>
-              <span class="cv-stat-label">Not Interested</span>
+              <span class="cv-stat-label">NI Outbound</span>
               <span class="cv-stat-val" id="cvRNiM">—</span>
             </div>
             <div class="cv-stat-row">
               <span class="cv-stat-badge nc">NC</span>
-              <span class="cv-stat-label">No Contact</span>
+              <span class="cv-stat-label">NC Outbound</span>
               <span class="cv-stat-val" id="cvRNcM">—</span>
+            </div>
+          </div>
+          <div class="cv-period-col">
+            <div class="cv-period-head">All Time</div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge inst">INST</span>
+              <span class="cv-stat-label">INST Outbound</span>
+              <span class="cv-stat-val" id="cvRInstAT">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge ni">NI</span>
+              <span class="cv-stat-label">NI Outbound</span>
+              <span class="cv-stat-val" id="cvRNiAT">—</span>
+            </div>
+            <div class="cv-stat-row">
+              <span class="cv-stat-badge nc">NC</span>
+              <span class="cv-stat-label">NC Outbound</span>
+              <span class="cv-stat-val" id="cvRNcAT">—</span>
             </div>
           </div>
           </div><!-- /cv-period-grid -->
@@ -778,7 +855,7 @@
   function setText(id, val) { let el=document.getElementById(id); if(el) el.textContent=val; }
 
   /* Cache: one array of users per period */
-  let cache = { today:[], week:[], lastWeek:[], month:[] };
+  let cache = { today:[], week:[], lastWeek:[], month:[], allTime:[] };
 
   async function fetchPeriod(start, end) {
     let res = await fetch(CONVOSO + '/convoso/all-users-summary', {
@@ -887,7 +964,7 @@
     /* Always include base reps */
     BASE_REPS.forEach(function(n) { nameSet[n] = true; });
     /* Add any reps found in API data */
-    [cache.today, cache.week, cache.lastWeek, cache.month].forEach(function(arr) {
+    [cache.today, cache.week, cache.lastWeek, cache.month, cache.allTime].forEach(function(arr) {
       arr.forEach(function(u) { if (u.user) nameSet[u.user] = true; });
     });
     let names = Object.keys(nameSet).sort();
@@ -912,8 +989,39 @@
     renderRankList('cvRankWeek',     cache.week);
     renderRankList('cvRankLastWeek', cache.lastWeek);
     renderRankList('cvRankMonth',    cache.month);
+    renderRankList('cvRankAllTime',  cache.allTime);
     let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setText('cvRankTs', 'Updated ' + ts);
+  }
+
+  function renderAllTimeModal() {
+    let body = document.getElementById('cvModalBody');
+    let sub  = document.getElementById('cvModalSub');
+    if (!body) return;
+    let sorted = cache.allTime
+      .map(function(u){ return { name: u.user, val: u.inst || 0 }; })
+      .filter(function(r){ return r.val > 0; })
+      .sort(function(a,b){ return b.val - a.val; });
+    if (sub) sub.textContent = sorted.length + ' reps · sorted by INST calls · Outbound';
+    if (!sorted.length) { body.innerHTML = '<div class="cv-placeholder">No data yet</div>'; return; }
+    let medals = ['🥇','🥈','🥉'];
+    body.innerHTML = sorted.map(function(r, i) {
+      let posHtml = i < 3
+        ? '<div class="cv-modal-pos medal">' + medals[i] + '</div>'
+        : '<div class="cv-modal-pos">' + (i + 1) + '</div>';
+      let rankClass = i === 0 ? ' cv-modal-r1' : i === 1 ? ' cv-modal-r2' : i === 2 ? ' cv-modal-r3' : '';
+      let photoFile = getPhotoFile(r.name);
+      let avatarHtml = photoFile
+        ? '<img class="cv-modal-avatar" src="Assets/reps/' + photoFile + '" alt="" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+          + '<div class="cv-modal-initials" style="display:none">' + getInitials(r.name) + '</div>'
+        : '<div class="cv-modal-initials">' + getInitials(r.name) + '</div>';
+      return '<div class="cv-modal-row' + rankClass + '">'
+        + posHtml
+        + avatarHtml
+        + '<div class="cv-modal-name">' + r.name + '</div>'
+        + '<div class="cv-modal-val">' + r.val + '</div>'
+        + '</div>';
+    }).join('');
   }
 
   function renderRepStats() {
@@ -928,16 +1036,21 @@
     let name = repSel.value;
 
     /* Exact match — no fuzzy */
-    function exact(arr) { return arr.find(function(u){ return u.user === name; }) || {inst:0,ni:0,nc:0}; }
+    function exact(arr) {
+      let found = arr.find(function(u){ return u.user === name; });
+      return { inst: (found && found.inst) || 0, ni: (found && found.ni) || 0, nc: (found && found.nc) || 0 };
+    }
     let t  = exact(cache.today);
     let w  = exact(cache.week);
     let lw = exact(cache.lastWeek);
     let m  = exact(cache.month);
+    let at = exact(cache.allTime);
 
     setText('cvRInstT',  t.inst);  setText('cvRNiT',  t.ni);  setText('cvRNcT',  t.nc);
     setText('cvRInstW',  w.inst);  setText('cvRNiW',  w.ni);  setText('cvRNcW',  w.nc);
     setText('cvRInstLW', lw.inst); setText('cvRNiLW', lw.ni); setText('cvRNcLW', lw.nc);
     setText('cvRInstM',  m.inst);  setText('cvRNiM',  m.ni);  setText('cvRNcM',  m.nc);
+    setText('cvRInstAT', at.inst); setText('cvRNiAT', at.ni); setText('cvRNcAT', at.nc);
 
     /* Profile photo */
     let photoEl    = document.getElementById('cvRepPhoto');
@@ -973,15 +1086,17 @@
 
     try {
       let results = await Promise.all([
-        fetchPeriod(today,   today),
-        fetchPeriod(wStart,  today),
-        fetchPeriod(lwStart, lwEnd),
-        fetchPeriod(mStart,  today)
+        fetchPeriod(today,        today),
+        fetchPeriod(wStart,       today),
+        fetchPeriod(lwStart,      lwEnd),
+        fetchPeriod(mStart,       today),
+        fetchPeriod('2016-01-01', today)
       ]);
       cache.today    = results[0];
       cache.week     = results[1];
       cache.lastWeek = results[2];
       cache.month    = results[3];
+      cache.allTime  = results[4];
 
       buildDropdown();
       renderHero();
@@ -997,10 +1112,30 @@
   }
 
   function init() {
-    let repSel = document.getElementById('cvRepSelect');
-    let refreshBtn = document.getElementById('cvRefreshBtn');
-    if (repSel)     repSel.addEventListener('change', renderRepStats);
+    let repSel      = document.getElementById('cvRepSelect');
+    let refreshBtn  = document.getElementById('cvRefreshBtn');
+    let fsBtn       = document.getElementById('cvAllTimeFullscreen');
+    let modal       = document.getElementById('cvAllTimeModal');
+    let modalClose  = document.getElementById('cvModalClose');
+
+    if (repSel)    repSel.addEventListener('change', renderRepStats);
     if (refreshBtn) refreshBtn.addEventListener('click', loadAll);
+
+    if (fsBtn && modal) {
+      fsBtn.addEventListener('click', function() {
+        renderAllTimeModal();
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      });
+    }
+    function closeModal() {
+      if (modal) modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    if (modalClose) modalClose.addEventListener('click', closeModal);
+    if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+
     loadAll();
   }
 
