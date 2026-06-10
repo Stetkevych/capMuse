@@ -139,6 +139,15 @@ app.post("/convoso/user-summary", async (req, res) => {
   }
 });
 
+/* Parse "HH:MM:SS" or "MM:SS" talk_sec strings from Convoso into total seconds */
+function parseHMMSS(str) {
+  if (!str) return 0;
+  const parts = String(str).split(":").map(Number);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parseFloat(str) || 0;
+}
+
 async function fetchAllRepPages(dateStart, dateEnd, statusId) {
   const users = {};
   let page = 1;
@@ -167,8 +176,10 @@ async function fetchAllRepPages(dateStart, dateEnd, statusId) {
       const userName = String(row.name || row.user || "").trim();
       if (!userId || !userName) continue;
       if (/^deleted user/i.test(userName)) continue;
-      if (!users[userId]) users[userId] = { user: userName, user_id: userId, calls: 0 };
-      users[userId].calls += Number(row.calls || 0);
+      if (!users[userId]) users[userId] = { user: userName, user_id: userId, calls: 0, connects: 0, talk_time: 0 };
+      users[userId].calls     += Number(row.calls || 0);
+      users[userId].connects  += Number(row.human_answered || row.connects || row.connect || row.num_connects || 0);
+      users[userId].talk_time += parseHMMSS(row.talk_sec) || Number(row.talk_time || row.talktime || row.total_talk_time || 0);
     }
 
     if (records.length === 0) break;
@@ -212,11 +223,17 @@ app.post("/convoso/all-users-summary", async (req, res) => {
       if (!userName) continue;
 
       users[uid] = {
-        user:    userName,
-        user_id: uid,
-        inst:    instRow.calls || 0,
-        ni:      niRow.calls   || 0,
-        nc:      ncRow.calls   || 0,
+        user:     userName,
+        user_id:  uid,
+        inst:     instRow.calls     || 0,
+        inst_con: instRow.connects  || 0,
+        inst_tt:  instRow.talk_time || 0,
+        ni:       niRow.calls       || 0,
+        ni_con:   niRow.connects    || 0,
+        ni_tt:    niRow.talk_time   || 0,
+        nc:       ncRow.calls       || 0,
+        nc_con:   ncRow.connects    || 0,
+        nc_tt:    ncRow.talk_time   || 0,
       };
     }
 
