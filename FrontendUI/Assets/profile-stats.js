@@ -634,8 +634,7 @@
   }
 
   let PLACEHOLDER_REP_PHOTOS = {
-    'assets/reps/cartoon/andersoncartoon.png': 1,
-    'assets/reps/anderson.png': 1
+    'assets/reps/cartoon/andersoncartoon.png': 1
   };
 
   function normalizePhotoPath(photo) {
