@@ -431,7 +431,7 @@
         <div class="fb-filter-grid" id="cvFilterGrid">
           <button class="fb-filter-chip" id="cvChipPeriod" data-chip="period">
             <span class="fb-filter-chip-name">Date Range</span>
-            <span class="fb-filter-chip-val" id="cvChipPeriodVal">Today</span>
+            <span class="fb-filter-chip-val" id="cvChipPeriodVal">Last 7 Days</span>
           </button>
           <button class="fb-filter-chip" id="cvChipCampaign" data-chip="campaign">
             <span class="fb-filter-chip-name">Campaign</span>
@@ -1021,6 +1021,7 @@
       closeRepModal();
     });
 
+    updateChipLabels();
     loadData();
   }
 
