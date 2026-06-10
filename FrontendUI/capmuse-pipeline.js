@@ -149,10 +149,11 @@
 
       let stage = (r['Stage of Package'] || '').toLowerCase();
       let amt = parseFloat(String(r['Amount'] || '0').replace(/[$,]/g, '')) || 0;
+      let isRenewal = r['Position'] && r['Position'] !== '0' && r['Position'] !== '1';
 
-      byRep[rep].apps++;
+      if (!isRenewal) byRep[rep].apps++;
 
-      if ((r['Date Applied'] || amt > 0) && (!r['Position'] || r['Position'] === '0' || r['Position'] === '1')) {
+      if ((r['Date Applied'] || amt > 0) && !isRenewal) {
         byRep[rep].approvals++;
       }
 
