@@ -184,11 +184,17 @@ async function fetchAllRepPages(dateStart, dateEnd, statusId, extraParams = {}) 
       const userName = String(row.name || row.user || "").trim();
       if (!userId || !userName) continue;
       if (/^deleted user/i.test(userName)) continue;
-      if (!users[userId]) users[userId] = { user: userName, user_id: userId, calls: 0, connects: 0, talk_time: 0, pause_time: 0 };
+      if (!users[userId]) users[userId] = { user: userName, user_id: userId, calls: 0, connects: 0, talk_time: 0, pause_time: 0, total_time: 0 };
+      const t_talk  = parseHMMSS(row.talk_sec)  || Number(row.talk_time  || row.talktime || row.total_talk_time || 0);
+      const t_pause = parseHMMSS(row.pause_sec) || Number(row.pause_time || row.agent_pause_time || row.on_pause_sec || row.total_pause || 0);
+      const t_wait  = parseHMMSS(row.wait_sec)  || 0;
+      const t_wrap  = parseHMMSS(row.wrap_sec)  || 0;
+      const t_total = parseHMMSS(row.total_time) || (t_talk + t_wait + t_pause + t_wrap);
       users[userId].calls      += Number(row.calls || 0);
       users[userId].connects   += Number(row.human_answered || row.connects || row.connect || row.num_connects || 0);
-      users[userId].talk_time  += parseHMMSS(row.talk_sec) || Number(row.talk_time || row.talktime || row.total_talk_time || 0);
-      users[userId].pause_time += parseHMMSS(row.pause_sec) || Number(row.pause_time || row.agent_pause_time || row.on_pause_sec || row.total_pause || 0);
+      users[userId].talk_time  += t_talk;
+      users[userId].pause_time += t_pause;
+      users[userId].total_time += t_total;
     }
 
     if (records.length === 0) break;
@@ -234,20 +240,21 @@ app.post("/convoso/all-users-summary", async (req, res) => {
       if (!userName) continue;
 
       users[uid] = {
-        user:     userName,
-        user_id:  uid,
-        inst:     instRow.calls      || 0,
-        inst_con: instRow.connects   || 0,
-        inst_tt:  instRow.talk_time  || 0,
-        inst_pt:  instRow.pause_time || 0,
-        ni:       niRow.calls        || 0,
-        ni_con:   niRow.connects     || 0,
-        ni_tt:    niRow.talk_time    || 0,
-        ni_pt:    niRow.pause_time   || 0,
-        nc:       ncRow.calls        || 0,
-        nc_con:   ncRow.connects     || 0,
-        nc_tt:    ncRow.talk_time    || 0,
-        nc_pt:    ncRow.pause_time   || 0,
+        user:       userName,
+        user_id:    uid,
+        inst:       instRow.calls      || 0,
+        inst_con:   instRow.connects   || 0,
+        inst_tt:    instRow.talk_time  || 0,
+        inst_pt:    instRow.pause_time || 0,
+        ni:         niRow.calls        || 0,
+        ni_con:     niRow.connects     || 0,
+        ni_tt:      niRow.talk_time    || 0,
+        ni_pt:      niRow.pause_time   || 0,
+        nc:         ncRow.calls        || 0,
+        nc_con:     ncRow.connects     || 0,
+        nc_tt:      ncRow.talk_time    || 0,
+        nc_pt:      ncRow.pause_time   || 0,
+        total_time: (instRow.total_time || 0) + (niRow.total_time || 0) + (ncRow.total_time || 0),
       };
     }
 
