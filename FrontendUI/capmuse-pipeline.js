@@ -148,7 +148,7 @@
 
       byRep[rep].apps++;
 
-      if (stage.indexOf('approv') > -1 || (stage.indexOf('fund') > -1 && stage.indexOf('decline') === -1)) {
+      if (r['Funder'] || r['Date Applied']) {
         byRep[rep].approvals++;
       }
 
