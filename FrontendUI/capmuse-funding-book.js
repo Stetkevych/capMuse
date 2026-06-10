@@ -47,6 +47,7 @@
 
   let DATE_PRESETS = [
     { id: 'today', label: 'Today' },
+    { id: 'yesterday', label: 'Yesterday' },
     { id: 'ytd', label: 'Year to date' },
     { id: 'last_month', label: 'Last month' },
     { id: 'last_3_months', label: 'Last 3 months' },
@@ -193,15 +194,21 @@
     };
   }
 
+  function dealPoints(funding, revenue) {
+    return funding > 0 ? (revenue / funding) * 100 : 0;
+  }
+
   function mapRecord(r) {
     let extra = csvEnrich(r);
     let leadSource = (r.lead_source || r.Lead_Source2 || '').trim();
+    let funding = nn(r.funding || r.Funded_Amount);
+    let revenue = nn(r.revenue || r.Total_rev);
     return {
       recordId: String(r.record_id || r.id || ''),
       company: r.company || r.Deal_Name || '',
-      funding: nn(r.funding || r.Funded_Amount),
-      revenue: nn(r.revenue || r.Total_rev),
-      points: nn(r.points || r.pts),
+      funding: funding,
+      revenue: revenue,
+      points: dealPoints(funding, revenue),
       leadSource: leadSource,
       state: (r.state || r.State || '').trim(),
       lender: normalizeLender(r.lender || r.Lender || ''),
@@ -328,6 +335,10 @@
         start = new Date(y, m, now.getDate(), 0, 0, 0);
         end = new Date(y, m, now.getDate(), 23, 59, 59);
         break;
+      case 'yesterday':
+        start = new Date(y, m, now.getDate() - 1, 0, 0, 0);
+        end = new Date(y, m, now.getDate() - 1, 23, 59, 59);
+        break;
       case 'ytd':
         start = new Date(y, 0, 1);
         end = new Date(y, m, now.getDate(), 23, 59, 59);
@@ -395,17 +406,19 @@
       let name = d.packageOwner;
       if (!name) return;
       if (!by[name]) {
-        by[name] = { name: name, volume: 0, revenue: 0, points: 0, count: 0 };
+        by[name] = { name: name, volume: 0, revenue: 0, pointsSum: 0, count: 0 };
       }
       by[name].volume += d.funding;
       by[name].revenue += d.revenue;
-      by[name].points += d.points;
+      by[name].pointsSum += d.points;
       by[name].count += 1;
     });
     return Object.values(by).map(function (r) {
       r.avg = r.count ? r.volume / r.count : 0;
       r.avgRev = r.count ? r.revenue / r.count : 0;
-      r.avgPts = r.count ? r.points / r.count : 0;
+      r.points = r.volume > 0 ? (r.revenue / r.volume) * 100 : 0;
+      r.avgPts = r.count ? r.pointsSum / r.count : 0;
+      delete r.pointsSum;
       return r;
     });
   }
@@ -429,12 +442,18 @@
 
   function repPersonId(name) {
     if (!window.REPS || !name) return null;
-    let n = name.toLowerCase();
+    let n = normStr(name);
     let keys = Object.keys(window.REPS);
-    for (let i = 0; i < keys.length; i++) {
+    let i;
+    for (i = 0; i < keys.length; i++) {
+      let rep = window.REPS[keys[i]];
+      if (!rep || !rep.bookName) continue;
+      if (n === normStr(rep.bookName)) return keys[i];
+    }
+    for (i = 0; i < keys.length; i++) {
       let rep = window.REPS[keys[i]];
       if (!rep) continue;
-      let book = (rep.bookName || rep.name || '').toLowerCase();
+      let book = normStr(rep.bookName || rep.name || '');
       if (book && n.indexOf(book) > -1) return keys[i];
       if (n.indexOf(keys[i]) > -1) return keys[i];
       let first = (rep.name || '').split(' ')[0].toLowerCase();

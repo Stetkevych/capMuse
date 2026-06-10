@@ -2,7 +2,7 @@
 (function () {
   if (!document.body.classList.contains('home-page')) return;
 
-  function init() {
+  function start() {
     if (!window.CapMuseAuth || !window.CapMuseAuth.getUserId()) return;
     if (!window.CapMuseRepStats || !window.CapMuseData) return;
 
@@ -23,6 +23,11 @@
       if (window.ensureRepProfile) uid = window.ensureRepProfile(uid);
       load(uid);
     });
+  }
+
+  function init() {
+    let ready = window.ensureLiveDeps ? window.ensureLiveDeps() : Promise.resolve();
+    ready.then(start);
   }
 
   if (document.readyState === 'loading') {
