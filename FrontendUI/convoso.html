@@ -358,6 +358,51 @@
 
     .cv-status { font-size: 12px; color: var(--text-muted); }
 
+    /* ── Disposition Filter Toggle ── */
+    .cv-filter-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .cv-filter-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
+    .cv-filter-group { display: flex; gap: 3px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 3px; flex-wrap: wrap; }
+    .cv-filter-btn { height: 26px; padding: 0 11px; border: none; border-radius: 5px; background: transparent; color: var(--text-muted); font-family: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+    .cv-filter-btn:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .cv-filter-btn[data-filter="all"].active  { background: var(--blue); color: #fff; }
+    .cv-filter-btn[data-filter="inst"].active { background: #10B981; color: #fff; }
+    .cv-filter-btn[data-filter="ni"].active   { background: #F59E0B; color: #fff; }
+    .cv-filter-btn[data-filter="nc"].active   { background: #64748B; color: #fff; }
+
+    /* ── Enhanced Rank Row ── */
+    .cv-rank-row.enhanced { flex-direction: column; align-items: flex-start; padding: 8px 0; gap: 0; }
+    .cv-rank-row-top { display: flex; align-items: center; gap: 9px; width: 100%; }
+    .cv-rank-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; padding-left: 31px; }
+    .cv-rs { font-size: 10px; color: var(--text-muted); }
+    .cv-rs b { font-weight: 600; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .cv-rs .i-inst { font-weight: 700; color: #10B981; }
+    .cv-rs .i-ni   { font-weight: 700; color: #F59E0B; }
+    .cv-rs .i-nc   { font-weight: 700; color: #94A3B8; }
+
+    /* ── Inline avg talk time in rank rows ── */
+    .cv-rank-avg { font-size: 10px; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; flex-shrink: 0; white-space: nowrap; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+
+    /* ── Clickable rep name ── */
+    .cv-click-name { cursor: pointer; transition: color 0.12s; }
+    .cv-click-name:hover { color: var(--blue) !important; text-decoration: underline; text-underline-offset: 2px; }
+
+    /* ── Rep Detail Modal grid ── */
+    .cv-rmod-grid { display: grid; grid-template-columns: repeat(5, 1fr); }
+    .cv-rmod-col  { padding: 14px 16px; border-right: 1px solid var(--border); }
+    .cv-rmod-col:last-child { border-right: none; }
+    .cv-rmod-head { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 10px; padding-bottom: 7px; border-bottom: 2px solid var(--border); }
+    .cv-rmod-stat { padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .cv-rmod-stat:last-child { border-bottom: none; }
+    .cv-rmod-top  { display: flex; align-items: center; gap: 8px; }
+    .cv-rmod-cnt  { font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-primary); margin-left: auto; }
+    .cv-rmod-sub  { display: flex; gap: 10px; margin-top: 4px; padding-left: 44px; flex-wrap: wrap; }
+    .cv-rmod-sub span { font-size: 10px; color: var(--text-muted); }
+    .cv-rmod-sub b    { font-weight: 600; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+    .cv-rmod-photo    { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); flex-shrink: 0; }
+    .cv-rmod-initials { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; flex-shrink: 0; background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+    @media (max-width: 860px) { .cv-rmod-grid { grid-template-columns: repeat(3, 1fr); } .cv-rmod-col:nth-child(3) { border-right: none; } }
+    @media (max-width: 560px) { .cv-rmod-grid { grid-template-columns: 1fr; } .cv-rmod-col { border-right: none; border-bottom: 1px solid var(--border); } }
+
     @media (max-width: 960px) {
       .cv-4col { grid-template-columns: repeat(2,1fr); }
       .cv-5col { grid-template-columns: repeat(3,1fr); }
@@ -575,7 +620,7 @@
       <div class="page-header">
         <div>
           <h1 class="page-title">Convoso</h1>
-          <p class="page-subtitle">Interested call rankings · All reps</p>
+          <p class="page-subtitle" id="cvPageSubtitle">Interested call rankings · All reps</p>
         </div>
         <div class="page-header-actions">
           <button id="cvRefreshBtn" class="btn-primary">
@@ -591,38 +636,73 @@
         <div class="cv-hero-number" id="cvHeroNum">—</div>
         <div class="cv-hero-info">
           <div class="cv-hero-eyebrow">All Reps · Today</div>
-          <div class="cv-hero-title">Total Interested (INST) Calls</div>
+          <div class="cv-hero-title" id="cvHeroTitle">Total Interested (INST) Calls</div>
           <div class="cv-hero-sub" id="cvHeroSub">Loading data…</div>
         </div>
       </div>
 
       <!-- Rankings: Today / This Week / Last Week / This Month / All Time -->
       <div class="cv-card">
-        <div class="cv-card-head">
-          <span class="cv-card-title">Top 5 · Interested (INST) Calls · Outbound · All Reps</span>
-          <span class="cv-card-ts" id="cvRankTs">Loading…</span>
+        <div class="cv-card-head" style="flex-direction:column;align-items:flex-start;gap:6px;padding-bottom:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;flex-wrap:wrap;">
+            <span class="cv-card-title" id="cvRankTitle">Top 5 · Interested (INST) Calls · Outbound · All Reps</span>
+            <span class="cv-card-ts" id="cvRankTs">Loading…</span>
+          </div>
+          <div class="cv-filter-wrap">
+            <span class="cv-filter-label">Filter:</span>
+            <div class="cv-filter-group" id="cvFilterGroup" role="group" aria-label="Disposition filter">
+              <button class="cv-filter-btn" data-filter="all">All Calls</button>
+              <button class="cv-filter-btn active" data-filter="inst">Interested (INST)</button>
+              <button class="cv-filter-btn" data-filter="ni">Not Interested (NI)</button>
+              <button class="cv-filter-btn" data-filter="nc">No Contact (NC)</button>
+            </div>
+          </div>
         </div>
         <div class="cv-5col">
           <div class="cv-col">
-            <div class="cv-col-head">Today</div>
+            <div class="cv-col-head-row">
+              <span class="cv-col-head" style="margin-bottom:0">Today</span>
+              <button class="cv-fullscreen-btn" data-period="today" aria-label="View all reps today">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8V3h5M17 8V3h-5M3 12v5h5M17 12v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                All Reps
+              </button>
+            </div>
             <div id="cvRankToday"><div class="cv-placeholder">Loading…</div></div>
           </div>
           <div class="cv-col">
-            <div class="cv-col-head">This Week</div>
+            <div class="cv-col-head-row">
+              <span class="cv-col-head" style="margin-bottom:0">This Week</span>
+              <button class="cv-fullscreen-btn" data-period="week" aria-label="View all reps this week">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8V3h5M17 8V3h-5M3 12v5h5M17 12v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                All Reps
+              </button>
+            </div>
             <div id="cvRankWeek"><div class="cv-placeholder">Loading…</div></div>
           </div>
           <div class="cv-col">
-            <div class="cv-col-head">Last Week</div>
+            <div class="cv-col-head-row">
+              <span class="cv-col-head" style="margin-bottom:0">Last Week</span>
+              <button class="cv-fullscreen-btn" data-period="lastweek" aria-label="View all reps last week">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8V3h5M17 8V3h-5M3 12v5h5M17 12v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                All Reps
+              </button>
+            </div>
             <div id="cvRankLastWeek"><div class="cv-placeholder">Loading…</div></div>
           </div>
           <div class="cv-col">
-            <div class="cv-col-head">This Month</div>
+            <div class="cv-col-head-row">
+              <span class="cv-col-head" style="margin-bottom:0">This Month</span>
+              <button class="cv-fullscreen-btn" data-period="month" aria-label="View all reps this month">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8V3h5M17 8V3h-5M3 12v5h5M17 12v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                All Reps
+              </button>
+            </div>
             <div id="cvRankMonth"><div class="cv-placeholder">Loading…</div></div>
           </div>
           <div class="cv-col">
             <div class="cv-col-head-row">
               <span class="cv-col-head" style="margin-bottom:0">All Time</span>
-              <button class="cv-fullscreen-btn" id="cvAllTimeFullscreen" aria-label="View all reps">
+              <button class="cv-fullscreen-btn" id="cvAllTimeFullscreen" data-period="alltime" aria-label="View all reps all time">
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 8V3h5M17 8V3h-5M3 12v5h5M17 12v5h-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 All Reps
               </button>
@@ -632,12 +712,12 @@
         </div>
       </div>
 
-      <!-- All-Time Fullscreen Modal -->
-      <div class="cv-modal-overlay" id="cvAllTimeModal" role="dialog" aria-modal="true" aria-label="All Time INST Rankings">
+      <!-- Period Fullscreen Modal (shared by all periods) -->
+      <div class="cv-modal-overlay" id="cvAllTimeModal" role="dialog" aria-modal="true" aria-label="Rankings Fullscreen">
         <div class="cv-modal">
           <div class="cv-modal-head">
             <div>
-              <div class="cv-modal-title">All Time · INST Rankings · Outbound</div>
+              <div class="cv-modal-title" id="cvModalTitle">All Time · INST Rankings · Outbound</div>
               <div class="cv-modal-sub" id="cvModalSub">All reps · sorted by INST calls</div>
             </div>
             <button class="cv-modal-close" id="cvModalClose" aria-label="Close">
@@ -646,6 +726,28 @@
           </div>
           <div class="cv-modal-body" id="cvModalBody">
             <div class="cv-placeholder">Loading…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rep Detail Modal (click name from rankings or fullscreen) -->
+      <div class="cv-modal-overlay" id="cvRepModal" role="dialog" aria-modal="true" aria-label="Rep Stats">
+        <div class="cv-modal" style="width:min(96vw,940px);max-height:90vh;">
+          <div class="cv-modal-head">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <img id="cvRepModalPhoto" class="cv-rmod-photo" src="" alt="" style="display:none" />
+              <div id="cvRepModalInitials" class="cv-rmod-initials" style="display:none"></div>
+              <div>
+                <div class="cv-modal-title" id="cvRepModalName"></div>
+                <div class="cv-modal-sub">Outbound call stats · all periods</div>
+              </div>
+            </div>
+            <button class="cv-modal-close" id="cvRepModalClose" aria-label="Close">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <div class="cv-modal-body" id="cvRepModalBody" style="padding:0;overflow-y:auto;">
+            <div class="cv-placeholder" style="padding:24px;">Loading…</div>
           </div>
         </div>
       </div>
@@ -828,6 +930,7 @@
 /* ── Convoso Integration ── */
 (function () {
   var CONVOSO = 'https://capmuse.onrender.com';
+  var activeFilter = 'inst';
 
   function pad2(n) { return String(n).padStart(2, '0'); }
   function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
@@ -854,6 +957,38 @@
   function badgeClass(i) { return ['rb-1','rb-2','rb-3','rb-n','rb-n'][i]||'rb-n'; }
   function setText(id, val) { let el=document.getElementById(id); if(el) el.textContent=val; }
 
+  function getFilterVals(u, filter) {
+    switch (filter) {
+      case 'inst': return { val: u.inst||0, con: u.inst_con||0, tt: u.inst_tt||0 };
+      case 'ni':   return { val: u.ni||0,   con: u.ni_con||0,   tt: u.ni_tt||0   };
+      case 'nc':   return { val: u.nc||0,   con: u.nc_con||0,   tt: u.nc_tt||0   };
+      default:     return {
+        val: (u.inst||0)+(u.ni||0)+(u.nc||0),
+        con: (u.inst_con||0)+(u.ni_con||0)+(u.nc_con||0),
+        tt:  (u.inst_tt||0)+(u.ni_tt||0)+(u.nc_tt||0)
+      };
+    }
+  }
+
+  function formatTT(sec) {
+    if (!sec) return '—';
+    var s = Math.round(sec);
+    var h = Math.floor(s / 3600);
+    var m = Math.floor((s % 3600) / 60);
+    var ss = s % 60;
+    if (h > 0) return h + 'h ' + pad2(m) + 'm';
+    if (m > 0) return m + 'm ' + pad2(ss) + 's';
+    return ss + 's';
+  }
+
+  function formatAvg(tt, calls) {
+    if (!tt || !calls) return '—';
+    var sec = Math.round(tt / calls);
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return m + ':' + pad2(s);
+  }
+
   /* Cache: one array of users per period */
   let cache = { today:[], week:[], lastWeek:[], month:[], allTime:[] };
 
@@ -870,18 +1005,48 @@
   function renderRankList(id, users) {
     let el = document.getElementById(id);
     if (!el) return;
-    let sorted = users
-      .map(function(u){ return {name:u.user, val:u.inst||0}; })
-      .sort(function(a,b){ return b.val-a.val; })
-      .filter(function(r){ return r.val>0; })
-      .slice(0,5);
+    var filter = activeFilter;
+    var sorted = users
+      .map(function(u) {
+        var fv = getFilterVals(u, filter);
+        return { name: u.user, val: fv.val, con: fv.con, tt: fv.tt,
+                 inst: u.inst||0, ni: u.ni||0, nc: u.nc||0 };
+      })
+      .sort(function(a,b) { return b.val - a.val; })
+      .filter(function(r) { return r.val > 0; })
+      .slice(0, 5);
     if (!sorted.length) { el.innerHTML='<div class="cv-placeholder">No data</div>'; return; }
-    el.innerHTML = sorted.map(function(r,i){
-      return '<div class="cv-rank-row">'
-        +'<div class="cv-rbadge '+badgeClass(i)+'">'+(i+1)+'</div>'
-        +'<div class="cv-rank-name">'+shortName(r.name)+'</div>'
-        +'<div class="cv-rank-val">'+r.val+'</div>'
-        +'</div>';
+    el.innerHTML = sorted.map(function(r, i) {
+      var statsHtml = '';
+      if (filter === 'all') {
+        statsHtml = '<div class="cv-rank-stats">'
+          + '<span class="cv-rs"><span class="i-inst">'+r.inst+'</span> INST</span>'
+          + '<span class="cv-rs"><span class="i-ni">'+r.ni+'</span> NI</span>'
+          + '<span class="cv-rs"><span class="i-nc">'+r.nc+'</span> NC</span>'
+          + '</div>';
+      } else if (r.con > 0 || r.tt > 0) {
+        var ttStr = r.tt ? formatTT(r.tt) : '—';
+        statsHtml = '<div class="cv-rank-stats">'
+          + '<span class="cv-rs">Con <b>'+r.con+'</b></span>'
+          + '<span class="cv-rs">TTT <b>'+ttStr+'</b></span>'
+          + '</div>';
+      }
+      var inlineAvg = (r.tt && r.val) ? formatAvg(r.tt, r.val) : '';
+      var dispBadge = '';
+      if (filter !== 'all') {
+        var badgeCls = { inst:'inst', ni:'ni', nc:'nc' }[filter] || '';
+        if (badgeCls) dispBadge = '<span class="cv-stat-badge '+badgeCls+'">'+filter.toUpperCase()+'</span>';
+      }
+      return '<div class="cv-rank-row enhanced">'
+        + '<div class="cv-rank-row-top">'
+        + '<div class="cv-rbadge '+badgeClass(i)+'">'+(i+1)+'</div>'
+        + '<div class="cv-rank-name cv-click-name" data-rep="'+r.name+'">'+shortName(r.name)+'</div>'
+        + '<div class="cv-rank-val">'+r.val+'</div>'
+        + (inlineAvg ? '<span class="cv-rank-avg">'+inlineAvg+'</span>' : '')
+        + dispBadge
+        + '</div>'
+        + statsHtml
+        + '</div>';
     }).join('');
   }
 
@@ -977,8 +1142,25 @@
     });
   }
 
+  var FILTER_META = {
+    all:  { hero: 'Total Calls (All Dispositions)',    sub: 'All calls rankings · All reps',      rank: 'Top 5 · All Calls · Outbound · All Reps',              modal: 'All Time · All Calls Rankings · Outbound' },
+    inst: { hero: 'Total Interested (INST) Calls',     sub: 'Interested call rankings · All reps', rank: 'Top 5 · Interested (INST) Calls · Outbound · All Reps', modal: 'All Time · INST Rankings · Outbound' },
+    ni:   { hero: 'Total Not Interested (NI) Calls',   sub: 'Not Interested rankings · All reps',  rank: 'Top 5 · Not Interested (NI) Calls · Outbound · All Reps', modal: 'All Time · NI Rankings · Outbound' },
+    nc:   { hero: 'Total No Contact (NC) Calls',       sub: 'No Contact rankings · All reps',      rank: 'Top 5 · No Contact (NC) Calls · Outbound · All Reps',  modal: 'All Time · NC Rankings · Outbound' },
+  };
+
+  function updateFilterLabels() {
+    var m = FILTER_META[activeFilter] || FILTER_META.inst;
+    setText('cvHeroTitle',    m.hero);
+    setText('cvPageSubtitle', m.sub);
+    setText('cvRankTitle',    m.rank);
+    setText('cvModalTitle',   m.modal);
+  }
+
   function renderHero() {
-    let total = cache.today.reduce(function(s,u){ return s+(u.inst||0); }, 0);
+    var total = cache.today.reduce(function(s, u) {
+      return s + getFilterVals(u, activeFilter).val;
+    }, 0);
     setText('cvHeroNum', total);
     let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setText('cvHeroSub', 'Updated ' + ts + ' · ' + cache.today.length + ' reps active');
@@ -994,15 +1176,25 @@
     setText('cvRankTs', 'Updated ' + ts);
   }
 
-  function renderAllTimeModal() {
-    let body = document.getElementById('cvModalBody');
-    let sub  = document.getElementById('cvModalSub');
+  function renderAllTimeModal(users, periodLabel) {
+    users = users || cache.allTime;
+    periodLabel = periodLabel || 'All Time';
+    var body = document.getElementById('cvModalBody');
+    var sub  = document.getElementById('cvModalSub');
+    var titleEl = document.getElementById('cvModalTitle');
     if (!body) return;
-    let sorted = cache.allTime
-      .map(function(u){ return { name: u.user, val: u.inst || 0 }; })
+    var filter = activeFilter;
+    var filterLabel = { all:'All Calls', inst:'INST', ni:'NI', nc:'NC' }[filter] || 'INST';
+    if (titleEl) titleEl.textContent = periodLabel + ' · ' + filterLabel + ' Rankings · Outbound';
+    var sorted = users
+      .map(function(u) {
+        var fv = getFilterVals(u, filter);
+        return { name: u.user, val: fv.val, con: fv.con, tt: fv.tt,
+                 inst: u.inst||0, ni: u.ni||0, nc: u.nc||0 };
+      })
       .filter(function(r){ return r.val > 0; })
       .sort(function(a,b){ return b.val - a.val; });
-    if (sub) sub.textContent = sorted.length + ' reps · sorted by INST calls · Outbound';
+    if (sub) sub.textContent = sorted.length + ' reps · sorted by ' + filterLabel + ' · Outbound';
     if (!sorted.length) { body.innerHTML = '<div class="cv-placeholder">No data yet</div>'; return; }
     let medals = ['🥇','🥈','🥉'];
     body.innerHTML = sorted.map(function(r, i) {
@@ -1015,13 +1207,91 @@
         ? '<img class="cv-modal-avatar" src="Assets/reps/' + photoFile + '" alt="" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
           + '<div class="cv-modal-initials" style="display:none">' + getInitials(r.name) + '</div>'
         : '<div class="cv-modal-initials">' + getInitials(r.name) + '</div>';
+      var extraHtml = '';
+      if (filter === 'all') {
+        extraHtml = '<div style="font-size:10px;color:var(--text-muted);text-align:right;line-height:1.6;flex-shrink:0">'
+          + '<span style="color:#10B981;font-weight:700">'+r.inst+'</span> I&nbsp;'
+          + '<span style="color:#F59E0B;font-weight:700">'+r.ni+'</span> N&nbsp;'
+          + '<span style="color:#94A3B8;font-weight:700">'+r.nc+'</span> C'
+          + '</div>';
+      } else if (r.tt > 0) {
+        extraHtml = '<div style="font-size:10px;color:var(--text-muted);text-align:right;line-height:1.6;flex-shrink:0">'
+          + 'C:<b style="color:var(--text-secondary)">'+r.con+'</b> '
+          + 'A:<b style="color:var(--text-secondary)">'+formatAvg(r.tt, r.val)+'</b>'
+          + '</div>';
+      }
       return '<div class="cv-modal-row' + rankClass + '">'
         + posHtml
         + avatarHtml
-        + '<div class="cv-modal-name">' + r.name + '</div>'
+        + '<div class="cv-modal-name cv-click-name" data-rep="' + r.name + '">' + r.name + '</div>'
+        + extraHtml
         + '<div class="cv-modal-val">' + r.val + '</div>'
         + '</div>';
     }).join('');
+  }
+
+  function renderRepModal(name) {
+    var nameEl     = document.getElementById('cvRepModalName');
+    var photoEl    = document.getElementById('cvRepModalPhoto');
+    var initialsEl = document.getElementById('cvRepModalInitials');
+    var body       = document.getElementById('cvRepModalBody');
+    if (!body) return;
+
+    if (nameEl) nameEl.textContent = name;
+
+    var photoFile = getPhotoFile(name);
+    if (photoFile && photoEl) {
+      photoEl.onload  = function() { photoEl.style.display=''; if (initialsEl) initialsEl.style.display='none'; };
+      photoEl.onerror = function() { photoEl.style.display='none'; if (initialsEl) { initialsEl.textContent=getInitials(name); initialsEl.style.display=''; } };
+      photoEl.style.display = 'none';
+      photoEl.src = 'Assets/reps/' + photoFile;
+    } else {
+      if (photoEl) photoEl.style.display = 'none';
+      if (initialsEl) { initialsEl.textContent = getInitials(name); initialsEl.style.display = ''; }
+    }
+
+    var periods = [
+      { label: 'Today',      data: cache.today    },
+      { label: 'This Week',  data: cache.week     },
+      { label: 'Last Week',  data: cache.lastWeek },
+      { label: 'This Month', data: cache.month    },
+      { label: 'All Time',   data: cache.allTime  },
+    ];
+
+    body.innerHTML = '<div class="cv-rmod-grid">'
+      + periods.map(function(p) {
+          var u = p.data.find(function(u) { return u.user === name; }) || {};
+          function statRow(key, label) {
+            var calls = u[key]       || 0;
+            var tt    = u[key+'_tt'] || 0;
+            var badgeCls = { inst:'inst', ni:'ni', nc:'nc' }[key] || '';
+            var ttStr  = tt ? formatTT(tt) : '—';
+            var avgStr = (tt && calls) ? formatAvg(tt, calls) : '—';
+            return '<div class="cv-rmod-stat">'
+              + '<div class="cv-rmod-top">'
+              + '<span class="cv-stat-badge ' + badgeCls + '">' + label + '</span>'
+              + '<span class="cv-rmod-cnt">' + calls + '</span>'
+              + '</div>'
+              + '<div class="cv-rmod-sub">'
+              + '<span>TTT <b>' + ttStr + '</b></span>'
+              + '<span>Avg <b>' + avgStr + '</b></span>'
+              + '</div>'
+              + '</div>';
+          }
+          return '<div class="cv-rmod-col">'
+            + '<div class="cv-rmod-head">'+p.label+'</div>'
+            + statRow('inst', 'INST')
+            + statRow('ni',   'NI')
+            + statRow('nc',   'NC')
+            + '</div>';
+        }).join('')
+      + '</div>';
+  }
+
+  function openRepModal(name) {
+    renderRepModal(name);
+    var modal = document.getElementById('cvRepModal');
+    if (modal) { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
   }
 
   function renderRepStats() {
@@ -1111,31 +1381,78 @@
     }
   }
 
+  function setActiveFilter(filter) {
+    activeFilter = filter;
+    document.querySelectorAll('#cvFilterGroup .cv-filter-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-filter') === filter);
+    });
+    updateFilterLabels();
+    renderHero();
+    renderRankings();
+  }
+
   function init() {
-    let repSel      = document.getElementById('cvRepSelect');
-    let refreshBtn  = document.getElementById('cvRefreshBtn');
-    let fsBtn       = document.getElementById('cvAllTimeFullscreen');
-    let modal       = document.getElementById('cvAllTimeModal');
-    let modalClose  = document.getElementById('cvModalClose');
+    var repSel      = document.getElementById('cvRepSelect');
+    var refreshBtn  = document.getElementById('cvRefreshBtn');
+    var modal       = document.getElementById('cvAllTimeModal');
+    var modalClose  = document.getElementById('cvModalClose');
+    var filterGroup = document.getElementById('cvFilterGroup');
+    var rankingsGrid = document.querySelector('.cv-5col');
+
+    var PERIOD_MAP = {
+      today:   { getUsers: function() { return cache.today;    }, label: 'Today' },
+      week:    { getUsers: function() { return cache.week;     }, label: 'This Week' },
+      lastweek:{ getUsers: function() { return cache.lastWeek; }, label: 'Last Week' },
+      month:   { getUsers: function() { return cache.month;    }, label: 'This Month' },
+      alltime: { getUsers: function() { return cache.allTime;  }, label: 'All Time' },
+    };
 
     if (repSel)    repSel.addEventListener('change', renderRepStats);
     if (refreshBtn) refreshBtn.addEventListener('click', loadAll);
 
-    if (fsBtn && modal) {
-      fsBtn.addEventListener('click', function() {
-        renderAllTimeModal();
+    if (filterGroup) {
+      filterGroup.addEventListener('click', function(e) {
+        var btn = e.target.closest('.cv-filter-btn');
+        if (!btn) return;
+        var f = btn.getAttribute('data-filter');
+        if (f) setActiveFilter(f);
+      });
+    }
+
+    if (rankingsGrid && modal) {
+      rankingsGrid.addEventListener('click', function(e) {
+        var btn = e.target.closest('.cv-fullscreen-btn[data-period]');
+        if (!btn) return;
+        var period = btn.getAttribute('data-period');
+        var meta = PERIOD_MAP[period];
+        if (!meta) return;
+        renderAllTimeModal(meta.getUsers(), meta.label);
         modal.classList.add('open');
         document.body.style.overflow = 'hidden';
       });
     }
+    var repModal      = document.getElementById('cvRepModal');
+    var repModalClose = document.getElementById('cvRepModalClose');
+
     function closeModal() {
       if (modal) modal.classList.remove('open');
       document.body.style.overflow = '';
     }
-    if (modalClose) modalClose.addEventListener('click', closeModal);
-    if (modal) modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+    function closeRepModal() {
+      if (repModal) repModal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    if (modalClose)    modalClose.addEventListener('click', closeModal);
+    if (repModalClose) repModalClose.addEventListener('click', closeRepModal);
+    if (modal)    modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+    if (repModal) repModal.addEventListener('click', function(e) { if (e.target === repModal) closeRepModal(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeModal(); closeRepModal(); } });
+    document.addEventListener('click', function(e) {
+      var el = e.target.closest('.cv-click-name[data-rep]');
+      if (el) openRepModal(el.getAttribute('data-rep'));
+    });
 
+    updateFilterLabels();
     loadAll();
   }
 
