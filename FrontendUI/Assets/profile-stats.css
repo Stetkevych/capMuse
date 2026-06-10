@@ -258,6 +258,8 @@ html[data-theme="dark"] .pmc-flip.pmc-flipped .pmc-face-back {
 }
 .pmc-stat:last-child { border-right: none; }
 .pmc-stats-row-2 { grid-template-columns: repeat(2, 1fr); }
+.pmc-stats-row-1 { grid-template-columns: 1fr; }
+.pmc-stats-row-1 .pmc-stat { border-right: none; }
 .pmc-stats-loading {
   text-align: center;
   font-size: 12px;
