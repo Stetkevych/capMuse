@@ -20,7 +20,7 @@ d = d.replace(
       el.style.cursor = 'pointer';
       el.addEventListener('click', function(e) {
         e.preventDefault();
-        var page = this.getAttribute('data-page') || this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();
+        let page = this.getAttribute('data-page') || this.textContent.trim().replace(/[^a-zA-Z]/g,'').toLowerCase();
         document.querySelectorAll('.nav-sub-item, .nav-item').forEach(function(n) { n.classList.remove('active'); n.removeAttribute('aria-current'); });
         this.classList.add('active');
         renderPage(page);

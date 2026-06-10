@@ -1,9 +1,9 @@
 // Shared funding-book loader — single fetch, session cache, stale-while-revalidate
 (function () {
-  var BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
-  var CACHE_KEY = 'capmuse:funding_book_live:v4';
-  var CACHE_TTL = 5 * 60 * 1000;
-  var inflight = null;
+  let BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
+  let CACHE_KEY = 'capmuse:funding_book_live:v4';
+  let CACHE_TTL = 5 * 60 * 1000;
+  let inflight = null;
 
   function parseRecords(raw) {
     if (!raw || !raw.length) return [];
@@ -12,9 +12,9 @@
 
   function readCache() {
     try {
-      var cached = sessionStorage.getItem(CACHE_KEY);
+      let cached = sessionStorage.getItem(CACHE_KEY);
       if (!cached) return null;
-      var parsed = JSON.parse(cached);
+      let parsed = JSON.parse(cached);
       if (!parsed || !parsed.data || !parsed.ts) return null;
       if (Date.now() - parsed.ts > CACHE_TTL) return null;
       return parsed.data;
@@ -42,7 +42,7 @@
   function getRawDeals() {
     if (inflight) return inflight;
 
-    var cached = readCache();
+    let cached = readCache();
     if (cached) {
       inflight = Promise.resolve(cached);
       fetchFresh().then(function (fresh) {

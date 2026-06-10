@@ -732,8 +732,8 @@
 </script>
 <script>
   (function () {
-    var btn  = document.getElementById('avatarBtn');
-    var menu = document.getElementById('avatarMenu');
+    let btn  = document.getElementById('avatarBtn');
+    let menu = document.getElementById('avatarMenu');
     if (!btn || !menu) return;
     btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
     document.addEventListener('click', function () { menu.classList.remove('open'); });
@@ -750,50 +750,50 @@
 <script>
 /* ── Convoso Integration ── */
 (function () {
-  var CONVOSO = 'http://localhost:8001';
+  let CONVOSO = 'http://localhost:8001';
 
   function pad2(n) { return String(n).padStart(2, '0'); }
   function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
   function todayStr() { return isoDate(new Date()); }
   function weekStartStr() {
-    var d = new Date(); var day = d.getDay();
+    let d = new Date(); let day = d.getDay();
     d.setDate(d.getDate() - (day === 0 ? 6 : day - 1)); return isoDate(d);
   }
   function lastWeekStartStr() {
-    var d = new Date(); var day = d.getDay();
+    let d = new Date(); let day = d.getDay();
     d.setDate(d.getDate() - (day === 0 ? 6 : day - 1) - 7); return isoDate(d);
   }
   function lastWeekEndStr() {
-    var d = new Date(); var day = d.getDay();
+    let d = new Date(); let day = d.getDay();
     d.setDate(d.getDate() - (day === 0 ? 6 : day - 1) - 1); return isoDate(d);
   }
   function monthStartStr() {
-    var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-01';
+    let d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-01';
   }
   function shortName(full) {
-    var p = (full||'').trim().split(/\s+/);
+    let p = (full||'').trim().split(/\s+/);
     return p.length === 1 ? p[0] : p[0] + ' ' + p[p.length-1][0] + '.';
   }
   function badgeClass(i) { return ['rb-1','rb-2','rb-3','rb-n','rb-n'][i]||'rb-n'; }
-  function setText(id, val) { var el=document.getElementById(id); if(el) el.textContent=val; }
+  function setText(id, val) { let el=document.getElementById(id); if(el) el.textContent=val; }
 
   /* Cache: one array of users per period */
-  var cache = { today:[], week:[], lastWeek:[], month:[] };
+  let cache = { today:[], week:[], lastWeek:[], month:[] };
 
   async function fetchPeriod(start, end) {
-    var res = await fetch(CONVOSO + '/convoso/all-users-summary', {
+    let res = await fetch(CONVOSO + '/convoso/all-users-summary', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({start_date:start, end_date:end})
     });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    var data = await res.json();
+    let data = await res.json();
     return data.users || [];
   }
 
   function renderRankList(id, users) {
-    var el = document.getElementById(id);
+    let el = document.getElementById(id);
     if (!el) return;
-    var sorted = users
+    let sorted = users
       .map(function(u){ return {name:u.user, val:u.inst||0}; })
       .sort(function(a,b){ return b.val-a.val; })
       .filter(function(r){ return r.val>0; })
@@ -809,7 +809,7 @@
   }
 
   /* Always-present reps regardless of API activity */
-  var BASE_REPS = [
+  let BASE_REPS = [
     'Erik Anderson', 'Ivan Ortega', 'Matthew Birnholz', 'Michael Cifuentes',
     'Ray Ortega', 'Rio Pampallona', 'Blake Fiorito', 'Dominic Basilio',
     'Kip Langat', "Colin O'Bryan", 'Christian Quintana', 'Nikholas Lazo',
@@ -817,7 +817,7 @@
   ];
 
   /* Photo mapping: exact full API name → filename in Assets/reps/ */
-  var PHOTO_MAP = {
+  let PHOTO_MAP = {
     'Alejandro Manuel':     null,
     'Andy Balou':           null,
     'Anthony Diaz':         'diaz.png',
@@ -858,7 +858,7 @@
     'Vanessa Fernandez':    null
   };
   /* Fallback first-name lookup for any rep not in PHOTO_MAP */
-  var PHOTO_FIRST = {
+  let PHOTO_FIRST = {
     'careem':    'careem.png',
     'emilio':    'emilio.png',
     'guillermo': 'guillermo.png',
@@ -870,30 +870,30 @@
 
   function getPhotoFile(name) {
     if (PHOTO_MAP.hasOwnProperty(name)) return PHOTO_MAP[name];
-    var first = (name || '').split(' ')[0].toLowerCase();
+    let first = (name || '').split(' ')[0].toLowerCase();
     return PHOTO_FIRST[first] || null;
   }
   function getInitials(name) {
-    var parts = (name || '').trim().split(/\s+/);
+    let parts = (name || '').trim().split(/\s+/);
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
   function buildDropdown() {
-    var repSel = document.getElementById('cvRepSelect');
+    let repSel = document.getElementById('cvRepSelect');
     if (!repSel) return;
-    var currentVal = repSel.value;
-    var nameSet = {};
+    let currentVal = repSel.value;
+    let nameSet = {};
     /* Always include base reps */
     BASE_REPS.forEach(function(n) { nameSet[n] = true; });
     /* Add any reps found in API data */
     [cache.today, cache.week, cache.lastWeek, cache.month].forEach(function(arr) {
       arr.forEach(function(u) { if (u.user) nameSet[u.user] = true; });
     });
-    var names = Object.keys(nameSet).sort();
+    let names = Object.keys(nameSet).sort();
     repSel.innerHTML = '<option value="">— Select a rep —</option>';
     names.forEach(function(n) {
-      var opt = document.createElement('option');
+      let opt = document.createElement('option');
       opt.value = n; opt.textContent = n;
       if (n === currentVal) opt.selected = true;
       repSel.appendChild(opt);
@@ -901,9 +901,9 @@
   }
 
   function renderHero() {
-    var total = cache.today.reduce(function(s,u){ return s+(u.inst||0); }, 0);
+    let total = cache.today.reduce(function(s,u){ return s+(u.inst||0); }, 0);
     setText('cvHeroNum', total);
-    var ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setText('cvHeroSub', 'Updated ' + ts + ' · ' + cache.today.length + ' reps active');
   }
 
@@ -912,27 +912,27 @@
     renderRankList('cvRankWeek',     cache.week);
     renderRankList('cvRankLastWeek', cache.lastWeek);
     renderRankList('cvRankMonth',    cache.month);
-    var ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setText('cvRankTs', 'Updated ' + ts);
   }
 
   function renderRepStats() {
-    var repSel  = document.getElementById('cvRepSelect');
-    var emptyEl = document.getElementById('cvRepEmpty');
-    var detailEl = document.getElementById('cvRepDetail');
+    let repSel  = document.getElementById('cvRepSelect');
+    let emptyEl = document.getElementById('cvRepEmpty');
+    let detailEl = document.getElementById('cvRepDetail');
     if (!repSel || !repSel.value) {
       if (emptyEl)  emptyEl.style.display  = '';
       if (detailEl) detailEl.style.display = 'none';
       return;
     }
-    var name = repSel.value;
+    let name = repSel.value;
 
     /* Exact match — no fuzzy */
     function exact(arr) { return arr.find(function(u){ return u.user === name; }) || {inst:0,ni:0,nc:0}; }
-    var t  = exact(cache.today);
-    var w  = exact(cache.week);
-    var lw = exact(cache.lastWeek);
-    var m  = exact(cache.month);
+    let t  = exact(cache.today);
+    let w  = exact(cache.week);
+    let lw = exact(cache.lastWeek);
+    let m  = exact(cache.month);
 
     setText('cvRInstT',  t.inst);  setText('cvRNiT',  t.ni);  setText('cvRNcT',  t.nc);
     setText('cvRInstW',  w.inst);  setText('cvRNiW',  w.ni);  setText('cvRNcW',  w.nc);
@@ -940,11 +940,11 @@
     setText('cvRInstM',  m.inst);  setText('cvRNiM',  m.ni);  setText('cvRNcM',  m.nc);
 
     /* Profile photo */
-    var photoEl    = document.getElementById('cvRepPhoto');
-    var initialsEl = document.getElementById('cvRepInitials');
-    var nameEl     = document.getElementById('cvRepProfileName');
+    let photoEl    = document.getElementById('cvRepPhoto');
+    let initialsEl = document.getElementById('cvRepInitials');
+    let nameEl     = document.getElementById('cvRepProfileName');
     if (nameEl) nameEl.textContent = name;
-    var photoFile = getPhotoFile(name);
+    let photoFile = getPhotoFile(name);
     if (photoFile && photoEl) {
       photoEl.onload  = function() { photoEl.style.display = ''; if (initialsEl) initialsEl.style.display = 'none'; };
       photoEl.onerror = function() { photoEl.style.display = 'none'; if (initialsEl) { initialsEl.textContent = getInitials(name); initialsEl.style.display = ''; } };
@@ -960,19 +960,19 @@
   }
 
   async function loadAll() {
-    var statusEl = document.getElementById('cvStatus');
+    let statusEl = document.getElementById('cvStatus');
     if (statusEl) statusEl.textContent = 'Loading…';
-    var refreshBtn = document.getElementById('cvRefreshBtn');
+    let refreshBtn = document.getElementById('cvRefreshBtn');
     if (refreshBtn) refreshBtn.disabled = true;
 
-    var today    = todayStr();
-    var wStart   = weekStartStr();
-    var lwStart  = lastWeekStartStr();
-    var lwEnd    = lastWeekEndStr();
-    var mStart   = monthStartStr();
+    let today    = todayStr();
+    let wStart   = weekStartStr();
+    let lwStart  = lastWeekStartStr();
+    let lwEnd    = lastWeekEndStr();
+    let mStart   = monthStartStr();
 
     try {
-      var results = await Promise.all([
+      let results = await Promise.all([
         fetchPeriod(today,   today),
         fetchPeriod(wStart,  today),
         fetchPeriod(lwStart, lwEnd),
@@ -997,8 +997,8 @@
   }
 
   function init() {
-    var repSel = document.getElementById('cvRepSelect');
-    var refreshBtn = document.getElementById('cvRefreshBtn');
+    let repSel = document.getElementById('cvRepSelect');
+    let refreshBtn = document.getElementById('cvRefreshBtn');
     if (repSel)     repSel.addEventListener('change', renderRepStats);
     if (refreshBtn) refreshBtn.addEventListener('click', loadAll);
     loadAll();

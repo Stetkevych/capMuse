@@ -639,8 +639,8 @@
   })();
 
   (function () {
-    var btn  = document.getElementById('avatarBtn');
-    var menu = document.getElementById('avatarMenu');
+    let btn  = document.getElementById('avatarBtn');
+    let menu = document.getElementById('avatarMenu');
     if (!btn || !menu) return;
     btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
     document.addEventListener('click', function () { menu.classList.remove('open'); });
@@ -651,9 +651,9 @@
 <script>
 /* ── RingCentral Backend Integration ── */
 (function () {
-  var RC_URL = 'http://localhost:8002';
+  let RC_URL = 'http://localhost:8002';
 
-  var ALL_REPS = [
+  let ALL_REPS = [
     'Erik Anderson','Ivan Ortega','Matthew Birnholz','Michael Cifuentes',
     'Ray Ortega','Rio Pampallona','Blake Fiorito','Dominic Basilio',
     'Kip Langat',"Colin O'Bryan",'Christian Quintana','Nikholas Lazo',
@@ -663,55 +663,55 @@
   function pad2(n) { return String(n).padStart(2, '0'); }
   function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
   function todayStr() { return isoDate(new Date()); }
-  function weekStartStr() { var d = new Date(); d.setDate(d.getDate() - d.getDay()); return isoDate(d); }
+  function weekStartStr() { let d = new Date(); d.setDate(d.getDate() - d.getDay()); return isoDate(d); }
   function initials(name) { return name.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2).toUpperCase(); }
 
-  var repSelectEl, dateStartEl, dateEndEl, statusEl;
+  let repSelectEl, dateStartEl, dateEndEl, statusEl;
 
   function setStatus(msg) { if (statusEl) statusEl.textContent = msg; }
-  function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+  function setText(id, val) { let el = document.getElementById(id); if (el) el.textContent = val; }
 
   async function fetchOne(rep, start, end) {
     try {
-      var res = await fetch(RC_URL + '/ringcentral/analytics-summary', {
+      let res = await fetch(RC_URL + '/ringcentral/analytics-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user: rep, start_date: start, end_date: end })
       });
       if (!res.ok) return null;
-      var data = await res.json();
+      let data = await res.json();
       return (data && data.success !== false) ? data : null;
     } catch (e) { return null; }
   }
 
   async function loadData() {
-    var rep   = repSelectEl ? repSelectEl.value : '';
-    var start = dateStartEl ? dateStartEl.value : todayStr();
-    var end   = dateEndEl   ? dateEndEl.value   : todayStr();
+    let rep   = repSelectEl ? repSelectEl.value : '';
+    let start = dateStartEl ? dateStartEl.value : todayStr();
+    let end   = dateEndEl   ? dateEndEl.value   : todayStr();
 
     setStatus('Loading…');
-    var loadBtn = document.getElementById('rcLoadBtn');
+    let loadBtn = document.getElementById('rcLoadBtn');
     if (loadBtn) loadBtn.disabled = true;
 
     try {
       if (!rep) {
         /* All Reps: fetch everyone in parallel and aggregate */
-        var results = await Promise.all(ALL_REPS.map(function (r) { return fetchOne(r, start, end); }));
-        var valid   = results.filter(Boolean);
+        let results = await Promise.all(ALL_REPS.map(function (r) { return fetchOne(r, start, end); }));
+        let valid   = results.filter(Boolean);
         if (valid.length === 0) throw new Error('no data');
 
-        var totCalls = 0, totMsgs = 0, totActivity = 0, ahtSum = 0, ahtCount = 0;
+        let totCalls = 0, totMsgs = 0, totActivity = 0, ahtSum = 0, ahtCount = 0;
         valid.forEach(function (d) {
           totCalls    += d.outbound_calls || 0;
           totMsgs     += d.outbound_messages || 0;
           totActivity += d.total_outbound_activity || 0;
           if (d.avg_handle_time_seconds > 0) { ahtSum += d.avg_handle_time_seconds; ahtCount++; }
         });
-        var avgAhtSec  = ahtCount > 0 ? Math.round(ahtSum / ahtCount) : 0;
-        var avgAhtFmt  = avgAhtSec > 0 ? Math.floor(avgAhtSec / 60) + 'm ' + (avgAhtSec % 60) + 's' : '—';
-        var days = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000) + 1);
+        let avgAhtSec  = ahtCount > 0 ? Math.round(ahtSum / ahtCount) : 0;
+        let avgAhtFmt  = avgAhtSec > 0 ? Math.floor(avgAhtSec / 60) + 'm ' + (avgAhtSec % 60) + 's' : '—';
+        let days = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000) + 1);
 
-        var agg = {
+        let agg = {
           outbound_calls:            totCalls,
           outbound_messages:         totMsgs,
           total_outbound_activity:   totActivity,
@@ -728,7 +728,7 @@
 
       } else {
         /* Single rep */
-        var data = await fetchOne(rep, start, end);
+        let data = await fetchOne(rep, start, end);
         if (!data) throw new Error('not found');
         setStatus('');
         render(data, rep, start, end);
@@ -755,7 +755,7 @@
     setText('rcKpiTotalSub', d.avg_total_activity_per_day + ' avg/day');
 
     /* Hero card */
-    var avatarEl = document.getElementById('rcAvatar');
+    let avatarEl = document.getElementById('rcAvatar');
     if (avatarEl) avatarEl.textContent = repName === 'All Reps' ? 'ALL' : initials(d.user || repName);
     setText('rcRepName',   d.user || repName);
     setText('rcRepExt',    d.extension ? (repName === 'All Reps' ? d.extension : 'Extension ' + d.extension) : '');
@@ -777,8 +777,8 @@
 
     /* Breakdown */
     setText('rcBdExt',   d.extension || '—');
-    var total   = d.total_outbound_activity || 1;
-    var callPct = total > 0 ? Math.round(d.outbound_calls / total * 100) : 0;
+    let total   = d.total_outbound_activity || 1;
+    let callPct = total > 0 ? Math.round(d.outbound_calls / total * 100) : 0;
     setText('rcBdRatio',  d.outbound_calls + ' calls / ' + d.outbound_messages + ' msgs (' + callPct + '% calls)');
     setText('rcBdCalls',  d.outbound_calls);
     setText('rcBdMsgs',   d.outbound_messages);
@@ -787,7 +787,7 @@
 
     /* Show detail, hide empty */
     document.getElementById('rcEmpty').style.display = 'none';
-    var detail = document.getElementById('rcDetail');
+    let detail = document.getElementById('rcDetail');
     if (detail) { detail.classList.add('visible'); }
   }
 
@@ -800,9 +800,9 @@
     if (dateStartEl && !dateStartEl.value) dateStartEl.value = todayStr();
     if (dateEndEl   && !dateEndEl.value)   dateEndEl.value   = todayStr();
 
-    var btnToday = document.getElementById('rcBtnToday');
-    var btnWeek  = document.getElementById('rcBtnWeek');
-    var btnLoad  = document.getElementById('rcLoadBtn');
+    let btnToday = document.getElementById('rcBtnToday');
+    let btnWeek  = document.getElementById('rcBtnWeek');
+    let btnLoad  = document.getElementById('rcLoadBtn');
 
     if (btnToday) btnToday.addEventListener('click', function () {
       if (dateStartEl) dateStartEl.value = todayStr();
@@ -826,9 +826,9 @@
 <script>
 /* ── RingCentral Rankings ── */
 (function () {
-  var RC_URL = 'http://localhost:8002';
+  let RC_URL = 'http://localhost:8002';
 
-  var ALL_REPS = [
+  let ALL_REPS = [
     'Erik Anderson','Ivan Ortega','Matthew Birnholz','Michael Cifuentes',
     'Ray Ortega','Rio Pampallona','Blake Fiorito','Dominic Basilio',
     'Kip Langat',"Colin O'Bryan",'Christian Quintana','Nikholas Lazo',
@@ -838,11 +838,11 @@
   function pad2(n) { return String(n).padStart(2, '0'); }
   function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
   function todayStr()      { return isoDate(new Date()); }
-  function weekStartStr()  { var d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoDate(d); }
-  function monthStartStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-01'; }
+  function weekStartStr()  { let d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoDate(d); }
+  function monthStartStr() { let d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-01'; }
 
   function shortName(full) {
-    var p = (full || '').trim().split(/\s+/);
+    let p = (full || '').trim().split(/\s+/);
     return p.length === 1 ? p[0] : p[0] + ' ' + p[p.length - 1][0] + '.';
   }
 
@@ -851,9 +851,9 @@
   }
 
   function renderList(containerId, repData, metric) {
-    var el = document.getElementById(containerId);
+    let el = document.getElementById(containerId);
     if (!el) return;
-    var sorted = repData
+    let sorted = repData
       .map(function (d) { return { name: d.user, val: d[metric] || 0 }; })
       .sort(function (a, b) { return b.val - a.val; })
       .filter(function (r) { return r.val > 0; })
@@ -872,7 +872,7 @@
   }
 
   async function fetchAllForPeriod(start, end) {
-    var results = await Promise.all(ALL_REPS.map(function (rep) {
+    let results = await Promise.all(ALL_REPS.map(function (rep) {
       return fetch(RC_URL + '/ringcentral/analytics-summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -884,30 +884,30 @@
   }
 
   async function loadRankings() {
-    var today  = todayStr();
-    var wStart = weekStartStr();
-    var mStart = monthStartStr();
-    var callsStatus = document.getElementById('rcCallsRankStatus');
-    var msgsStatus  = document.getElementById('rcMsgsRankStatus');
+    let today  = todayStr();
+    let wStart = weekStartStr();
+    let mStart = monthStartStr();
+    let callsStatus = document.getElementById('rcCallsRankStatus');
+    let msgsStatus  = document.getElementById('rcMsgsRankStatus');
 
-    var setAllPlaceholder = function (msg) {
+    let setAllPlaceholder = function (msg) {
       ['rcCallsToday','rcCallsWeek','rcCallsMonth',
        'rcMsgsToday','rcMsgsWeek','rcMsgsMonth'].forEach(function (id) {
-        var el = document.getElementById(id);
+        let el = document.getElementById(id);
         if (el) el.innerHTML = '<div class="rank-placeholder">' + msg + '</div>';
       });
     };
 
     try {
       /* Fetch all 3 periods in parallel; each period fetches all 14 reps in parallel */
-      var periods = await Promise.all([
+      let periods = await Promise.all([
         fetchAllForPeriod(today,  today),
         fetchAllForPeriod(wStart, today),
         fetchAllForPeriod(mStart, today)
       ]);
-      var todayData  = periods[0];
-      var weekData   = periods[1];
-      var monthData  = periods[2];
+      let todayData  = periods[0];
+      let weekData   = periods[1];
+      let monthData  = periods[2];
 
       /* Callers */
       renderList('rcCallsToday',  todayData,  'outbound_calls');
@@ -918,7 +918,7 @@
       renderList('rcMsgsWeek',    weekData,   'outbound_messages');
       renderList('rcMsgsMonth',   monthData,  'outbound_messages');
 
-      var ts = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      let ts = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
       if (callsStatus) callsStatus.textContent = ts;
       if (msgsStatus)  msgsStatus.textContent  = ts;
 
