@@ -194,6 +194,7 @@
       stats: {
         experience: null, age: null, height: null,
         avgDeal: null, timeToFund: null, totalDeals: 0,
+        totalApps: 0, totalApprovals: 0,
         volume: null
       },
       kpis: {
@@ -201,6 +202,53 @@
       },
       hero: { volumeToday: 0, fundedToday: 0, mtdVolume: 0 }
     };
+  }
+
+  function isHousePipelineName(name) {
+    return normStr(name).replace(/\./g, '').trim() === 'house';
+  }
+
+  function pipelineRepName(r) {
+    return (r['Puller'] || r['Packages in Process Owner'] || '').trim();
+  }
+
+  function pipelineRowMatchesRep(r, rep, userId) {
+    let assigned = pipelineRepName(r);
+    if (!assigned || isHousePipelineName(assigned)) return false;
+    let target = (rep && (rep.bookName || rep.name)) || userId || '';
+    if (!target) return false;
+    if (window.CapMuseRepMatch) {
+      return window.CapMuseRepMatch.namesMatch(assigned, target);
+    }
+    return normStr(assigned) === normStr(target);
+  }
+
+  function countPipelineForRep(userId, rows) {
+    let out = { totalApps: 0, totalApprovals: 0 };
+    if (!rows || !rows.length || !window.REPS || !window.REPS[userId]) return out;
+    let rep = window.REPS[userId];
+    if (!rep.bookName && !rep.name) return out;
+
+    rows.forEach(function (r) {
+      if (!pipelineRowMatchesRep(r, rep, userId)) return;
+      let stage = (r['Stage of Package'] || '').toLowerCase();
+      if (r['Date Applied'] || stage.indexOf('pack') > -1 || stage.indexOf('review') > -1 ||
+          stage.indexOf('approv') > -1 || stage.indexOf('fund') > -1) {
+        out.totalApps++;
+      }
+      if (stage.indexOf('approv') > -1 || (stage.indexOf('fund') > -1 && stage.indexOf('decline') === -1)) {
+        out.totalApprovals++;
+      }
+    });
+    return out;
+  }
+
+  function mergePipelineStats(live, userId, pipelineRows) {
+    if (!live) live = emptyLive();
+    let p = countPipelineForRep(userId, pipelineRows || []);
+    live.stats.totalApps = p.totalApps;
+    live.stats.totalApprovals = p.totalApprovals;
+    return live;
   }
 
   function computeLive(userId, raw) {
@@ -244,6 +292,8 @@
         avgDeal: fmtMoney(avgDeal),
         timeToFund: avgTimeToFund(fundedDeals),
         totalDeals: totalDeals,
+        totalApps: 0,
+        totalApprovals: 0,
         volume: fmtMoney(totalVol)
       },
       kpis: {
@@ -279,12 +329,24 @@
     if (!window.REPS || !window.REPS[userId]) return Promise.resolve(null);
     if (!window.CapMuseData) return Promise.resolve(null);
 
-    return window.CapMuseData.getRawDeals().then(function (raw) {
+    let dealsP = window.CapMuseData.getRawDeals();
+    let pipelineP = window.CapMuseData.getPipelineRows
+      ? window.CapMuseData.getPipelineRows()
+      : Promise.resolve([]);
+
+    return Promise.all([dealsP, pipelineP]).then(function (results) {
+      let raw = results[0];
+      let pipelineRows = results[1];
+      let live;
+
       if (!raw || !raw.length) {
-        let empty = emptyLive();
-        return applyLive(userId, empty);
+        live = mergePipelineStats(emptyLive(), userId, pipelineRows);
+        return applyLive(userId, live);
       }
-      let live = computeLive(userId, raw);
+
+      live = computeLive(userId, raw);
+      if (!live) live = emptyLive();
+      live = mergePipelineStats(live, userId, pipelineRows);
       return applyLive(userId, live);
     });
   }
