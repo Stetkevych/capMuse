@@ -217,31 +217,51 @@
     /* REP DETAIL MODAL */
     .cv-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:900; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s; }
     .cv-modal-overlay.open { opacity:1; pointer-events:auto; }
-    .cv-modal { background:var(--surface); border:1px solid var(--border); border-radius:18px; width:min(96vw,860px); max-height:90vh; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,0.55); overflow:hidden; }
-    .cv-modal-head { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid var(--border); flex-shrink:0; gap:12px; }
-    .cv-modal-title { font-size:14px; font-weight:700; color:var(--text-primary); }
+    .cv-modal { background:var(--surface); border:1px solid var(--border); border-radius:18px; width:min(96vw,1020px); max-height:92vh; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,0.55); overflow:hidden; }
+    .cv-modal-head { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--border); flex-shrink:0; gap:12px; flex-wrap:wrap; }
+    .cv-modal-title { font-size:15px; font-weight:700; color:var(--text-primary); }
     .cv-modal-sub { font-size:11px; color:var(--text-muted); margin-top:1px; }
     .cv-modal-close { width:30px; height:30px; border:none; background:var(--surface-2); border-radius:7px; cursor:pointer; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .cv-modal-close:hover { background:var(--border); color:var(--text-primary); }
     .cv-modal-close svg { width:15px; height:15px; }
-    .cv-modal-body { overflow-y:auto; padding:0; flex:1; }
-    .cv-rmod-grid { display:grid; grid-template-columns:repeat(5,1fr); }
-    .cv-rmod-col { padding:14px 16px; border-right:1px solid var(--border); }
-    .cv-rmod-col:last-child { border-right:none; }
-    .cv-rmod-head { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:10px; padding-bottom:7px; border-bottom:2px solid var(--border); }
-    .cv-rmod-stat { padding:8px 0; border-bottom:1px solid var(--border); }
-    .cv-rmod-stat:last-child { border-bottom:none; }
-    .cv-rmod-top { display:flex; align-items:center; gap:8px; }
-    .cv-rmod-cnt { font-family:'Orbitron',sans-serif; font-size:15px; font-weight:700; color:var(--text-primary); margin-left:auto; }
-    .cv-rmod-sub { display:flex; gap:10px; margin-top:4px; padding-left:44px; flex-wrap:wrap; }
-    .cv-rmod-sub span { font-size:10px; color:var(--text-muted); }
-    .cv-rmod-sub b { font-weight:600; color:var(--text-secondary); }
-    .cv-rmod-photo { width:56px; height:56px; border-radius:50%; object-fit:cover; border:2px solid var(--border); flex-shrink:0; }
-    .cv-rmod-initials { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; color:#fff; flex-shrink:0; background:linear-gradient(135deg,#3b82f6,#8b5cf6); }
-    .cv-stat-badge { display:inline-flex; align-items:center; justify-content:center; width:36px; height:20px; border-radius:4px; font-size:10px; font-weight:800; letter-spacing:0.04em; flex-shrink:0; }
-    .cv-stat-badge.inst { background:rgba(16,185,129,0.12); color:#10B981; }
-    .cv-stat-badge.ni   { background:rgba(245,158,11,0.12);  color:#F59E0B; }
-    .cv-stat-badge.nc   { background:rgba(148,163,184,0.12); color:#94A3B8; }
+    .cv-rmod-photo { width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid var(--border); flex-shrink:0; }
+    .cv-rmod-initials { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#fff; flex-shrink:0; background:linear-gradient(135deg,#3b82f6,#8b5cf6); }
+    .cv-rmod-filter-row { display:flex; gap:8px; flex-shrink:0; }
+    .cv-rmod-chip { display:flex; flex-direction:column; align-items:flex-start; gap:1px; padding:6px 11px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-family:inherit; transition:border-color 0.15s; }
+    .cv-rmod-chip:hover { border-color:rgba(37,99,235,0.45); }
+    .cv-rmod-chip.active { border-color:var(--blue); }
+    .cv-rmod-chip-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); }
+    .cv-rmod-chip-val { font-size:11.5px; font-weight:600; color:var(--text-primary); white-space:nowrap; max-width:140px; overflow:hidden; text-overflow:ellipsis; }
+    /* body top: kpis left | table right */
+    .cv-rmod-body-top { display:flex; border-bottom:1px solid var(--border); overflow-y:auto; }
+    .cv-rmod-kpis { display:flex; flex-direction:column; border-right:1px solid var(--border); flex-shrink:0; width:160px; }
+    .cv-rmod-kpi { padding:14px 16px; border-bottom:1px solid var(--border); flex:1; }
+    .cv-rmod-kpi:last-child { border-bottom:none; }
+    .cv-rmod-kpi-val { font-size:21px; font-weight:800; color:var(--text-primary); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; line-height:1; }
+    .cv-rmod-kpi--inst .cv-rmod-kpi-val { color:#10B981; }
+    .cv-rmod-kpi-lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); margin-top:4px; }
+    .cv-rmod-table-wrap { flex:1; overflow:auto; }
+    .cv-rmod-breakdown { width:100%; border-collapse:collapse; }
+    .cv-rmod-breakdown th { padding:10px 14px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); text-align:left; border-bottom:1px solid var(--border); background:var(--table-head); white-space:nowrap; }
+    .cv-rmod-breakdown td { padding:13px 14px; font-size:13px; color:var(--text-secondary); border-bottom:1px solid var(--border); }
+    .cv-rmod-breakdown tbody tr:last-child td { border-bottom:none; }
+    .cv-rmod-breakdown tbody tr:hover td { background:var(--table-hover); }
+    .cv-rmod-dsp-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:4px; font-size:10.5px; font-weight:800; letter-spacing:0.04em; }
+    .cv-rmod-dsp-badge.inst { background:rgba(16,185,129,0.12); color:#10B981; }
+    .cv-rmod-dsp-badge.ni   { background:rgba(245,158,11,0.12);  color:#F59E0B; }
+    .cv-rmod-dsp-badge.nc   { background:rgba(148,163,184,0.12); color:#94A3B8; }
+    /* chart */
+    .cv-rmod-chart-section { padding:14px 20px 18px; flex-shrink:0; overflow:hidden; }
+    .cv-rmod-chart-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .cv-rmod-chart-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
+    .cv-rmod-chart-legend { display:flex; gap:14px; }
+    .cv-rmod-leg { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--text-muted); }
+    .cv-rmod-leg::before { content:''; width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+    .cv-rmod-leg--inst::before { background:#10B981; }
+    .cv-rmod-leg--ni::before   { background:#F59E0B; }
+    .cv-rmod-leg--nc::before   { background:#94A3B8; }
+    .cv-rmod-chart-wrap { position:relative; height:150px; }
+    .cv-rmod-loading { text-align:center; padding:32px 16px; color:var(--text-muted); font-size:13px; }
 
     @keyframes cvFadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
 
@@ -270,10 +290,12 @@
       .burger { display:flex; }
       .page-content { padding:8px 14px 36px; }
       .fb-filter-grid { grid-template-columns:repeat(2,1fr); }
-      .cv-rmod-grid { grid-template-columns:repeat(3,1fr); }
-      .cv-rmod-col:nth-child(3) { border-right:none; }
+      .cv-rmod-body-top { flex-direction:column; }
+      .cv-rmod-kpis { flex-direction:row; width:100%; border-right:none; border-bottom:1px solid var(--border); overflow-x:auto; }
+      .cv-rmod-kpi { border-bottom:none; border-right:1px solid var(--border); min-width:120px; }
+      .cv-rmod-kpi:last-child { border-right:none; }
     }
-    @media (max-width:560px) { .cv-rmod-grid { grid-template-columns:1fr; } .cv-rmod-col { border-right:none; border-bottom:1px solid var(--border); } }
+    @media (max-width:560px) { .cv-rmod-kpi { min-width:100px; } }
   </style>
   <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
@@ -456,13 +478,15 @@
                 <th>Contacts</th>
                 <th>Talk Time</th>
                 <th>Pause Time</th>
+                <th>Total Time</th>
+                <th>Calls / INT</th>
                 <th>Interested</th>
                 <th>NI</th>
                 <th>NC</th>
               </tr>
             </thead>
             <tbody id="cvTableBody">
-              <tr><td colspan="8" class="fb-empty">Loading…</td></tr>
+              <tr><td colspan="10" class="fb-empty">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -493,21 +517,85 @@
 <!-- REP DETAIL MODAL -->
 <div class="cv-modal-overlay" id="cvRepModal" role="dialog" aria-modal="true">
   <div class="cv-modal">
+    <!-- HEAD -->
     <div class="cv-modal-head">
-      <div style="display:flex;align-items:center;gap:14px;">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
         <img id="cvRepModalPhoto" class="cv-rmod-photo" src="" alt="" hidden />
         <div id="cvRepModalInitials" class="cv-rmod-initials" hidden></div>
-        <div>
+        <div style="min-width:0;">
           <div class="cv-modal-title" id="cvRepModalName"></div>
-          <div class="cv-modal-sub">Outbound call stats</div>
+          <div class="cv-modal-sub">Outbound performance</div>
         </div>
+      </div>
+      <div class="cv-rmod-filter-row">
+        <button class="cv-rmod-chip" id="cvRepChipPeriod" data-rchip="period">
+          <span class="cv-rmod-chip-lbl">Date Range</span>
+          <span class="cv-rmod-chip-val" id="cvRepChipPeriodVal">Last 7 Days</span>
+        </button>
+        <button class="cv-rmod-chip" id="cvRepChipCampaign" data-rchip="campaign">
+          <span class="cv-rmod-chip-lbl">Campaign</span>
+          <span class="cv-rmod-chip-val" id="cvRepChipCampaignVal">All</span>
+        </button>
       </div>
       <button class="cv-modal-close" id="cvRepModalClose" aria-label="Close">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l10 10M15 5L5 15" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <div class="cv-modal-body" id="cvRepModalBody">
-      <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">Loading…</div>
+    <!-- KPIs | TABLE -->
+    <div class="cv-rmod-body-top">
+      <div class="cv-rmod-kpis">
+        <div class="cv-rmod-kpi">
+          <div class="cv-rmod-kpi-val" id="cvRmodTotalTime">—</div>
+          <div class="cv-rmod-kpi-lbl">Total Time</div>
+        </div>
+        <div class="cv-rmod-kpi">
+          <div class="cv-rmod-kpi-val" id="cvRmodTalkTime">—</div>
+          <div class="cv-rmod-kpi-lbl">Talk Time</div>
+        </div>
+        <div class="cv-rmod-kpi">
+          <div class="cv-rmod-kpi-val" id="cvRmodContacts">—</div>
+          <div class="cv-rmod-kpi-lbl">Contacts</div>
+        </div>
+        <div class="cv-rmod-kpi cv-rmod-kpi--inst">
+          <div class="cv-rmod-kpi-val" id="cvRmodInst">—</div>
+          <div class="cv-rmod-kpi-lbl">Interested</div>
+        </div>
+        <div class="cv-rmod-kpi">
+          <div class="cv-rmod-kpi-val" id="cvRmodCallsPerInt">—</div>
+          <div class="cv-rmod-kpi-lbl">Calls / INT</div>
+        </div>
+      </div>
+      <div class="cv-rmod-table-wrap">
+        <table class="cv-rmod-breakdown">
+          <thead>
+            <tr>
+              <th>Disposition</th>
+              <th>Calls</th>
+              <th>Contacts</th>
+              <th>Talk Time</th>
+              <th>Pause Time</th>
+              <th>Calls / INT</th>
+            </tr>
+          </thead>
+          <tbody id="cvRmodTableBody">
+            <tr><td colspan="6" class="cv-rmod-loading">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- CHART -->
+    <div class="cv-rmod-chart-section">
+      <div class="cv-rmod-chart-head">
+        <span class="cv-rmod-chart-title">Performance Over Time</span>
+        <div class="cv-rmod-chart-legend">
+          <span class="cv-rmod-leg cv-rmod-leg--inst">Interested</span>
+          <span class="cv-rmod-leg cv-rmod-leg--ni">NI</span>
+          <span class="cv-rmod-leg cv-rmod-leg--nc">NC</span>
+        </div>
+      </div>
+      <div class="cv-rmod-chart-wrap">
+        <canvas id="cvRmodChart"></canvas>
+      </div>
     </div>
   </div>
 </div>
@@ -549,6 +637,7 @@
 })();
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="Assets/profile-stats.js"></script>
 <script src="Assets/capmuse-auth.js"></script>
 <script>(function(){ if(window.CapMuseAuth) window.CapMuseAuth.initPage({requireLogin:true}); })();</script>
@@ -571,10 +660,20 @@
 
   /* ── MODAL STATE ── */
   var currentChip      = null;
+  var filterContext    = 'main';
   var pendingPeriod    = 'last7days';
   var pendingCampaign  = '';
   var pendingCustStart = '';
   var pendingCustEnd   = '';
+
+  /* ── REP MODAL STATE ── */
+  var currentRepName   = '';
+  var currentRepUserId = '';
+  var repActivePeriod  = 'last7days';
+  var repActiveCampaign= '';
+  var repCustomStart   = '';
+  var repCustomEnd     = '';
+  var repChart         = null;
 
   /* ── CONSTANTS ── */
   var PERIOD_LABELS = {
@@ -663,7 +762,9 @@
       var fv=getFilterVals(u);
       return {name:u.user, val:fv.val, con:fv.con, tt:fv.tt, inst:u.inst||0, ni:u.ni||0, nc:u.nc||0,
               inst_tt:u.inst_tt||0, ni_tt:u.ni_tt||0, nc_tt:u.nc_tt||0,
-              pt:(u.inst_pt||0)+(u.ni_pt||0)+(u.nc_pt||0)};
+              pt:(u.inst_pt||0)+(u.ni_pt||0)+(u.nc_pt||0),
+              total_calls:(u.inst||0)+(u.ni||0)+(u.nc||0),
+              total_time:u.total_time||0};
     }).filter(function(r){ return r.val>0; }).sort(function(a,b){ return b.val-a.val; });
   }
 
@@ -765,7 +866,7 @@
   function renderTable(users) {
     var sorted=sortedUsers(users), tbody=document.getElementById('cvTableBody');
     if(!tbody) return;
-    if(!sorted.length){ tbody.innerHTML='<tr><td colspan="8" class="fb-empty">No data for this period</td></tr>'; return; }
+    if(!sorted.length){ tbody.innerHTML='<tr><td colspan="10" class="fb-empty">No data for this period</td></tr>'; return; }
     tbody.innerHTML=sorted.map(function(r,i){
       var rankHtml=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
       var photoFile=getPhotoFile(r.name);
@@ -781,6 +882,8 @@
         +'<td>'+(r.con||'—')+'</td>'
         +'<td class="cv-tt">'+formatTT(ttTotal||r.tt)+'</td>'
         +'<td class="cv-tt">'+(r.pt ? formatTT(r.pt) : '—')+'</td>'
+        +'<td class="cv-tt">'+(r.total_time ? formatTT(r.total_time) : '—')+'</td>'
+        +'<td>'+(r.inst>0 ? (r.total_calls/r.inst).toFixed(1) : '—')+'</td>'
         +'<td class="cv-inst">'+r.inst+'</td>'
         +'<td class="cv-ni">'+r.ni+'</td>'
         +'<td class="cv-nc">'+r.nc+'</td>'
@@ -807,12 +910,20 @@
   }
 
   /* ── FILTER MODAL ── */
-  function openFilterModal(chipType) {
-    currentChip     = chipType;
-    pendingPeriod   = activePeriod;
-    pendingCampaign = activeCampaign;
-    pendingCustStart= customStart;
-    pendingCustEnd  = customEnd;
+  function openFilterModal(chipType, ctx) {
+    currentChip  = chipType;
+    filterContext = ctx || 'main';
+    if (filterContext === 'rep') {
+      pendingPeriod    = repActivePeriod;
+      pendingCampaign  = repActiveCampaign;
+      pendingCustStart = repCustomStart;
+      pendingCustEnd   = repCustomEnd;
+    } else {
+      pendingPeriod    = activePeriod;
+      pendingCampaign  = activeCampaign;
+      pendingCustStart = customStart;
+      pendingCustEnd   = customEnd;
+    }
 
     var titles={period:'Date Range',campaign:'Campaign'};
     setText('cvModalTitle', titles[chipType]||'Filter');
@@ -872,33 +983,52 @@
 
   function applyFilterModal() {
     var needsReload=false;
-    if (currentChip==='period') {
-      if(activePeriod!==pendingPeriod){ activePeriod=pendingPeriod; needsReload=true; }
-      if(activePeriod==='custom'){
-        var ds=document.getElementById('cvModalDateStart'), de=document.getElementById('cvModalDateEnd');
-        if(ds) customStart=ds.value; if(de) customEnd=de.value; needsReload=true;
+    if (filterContext==='rep') {
+      if (currentChip==='period') {
+        if(repActivePeriod!==pendingPeriod){ repActivePeriod=pendingPeriod; needsReload=true; }
+        if(repActivePeriod==='custom'){
+          var ds=document.getElementById('cvModalDateStart'), de=document.getElementById('cvModalDateEnd');
+          if(ds) repCustomStart=ds.value; if(de) repCustomEnd=de.value; needsReload=true;
+        }
+      } else if (currentChip==='campaign') {
+        if(repActiveCampaign!==pendingCampaign){ repActiveCampaign=pendingCampaign; needsReload=true; }
       }
-    } else if (currentChip==='campaign') {
-      if(activeCampaign!==pendingCampaign){ activeCampaign=pendingCampaign; needsReload=true; }
+      closeFilterModal();
+      updateRepChipLabels();
+      if(needsReload) loadRepModalData();
+    } else {
+      if (currentChip==='period') {
+        if(activePeriod!==pendingPeriod){ activePeriod=pendingPeriod; needsReload=true; }
+        if(activePeriod==='custom'){
+          var ds=document.getElementById('cvModalDateStart'), de=document.getElementById('cvModalDateEnd');
+          if(ds) customStart=ds.value; if(de) customEnd=de.value; needsReload=true;
+        }
+      } else if (currentChip==='campaign') {
+        if(activeCampaign!==pendingCampaign){ activeCampaign=pendingCampaign; needsReload=true; }
+      }
+      closeFilterModal();
+      updateChipLabels();
+      if(needsReload) loadData(); else renderAll(currentUsers);
     }
-    closeFilterModal();
-    updateChipLabels();
-    if(needsReload) loadData(); else renderAll(currentUsers);
   }
 
   function clearFilterModal() {
-    if(currentChip==='period')   { pendingPeriod='last7days'; customStart=''; customEnd=''; }
+    if(currentChip==='period')        { pendingPeriod='last7days'; pendingCustStart=''; pendingCustEnd=''; }
     else if(currentChip==='campaign') { pendingCampaign=''; }
     buildModalOptions(currentChip,'');
   }
 
-  /* ── REP DETAIL MODAL ── */
-  function renderRepModal(name) {
-    var nameEl=document.getElementById('cvRepModalName'), photoEl=document.getElementById('cvRepModalPhoto');
-    var initEl=document.getElementById('cvRepModalInitials'), body=document.getElementById('cvRepModalBody');
-    if(!body) return;
-    if(nameEl) nameEl.textContent=name;
+  /* ── REP MODAL: helpers ── */
+  function updateRepChipLabels() {
+    setText('cvRepChipPeriodVal', PERIOD_LABELS[repActivePeriod]||repActivePeriod);
+    var c=campaigns.find(function(x){ return x.id===repActiveCampaign; });
+    setText('cvRepChipCampaignVal', repActiveCampaign ? (c?c.name:'Campaign') : 'All');
+    document.getElementById('cvRepChipPeriod').classList.toggle('active',   repActivePeriod!=='last7days');
+    document.getElementById('cvRepChipCampaign').classList.toggle('active', !!repActiveCampaign);
+  }
 
+  function setRepModalPhoto(name) {
+    var photoEl=document.getElementById('cvRepModalPhoto'), initEl=document.getElementById('cvRepModalInitials');
     var photoFile=getPhotoFile(name);
     if(photoFile&&photoEl){
       photoEl.onload=function(){ photoEl.hidden=false; if(initEl) initEl.hidden=true; };
@@ -908,32 +1038,125 @@
       if(photoEl) photoEl.hidden=true;
       if(initEl){ initEl.textContent=getInitials(name); initEl.hidden=false; }
     }
+  }
 
-    var u=currentUsers.find(function(x){ return x.user===name; })||{};
-    var at=allTimeCache.find(function(x){ return x.user===name; })||{};
+  function renderRepStats(u) {
+    if(!u){ u={}; }
+    var totalCalls=(u.inst||0)+(u.ni||0)+(u.nc||0);
+    var totalCon=(u.inst_con||0)+(u.ni_con||0)+(u.nc_con||0);
+    var totalTT=(u.inst_tt||0)+(u.ni_tt||0)+(u.nc_tt||0);
+    var totalPT=(u.inst_pt||0)+(u.ni_pt||0)+(u.nc_pt||0);
 
-    function statRow(key,label){
-      var calls=u[key]||0, tt=u[key+'_tt']||0, atCalls=at[key]||0, badgeCls={inst:'inst',ni:'ni',nc:'nc'}[key]||'';
-      return '<div class="cv-rmod-stat">'
-        +'<div class="cv-rmod-top"><span class="cv-stat-badge '+badgeCls+'">'+label+'</span><span class="cv-rmod-cnt">'+calls+'</span></div>'
-        +'<div class="cv-rmod-sub"><span>Talk Time <b>'+formatTT(tt)+'</b></span><span>Avg <b>'+formatAvg(tt,calls)+'</b></span>'
-        +(atCalls?'<span>All Time <b>'+atCalls+'</b></span>':'')+'</div></div>';
+    setText('cvRmodTotalTime',   u.total_time ? formatTT(u.total_time) : (totalTT ? formatTT(totalTT) : '—'));
+    setText('cvRmodTalkTime',    totalTT ? formatTT(totalTT) : '—');
+    setText('cvRmodContacts',    totalCon || '—');
+    setText('cvRmodInst',        u.inst   || '—');
+    setText('cvRmodCallsPerInt', u.inst>0 ? (totalCalls/u.inst).toFixed(1) : '—');
+
+    var tbody=document.getElementById('cvRmodTableBody');
+    if(!tbody) return;
+    var rows=[
+      {key:'inst', lbl:'INST', calls:u.inst||0, con:u.inst_con||0, tt:u.inst_tt||0, pt:u.inst_pt||0},
+      {key:'ni',   lbl:'NI',   calls:u.ni  ||0, con:u.ni_con  ||0, tt:u.ni_tt  ||0, pt:u.ni_pt  ||0},
+      {key:'nc',   lbl:'NC',   calls:u.nc  ||0, con:u.nc_con  ||0, tt:u.nc_tt  ||0, pt:u.nc_pt  ||0},
+    ];
+    tbody.innerHTML=rows.map(function(r){
+      var allCalls=(u.inst||0)+(u.ni||0)+(u.nc||0);
+      var ratio=r.key==='inst'&&r.calls>0 ? (allCalls/r.calls).toFixed(1) : '—';
+      return '<tr>'
+        +'<td><span class="cv-rmod-dsp-badge '+r.key+'">'+r.lbl+'</span></td>'
+        +'<td>'+r.calls+'</td>'
+        +'<td>'+r.con+'</td>'
+        +'<td class="cv-tt">'+formatTT(r.tt)+'</td>'
+        +'<td class="cv-tt">'+formatTT(r.pt)+'</td>'
+        +'<td>'+(r.key==='inst'?ratio:'—')+'</td>'
+        +'</tr>';
+    }).join('');
+  }
+
+  function renderRepChart(periods) {
+    var canvas=document.getElementById('cvRmodChart');
+    if(!canvas||typeof Chart==='undefined') return;
+    if(repChart){ repChart.destroy(); repChart=null; }
+    var isDark=document.documentElement.getAttribute('data-theme')==='dark';
+    var gridC=isDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+    var tickC=isDark?'#7A8FA8':'#999';
+    repChart=new Chart(canvas,{
+      type:'bar',
+      data:{
+        labels:periods.map(function(p){ return p.label; }),
+        datasets:[
+          {label:'Interested',data:periods.map(function(p){ return p.inst; }),backgroundColor:'rgba(16,185,129,0.75)',borderRadius:3,borderSkipped:false},
+          {label:'NI',        data:periods.map(function(p){ return p.ni;   }),backgroundColor:'rgba(245,158,11,0.65)',borderRadius:3,borderSkipped:false},
+          {label:'NC',        data:periods.map(function(p){ return p.nc;   }),backgroundColor:'rgba(148,163,184,0.55)',borderRadius:3,borderSkipped:false},
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{mode:'index',intersect:false} },
+        scales:{
+          x:{ grid:{color:gridC}, ticks:{color:tickC,font:{size:9.5}}, border:{color:gridC} },
+          y:{ grid:{color:gridC}, ticks:{color:tickC,font:{size:9.5},precision:0}, border:{color:gridC}, beginAtZero:true }
+        }
+      }
+    });
+  }
+
+  /* ── REP MODAL: load & open ── */
+  async function loadRepModalData() {
+    var tbody=document.getElementById('cvRmodTableBody');
+    if(tbody) tbody.innerHTML='<tr><td colspan="6" class="cv-rmod-loading">Loading…</td></tr>';
+    ['cvRmodTotalTime','cvRmodTalkTime','cvRmodContacts','cvRmodInst','cvRmodCallsPerInt'].forEach(function(id){ setText(id,'—'); });
+
+    try {
+      var range=repActivePeriod==='custom'
+        ? {start:repCustomStart||isoDate(new Date()), end:repCustomEnd||isoDate(new Date())}
+        : getDateRange(repActivePeriod);
+
+      var body={start_date:range.start, end_date:range.end};
+      if(repActiveCampaign) body.campaign_id=repActiveCampaign;
+
+      var summaryRes=await fetch(CONVOSO+'/convoso/all-users-summary',{
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+      });
+      var summaryData=await summaryRes.json();
+      var users=summaryData.users||[];
+      var u=users.find(function(x){ return x.user_id===currentRepUserId; })||
+             users.find(function(x){ return x.user===currentRepName; })||null;
+      renderRepStats(u);
+
+      if(currentRepUserId) {
+        var histBody={user_id:currentRepUserId, start_date:range.start, end_date:range.end};
+        if(repActiveCampaign) histBody.campaign_id=repActiveCampaign;
+        var histRes=await fetch(CONVOSO+'/convoso/rep-history',{
+          method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(histBody)
+        });
+        var histData=await histRes.json();
+        renderRepChart(histData.periods||[]);
+      }
+    } catch(e) {
+      console.error('[rep-modal]',e);
+      if(tbody) tbody.innerHTML='<tr><td colspan="6" class="cv-rmod-loading">Error loading data</td></tr>';
     }
-
-    body.innerHTML='<div class="cv-rmod-grid">'
-      +['inst','ni','nc'].map(function(k){ var lbl={inst:'Interested',ni:'NI',nc:'NC'}[k]; return '<div class="cv-rmod-col"><div class="cv-rmod-head">'+lbl+'</div>'+statRow(k,k==='inst'?'INST':k.toUpperCase())+'</div>'; }).join('')
-      +'<div class="cv-rmod-col"><div class="cv-rmod-head">Talk Time Total</div>'
-      +'<div class="cv-rmod-stat"><div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:800;color:var(--text-primary);padding:8px 0">'+formatTT((u.inst_tt||0)+(u.ni_tt||0)+(u.nc_tt||0))+'</div></div>'
-      +'<div class="cv-rmod-stat"><div style="font-size:11px;color:var(--text-muted);padding:4px 0">Period: '+(PERIOD_LABELS[activePeriod]||activePeriod)+'</div></div></div>'
-      +'<div class="cv-rmod-col"><div class="cv-rmod-head">Contacts</div>'
-      +'<div class="cv-rmod-stat"><div style="font-family:Orbitron,sans-serif;font-size:18px;font-weight:800;color:#10B981;padding:8px 0">'+((u.inst_con||0)+(u.ni_con||0)+(u.nc_con||0)||'—')+'</div></div></div>'
-      +'</div>';
   }
 
   function openRepModal(name) {
-    renderRepModal(name);
+    currentRepName   = name;
+    var found=currentUsers.find(function(x){ return x.user===name; });
+    currentRepUserId = found ? (found.user_id||'') : '';
+    repActivePeriod  = activePeriod;
+    repActiveCampaign= activeCampaign;
+    repCustomStart   = customStart;
+    repCustomEnd     = customEnd;
+
+    setText('cvRepModalName', name);
+    setRepModalPhoto(name);
+    updateRepChipLabels();
+
     var modal=document.getElementById('cvRepModal');
     if(modal){ modal.classList.add('open'); document.body.style.overflow='hidden'; }
+
+    loadRepModalData();
   }
 
   /* ── LOAD DATA ── */
@@ -1004,9 +1227,23 @@
 
     /* Rep detail modal close */
     var repModal=document.getElementById('cvRepModal'), repClose=document.getElementById('cvRepModalClose');
-    function closeRepModal(){ if(repModal){ repModal.classList.remove('open'); document.body.style.overflow=''; } }
+    function closeRepModal(){
+      if(repModal){ repModal.classList.remove('open'); document.body.style.overflow=''; }
+      if(repChart){ repChart.destroy(); repChart=null; }
+    }
     if(repClose) repClose.addEventListener('click', closeRepModal);
     if(repModal) repModal.addEventListener('click',function(e){ if(e.target===repModal) closeRepModal(); });
+
+    /* Rep modal filter chips */
+    ['cvRepChipPeriod','cvRepChipCampaign'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('click',function(e){
+        e.stopPropagation();
+        var chip=el.getAttribute('data-rchip');
+        openFilterModal(chip, 'rep');
+      });
+    });
 
     /* Click rep row to open rep modal */
     document.addEventListener('click',function(e){

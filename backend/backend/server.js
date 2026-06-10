@@ -563,6 +563,75 @@ app.get("/convoso/debug-campaign-filter", async (req, res) => {
   }
 });
 
+app.post("/convoso/rep-history", async (req, res) => {
+  try {
+    const { user_id, start_date, end_date, campaign_id } = req.body;
+    if (!user_id || !start_date || !end_date) {
+      return res.status(400).json({ error: "Missing user_id, start_date, or end_date" });
+    }
+
+    const startDt  = new Date(start_date);
+    const endDt    = new Date(end_date);
+    const diffDays = Math.ceil((endDt - startDt) / 86400000) + 1;
+    const MON      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const periods  = [];
+
+    if (diffDays <= 14) {
+      for (let d = new Date(startDt); d <= endDt; d.setDate(d.getDate() + 1)) {
+        const s = d.toISOString().slice(0, 10);
+        periods.push({ start: s, end: s, label: MON[d.getMonth()] + ' ' + d.getDate() });
+      }
+    } else if (diffDays <= 90) {
+      for (let d = new Date(startDt); d <= endDt; d.setDate(d.getDate() + 7)) {
+        const wS = new Date(d), wE = new Date(d);
+        wE.setDate(wE.getDate() + 6);
+        if (wE > endDt) wE.setTime(endDt.getTime());
+        periods.push({ start: wS.toISOString().slice(0,10), end: wE.toISOString().slice(0,10), label: MON[wS.getMonth()] + ' ' + wS.getDate() });
+      }
+    } else {
+      for (let d = new Date(startDt.getFullYear(), startDt.getMonth(), 1); d <= endDt; d.setMonth(d.getMonth() + 1)) {
+        const mS = new Date(d), mE = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+        if (mE > endDt) mE.setTime(endDt.getTime());
+        periods.push({ start: mS.toISOString().slice(0,10), end: mE.toISOString().slice(0,10), label: MON[mS.getMonth()] + " '" + String(mS.getFullYear()).slice(2) });
+      }
+    }
+
+    const extraParams = {};
+    if (campaign_id) extraParams.campaign_id = campaign_id;
+
+    const results = [];
+    const BATCH = 3;
+    for (let i = 0; i < periods.length; i += BATCH) {
+      const batchOut = await Promise.all(periods.slice(i, i + BATCH).map(async (p) => {
+        const ds = `${p.start} 00:00:00`, de = `${p.end} 23:59:59`;
+        const [iMap, nMap, cMap] = await Promise.all([
+          fetchAllRepPages(ds, de, "inst", extraParams),
+          fetchAllRepPages(ds, de, "NI",   extraParams),
+          fetchAllRepPages(ds, de, "NC",   extraParams),
+        ]);
+        const ir = iMap[user_id] || {}, nr = nMap[user_id] || {}, cr = cMap[user_id] || {};
+        return {
+          label:      p.label,
+          inst:       (ir.calls      || 0),
+          ni:         (nr.calls      || 0),
+          nc:         (cr.calls      || 0),
+          contacts:   (ir.connects   || 0) + (nr.connects   || 0) + (cr.connects   || 0),
+          talk_time:  (ir.talk_time  || 0) + (nr.talk_time  || 0) + (cr.talk_time  || 0),
+          pause_time: (ir.pause_time || 0) + (nr.pause_time || 0) + (cr.pause_time || 0),
+          total_time: (ir.total_time || 0) + (nr.total_time || 0) + (cr.total_time || 0),
+        };
+      }));
+      results.push(...batchOut);
+    }
+
+    console.log(`[rep-history] ${results.length} periods for user ${user_id}`);
+    res.json({ user_id, periods: results });
+  } catch (err) {
+    console.error("[rep-history]", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Convoso server running on port ${PORT}`);
 });
