@@ -407,299 +407,47 @@
       </div>
 
       <!-- KPI strip -->
-      <div class="kpi-strip">
-        <div class="kpi-card kc-purple">
-          <div class="kpi-label">Active Deals</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-        <div class="kpi-card kc-blue">
-          <div class="kpi-label">Pipeline Value</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-        <div class="kpi-card kc-amber">
-          <div class="kpi-label">Avg Deal Size</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta neu"></div>
-        </div>
-        <div class="kpi-card kc-green">
-          <div class="kpi-label">Funded This Month</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
+      <div class="kpi-strip" style="grid-template-columns:repeat(6,1fr)">
+        <div class="kpi-card kc-purple"><div class="kpi-label">Calls</div><div class="kpi-value" id="kpiCalls">—</div></div>
+        <div class="kpi-card kc-blue"><div class="kpi-label">Apps</div><div class="kpi-value" id="kpiApps">—</div></div>
+        <div class="kpi-card kc-amber"><div class="kpi-label">Approvals</div><div class="kpi-value" id="kpiApprovals">—</div></div>
+        <div class="kpi-card kc-green"><div class="kpi-label">Funded</div><div class="kpi-value" id="kpiFunded">—</div></div>
+        <div class="kpi-card kc-blue"><div class="kpi-label">Funded Amount</div><div class="kpi-value" id="kpiFundedAmt">—</div></div>
+        <div class="kpi-card kc-green"><div class="kpi-label">Revenue</div><div class="kpi-value" id="kpiRevenue">—</div></div>
       </div>
 
-      <!-- ── Stat Cards ── -->
-      <div class="cards-col" id="statCards">
 
-        <!-- Card 1: Most Pulls Today -->
-        <div class="stat-card blue-1" data-person-id="matt" style="grid-column:span 6;align-items:flex-start;padding:20px 24px;">
-          <div class="card-left">
-            <p class="card-headline">Most applications pulled<br />today:</p>
-            <div class="card-names">
-              <span class="card-name">Matt</span>
-            </div>
-            <span class="card-big-single"></span>
-          </div>
-          <div class="card-right">
-            <div class="photo-wrap-blue">
-              <img src="Assets/reps/matthew.png" alt="Matthew" class="card-rep-photo" />
-            </div>
-          </div>
-        </div>
 
-        <!-- Card 2: Most Owners Today -->
-        <div class="stat-card plum" data-person-id="gabe" style="grid-column:span 6;align-items:flex-start;padding:20px 24px;">
-          <div class="card-left">
-            <p class="card-headline">Most deals owned<br />today:</p>
-            <div class="card-names">
-              <span class="card-name" style="color:#C084FC">Gabe</span>
-            </div>
-            <span class="card-big-single" style="background:linear-gradient(135deg,#F0ABFC,#C084FC,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(232,121,249,0.55))"></span>
-          </div>
-          <div class="card-right">
-            <div class="card-rep-photo-wrap">
-              <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Gabriel" class="card-rep-photo" />
-            </div>
-          </div>
-        </div>
 
-        <!-- Card 3: Yesterday vs Today -->
-        <div class="stat-card navy" style="grid-column:span 8;align-items:flex-start;padding:22px 26px;">
-          <div class="vs-card-body">
-            <p class="card-headline" style="margin-bottom:16px;">Most owners: Yesterday vs. Today</p>
-            <div class="vs-row">
-              <span class="vs-label">Yesterday</span>
-              <div class="vs-rep-wrap" data-person-id="gabe">
-                <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Gabriel" class="vs-rep-photo" />
-                <span class="vs-rep-name">Gabe</span>
-              </div>
-              <span class="vs-count"></span>
-            </div>
-            <div class="vs-divider"></div>
-            <div class="vs-row">
-              <span class="vs-label">Today</span>
-              <div class="vs-rep-wrap" data-person-id="jason">
-                <img src="Assets/reps/Cartoon/IvanCartoon.png" alt="Jason" class="vs-rep-photo" />
-                <span class="vs-rep-name">Jason</span>
-              </div>
-              <span class="vs-count" style="color:#34D399"></span>
-            </div>
-          </div>
-        </div>
 
-        <!-- Card 4: Most Owners Last Week -->
-        <div class="stat-card teal" data-person-id="gabe" style="grid-column:span 4;align-items:flex-start;padding:20px 22px;">
-          <div class="card-left">
-            <p class="card-headline" style="color:rgba(110,231,183,0.85)">Most deals owned<br />last week:</p>
-            <div class="card-names">
-              <span class="card-name" style="color:#34D399">Gabe</span>
-            </div>
-            <span class="card-big-single" style="background:linear-gradient(135deg,#6EE7B7,#34D399,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(52,211,153,0.55))"></span>
-          </div>
-          <div class="card-right">
-            <div class="photo-wrap-teal" style="width:72px;height:72px;">
-              <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Gabriel" class="card-rep-photo" />
-            </div>
-          </div>
-        </div>
 
-      </div>
-      <!-- END Stat Cards -->
 
-      <!-- Stage funnel -->
-      <div class="funnel-row">
-        <div class="funnel-step fs-new">
-          <div class="funnel-step-label">New App</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
+      <section class="fb-table-card" aria-label="Pipeline Rep Leaderboard">
+        <div class="fb-table-head">
+          <h2 class="fb-table-title">Pipeline — Rep Leaderboard</h2>
+          <span class="fb-table-meta" id="kpiRecords">All time</span>
         </div>
-        <div class="funnel-step fs-review">
-          <div class="funnel-step-label">Under Review</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
-        </div>
-        <div class="funnel-step fs-approv">
-          <div class="funnel-step-label">Approved</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
-        </div>
-        <div class="funnel-step fs-funded">
-          <div class="funnel-step-label">Funded</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
-        </div>
-        <div class="funnel-step fs-decl">
-          <div class="funnel-step-label">Declined</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
-        </div>
-      </div>
-
-      <!-- Controls -->
-      <div class="controls-row">
-        <div class="tab-bar" role="tablist">
-          <a class="tab active" href="#" role="tab">All <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">New App <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Under Review <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Approved <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Funded <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Declined <span class="tab-count"></span></a>
-        </div>
-        <div class="filter-bar">
-          <div class="filter-search-wrap">
-            <svg class="filter-search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
-            <input class="filter-search" type="search" placeholder="Search deals…" aria-label="Search deals" />
-          </div>
-          <select class="filter-select" aria-label="Filter by rep"><option value="">All Reps</option><option>Anderson</option><option>Frank</option><option>Blake</option><option>Ivan</option><option>Kip</option><option>Colin</option><option>Matthew</option><option>Santi</option><option>Rio</option></select>
-          <select class="filter-select" aria-label="Filter by lender"><option value="">All Lenders</option><option>Credibly</option><option>OnDeck</option><option>BlueVine</option><option>Kabbage</option><option>Fundbox</option><option>Rapid Finance</option></select>
-          <select class="filter-select" aria-label="Filter by position"><option value="">All Positions</option><option>1st</option><option>2nd</option><option>3rd</option></select>
-          <div class="filter-spacer"></div>
-          <button class="filter-export"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2M10 3v10M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>Export</button>
-        </div>
-      </div>
-
-      <div class="data-card">
-        <table class="data-table" aria-label="Pipeline table">
+        <table class="fb-rep-table" id="pipelineTable" aria-label="Pipeline rep leaderboard">
           <thead>
             <tr>
               <th>#</th>
-              <th>Business</th>
-              <th>Requested</th>
-              <th>Lender</th>
               <th>Rep</th>
-              <th>Stage</th>
-              <th>Factor Rate</th>
-              <th>Position</th>
-              <th>Date Applied</th>
-              <th>Action</th>
+              <th>Calls</th>
+              <th>Apps</th>
+              <th>C→A %</th>
+              <th>Approvals</th>
+              <th>A→Ap %</th>
+              <th>Funded</th>
+              <th>Ap→F %</th>
+              <th>Funded Amt</th>
+              <th>Avg Pts</th>
+              <th>Avg Amt</th>
+              <th>Revenue</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#34D399)">MH</div><span class="biz-cell-name">Metro Holdings</span></div></td>
-              <td></td>
-              <td>Credibly</td>
-              <td>Anderson</td>
-              <td><span class="status-chip chip-green">Funded</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>May 15</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#2563EB)">AF</div><span class="biz-cell-name">Apex Financial</span></div></td>
-              <td></td>
-              <td>BlueVine</td>
-              <td>Frank</td>
-              <td><span class="status-chip chip-amber">Approved</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>May 22</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#34D399,#2563EB)">BC</div><span class="biz-cell-name">BlueStar Capital</span></div></td>
-              <td></td>
-              <td>OnDeck</td>
-              <td>Blake</td>
-              <td><span class="status-chip chip-blue">Under Review</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>May 28</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>4</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#6366F1,#2563EB)">NT</div><span class="biz-cell-name">NovaTech LLC</span></div></td>
-              <td></td>
-              <td>Kabbage</td>
-              <td>Ivan</td>
-              <td><span class="status-chip chip-blue">Under Review</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>2nd</td>
-              <td>Jun 1</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>5</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#10B981)">SD</div><span class="biz-cell-name">Sierra Dynamics</span></div></td>
-              <td></td>
-              <td>Rapid Finance</td>
-              <td>Colin</td>
-              <td><span class="status-chip chip-purple">New App</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>Jun 3</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>6</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#10B981,#0F4C81)">CP</div><span class="biz-cell-name">Capital Partners</span></div></td>
-              <td></td>
-              <td>Credibly</td>
-              <td>Kip</td>
-              <td><span class="status-chip chip-amber">Approved</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>2nd</td>
-              <td>May 18</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>7</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#6366F1)">VS</div><span class="biz-cell-name">Vertex Solutions</span></div></td>
-              <td></td>
-              <td>Fundbox</td>
-              <td>Santi</td>
-              <td><span class="status-chip chip-blue">Under Review</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>Jun 2</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>8</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#34D399)">PV</div><span class="biz-cell-name">Pacific Ventures</span></div></td>
-              <td></td>
-              <td>OnDeck</td>
-              <td>Matthew</td>
-              <td><span class="status-chip chip-purple">New App</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>Jun 4</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>9</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">SH</div><span class="biz-cell-name">Summit Holdings</span></div></td>
-              <td></td>
-              <td>BlueVine</td>
-              <td>Anderson</td>
-              <td><span class="status-chip chip-green">Funded</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>Apr 30</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>10</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#EF4444,#6366F1)">HF</div><span class="biz-cell-name">Harbor Finance</span></div></td>
-              <td></td>
-              <td>Kabbage</td>
-              <td>Rio</td>
-              <td><span class="status-chip chip-red">Declined</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>2nd</td>
-              <td>May 25</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-          </tbody>
+          <tbody id="pipelineTableBody"></tbody>
         </table>
-      </div>
+      </section>
 
     </main>
   </div>
@@ -754,5 +502,6 @@
   })();
 </script>
 <script src="Assets/capmuse-search.js"></script>
+<script src="capmuse-pipeline.js"></script>
 </body>
 </html>
