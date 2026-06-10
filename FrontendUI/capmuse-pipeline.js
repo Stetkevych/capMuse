@@ -152,7 +152,7 @@
 
       byRep[rep].apps++;
 
-      if (r['Date Applied'] || amt > 0 || r['Position']) {
+      if (r['Date Applied'] || amt > 0) {
         byRep[rep].approvals++;
       }
 
