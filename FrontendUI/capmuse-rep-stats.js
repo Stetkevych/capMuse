@@ -2,12 +2,49 @@
 (function () {
   'use strict';
 
+  let PACKAGE_OWNER_RECORD_FIXES = {
+    '3793076000601237337': 'House .',
+    '3793076000605384128': 'House .',
+    '3793076000606189343': 'House .',
+    '3793076000624144182': 'House .',
+    '3793076000649034499': 'House .'
+  };
+
   function nn(v) { return parseFloat(String(v || '').replace(/[$,]/g, '')) || 0; }
+
+  function normStr(s) {
+    return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  function isHouseName(name) {
+    return normStr(name).replace(/\./g, '').trim() === 'house';
+  }
+
+  function fundingBookOwnerFromRecord(r) {
+    return (r.funding_book_owner || r.Funding_Book_Owner || r['Funding_Book_Owner.name'] || r.Owner || r['Owner.name'] || '').trim();
+  }
+
+  function packageOwnerFromRecord(r) {
+    let recordId = String(r.record_id || r.id || '');
+    if (PACKAGE_OWNER_RECORD_FIXES[recordId]) return PACKAGE_OWNER_RECORD_FIXES[recordId];
+
+    let fromLookup = (r['Package_Owner.name'] || (r.Package_Owner && r.Package_Owner.name) || r.package_owner_name || '').trim();
+    if (fromLookup) return fromLookup;
+
+    let flat = (r.package_owner || '').trim();
+    let puller = (r.puller || r.Puller || r['Puller.name'] || '').trim();
+    let fbOwner = fundingBookOwnerFromRecord(r);
+
+    if (flat && puller && normStr(flat) === normStr(puller) && fbOwner && isHouseName(fbOwner)) {
+      return fbOwner;
+    }
+    return flat;
+  }
 
   function fmtMoney(v) {
     if (v == null || v === '') return '';
     let n = typeof v === 'number' ? v : nn(v);
-    if (!n) return '';
+    if (!n) return '$0';
     if (n >= 1e6 || Math.round(n / 1000) >= 1000) {
       return '$' + (n / 1e6).toFixed(2) + 'M';
     }
@@ -21,14 +58,30 @@
     return isNaN(d.getTime()) ? null : d;
   }
 
+  function applicationDate(r) {
+    return parseDate(
+      r.Date_Applied || r.date_applied || r.application_submitted_at || r.applied_at || ''
+    );
+  }
+
   function mapRecord(r) {
+    let raw = Object.assign({}, r);
+    raw.package_owner = packageOwnerFromRecord(r);
+    if (raw.package_owner) raw['Package_Owner.name'] = raw.package_owner;
+
+    let daysField = nn(r.days_total_to_fund || r.days_to_fund);
     return {
       funding: nn(r.funding || r.Funded_Amount),
       revenue: nn(r.revenue || r.Total_rev),
       date: parseDate(r.date_funded || r.Date_Funded || ''),
-      created: parseDate(r.created_time || r.Created_Time || ''),
-      raw: r
+      applied: applicationDate(r),
+      daysTotal: daysField > 0 ? daysField : null,
+      raw: raw
     };
+  }
+
+  function isFundedDeal(d) {
+    return d.funding > 0 && d.date;
   }
 
   function isToday(d) {
@@ -41,6 +94,11 @@
     return d && d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth();
   }
 
+  function isThisYear(d) {
+    let n = new Date();
+    return d && d.getFullYear() === n.getFullYear();
+  }
+
   function sumField(list, key) {
     return list.reduce(function (s, d) { return s + (d[key] || 0); }, 0);
   }
@@ -51,11 +109,7 @@
       return window.CapMuseRepMatch.recordMatchesRep(record, rep, userId, options);
     }
     let owner = record.package_owner || record['Package_Owner.name'] || '';
-    let puller = record.puller || record['Puller.name'] || '';
     let target = (rep && (rep.bookName || rep.name)) || userId || '';
-    if (options.pullerOnly) {
-      return puller && target && puller.toLowerCase() === target.toLowerCase();
-    }
     return owner && target && owner.toLowerCase() === target.toLowerCase();
   }
 
@@ -79,15 +133,52 @@
     return months[parseInt(parts[1], 10) - 1] + ' ' + parts[0];
   }
 
+  let MIN_TIME_TO_FUND_DEALS = 5;
+
+  function dealTimeMs(d) {
+    if (d.daysTotal != null) return d.daysTotal * 86400000;
+    // created_time is Zoho record sync time, not application date — only use explicit apply dates
+    if (!d.applied || !d.date) return null;
+    let diff = d.date.getTime() - d.applied.getTime();
+    if (diff < 86400000 || diff >= 730 * 86400000) return null;
+    return diff;
+  }
+
+  function formatDuration(ms) {
+    if (ms == null || ms < 0) return null;
+    let mins = ms / 60000;
+    if (mins < 60) {
+      let rounded = Math.max(1, Math.round(mins));
+      return rounded === 1 ? '1 min' : rounded + ' mins';
+    }
+    let hours = ms / 3600000;
+    if (hours < 24) {
+      let h = Math.round(hours * 10) / 10;
+      return h === 1 ? '1 hour' : h + ' hours';
+    }
+    let days = ms / 86400000;
+    if (days >= 2) {
+      let d = Math.round(days);
+      return d === 1 ? '1 day' : d + ' days';
+    }
+    let d = Math.round(days * 10) / 10;
+    return d === 1 ? '1 day' : d + ' days';
+  }
+
   function avgTimeToFund(deals) {
-    let days = [];
+    let times = [];
     deals.forEach(function (d) {
-      if (!d.created || !d.date) return;
-      let diff = (d.date.getTime() - d.created.getTime()) / 86400000;
-      if (diff >= 0 && diff < 730) days.push(diff);
+      let ms = dealTimeMs(d);
+      if (ms != null) times.push(ms);
     });
-    if (!days.length) return null;
-    return Math.round((days.reduce(function (s, n) { return s + n; }, 0) / days.length) * 10) / 10;
+    if (times.length < MIN_TIME_TO_FUND_DEALS) return null;
+    let avg = times.reduce(function (s, n) { return s + n; }, 0) / times.length;
+    return formatDuration(avg);
+  }
+
+  function fundedYtd(deals) {
+    let ytd = deals.filter(function (d) { return isThisYear(d.date); });
+    return sumField(ytd, 'funding');
   }
 
   function emptyToday() {
@@ -97,31 +188,32 @@
     };
   }
 
+  function emptyLive() {
+    return {
+      today: emptyToday(),
+      stats: {
+        experience: null, age: null, height: null,
+        avgDeal: null, timeToFund: null, totalDeals: 0,
+        volume: null
+      },
+      kpis: {
+        bestMonth: null, largestDeal: null, fundedYtd: null, avgRevenue: null
+      },
+      hero: { volumeToday: 0, fundedToday: 0, mtdVolume: 0 }
+    };
+  }
+
   function computeLive(userId, raw) {
     if (!window.REPS || !window.REPS[userId]) return null;
     let rep = window.REPS[userId];
+    if (!rep.bookName) return emptyLive();
     let mapped = raw.filter(function (r) { return r.company || r.Deal_Name; }).map(mapRecord);
     let fundedDeals = mapped.filter(function (d) {
-      return recordMatchesRep(d.raw, rep, userId, { fundedOnly: true });
+      return isFundedDeal(d) && recordMatchesRep(d.raw, rep, userId, { fundedOnly: true });
     });
-    let pulledDeals = mapped.filter(function (d) {
-      return recordMatchesRep(d.raw, rep, userId, { pullerOnly: true });
-    });
-    let totalPulled = pulledDeals.length;
 
     if (!fundedDeals.length) {
-      return {
-        today: emptyToday(),
-        stats: {
-          experience: null, age: null, height: null,
-          avgDeal: null, timeToFund: null, totalDeals: 0,
-          totalPulled: totalPulled, volume: '$0', activeClients: null
-        },
-        kpis: {
-          bestMonth: null, largestDeal: null, totalFunded: '$0', avgRevenue: null
-        },
-        hero: { volumeToday: 0, fundedToday: 0, mtdVolume: 0 }
-      };
+      return emptyLive();
     }
 
     let todayDeals = fundedDeals.filter(function (d) { return isToday(d.date); });
@@ -132,7 +224,7 @@
     let avgDeal = totalVol / totalDeals;
     let largest = fundedDeals.reduce(function (m, d) { return d.funding > m ? d.funding : m; }, 0);
     let todayVol = sumField(todayDeals, 'funding');
-    let timeToFund = avgTimeToFund(fundedDeals);
+    let ytdVol = fundedYtd(fundedDeals);
 
     return {
       today: {
@@ -150,16 +242,14 @@
         age: null,
         height: null,
         avgDeal: fmtMoney(avgDeal),
-        timeToFund: timeToFund,
+        timeToFund: avgTimeToFund(fundedDeals),
         totalDeals: totalDeals,
-        totalPulled: totalPulled,
-        volume: fmtMoney(totalVol),
-        activeClients: null
+        volume: fmtMoney(totalVol)
       },
       kpis: {
         bestMonth: bestMonthLabel(fundedDeals),
         largestDeal: fmtMoney(largest),
-        totalFunded: fmtMoney(totalVol),
+        fundedYtd: ytdVol > 0 ? fmtMoney(ytdVol) : '$0',
         avgRevenue: totalDeals && totalRev ? fmtMoney(totalRev / totalDeals) : null
       },
       hero: {
@@ -190,7 +280,10 @@
     if (!window.CapMuseData) return Promise.resolve(null);
 
     return window.CapMuseData.getRawDeals().then(function (raw) {
-      if (!raw || !raw.length) return null;
+      if (!raw || !raw.length) {
+        let empty = emptyLive();
+        return applyLive(userId, empty);
+      }
       let live = computeLive(userId, raw);
       return applyLive(userId, live);
     });
@@ -222,6 +315,7 @@
     applyLive: applyLive,
     applyForRep: applyForRep,
     refreshOpenProfilePanels: refreshOpenProfilePanels,
-    fmtMoney: fmtMoney
+    fmtMoney: fmtMoney,
+    formatDuration: formatDuration
   };
 })();

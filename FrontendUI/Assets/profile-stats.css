@@ -257,6 +257,31 @@ html[data-theme="dark"] .pmc-flip.pmc-flipped .pmc-face-back {
   border-right: 1px solid var(--pmc-row-sep);
 }
 .pmc-stat:last-child { border-right: none; }
+.pmc-stats-row-2 { grid-template-columns: repeat(2, 1fr); }
+.pmc-stats-loading {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pmc-stat-lbl);
+  padding: 8px 0 4px;
+  letter-spacing: 0.04em;
+}
+.pmc-skel {
+  display: inline-block;
+  min-width: 48px;
+  height: 22px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--pmc-div-thin) 25%, var(--pmc-div) 50%, var(--pmc-div-thin) 75%);
+  background-size: 200% 100%;
+  animation: pmc-skel-pulse 1.2s ease-in-out infinite;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: border-box !important;
+}
+@keyframes pmc-skel-pulse {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
 .pmc-stat-val {
   font-family: 'Orbitron', sans-serif;
   font-size: 26px; font-weight: 800; color: var(--pmc-stat-val);
@@ -275,6 +300,11 @@ html[data-theme="dark"] .pmc-flip.pmc-flipped .pmc-face-back {
 .pmc-stat-lbl {
   font-size: 10px; font-weight: 600; color: var(--pmc-stat-lbl);
   text-transform: uppercase; letter-spacing: 0.09em;
+}
+.pmc-stats-row:first-child .pmc-stat-lbl {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
 }
 
 /* ── KPI mini cards ── */
@@ -401,7 +431,7 @@ html[data-theme="light"] .pmc-compare-title { color: #0F172A; }
 .pmc-compare-select {
   min-width: 180px;
   height: 38px;
-  padding: 0 12px;
+  padding: 0 36px 0 12px;
   border-radius: 10px;
   border: 1px solid var(--pmc-kpi-border);
   background: var(--pmc-kpi-bg);
@@ -410,6 +440,36 @@ html[data-theme="light"] .pmc-compare-title { color: #0F172A; }
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+}
+html[data-theme="dark"] .pmc-compare-select {
+  color-scheme: dark;
+  background-color: #1E293B;
+  border-color: rgba(255, 255, 255, 0.14);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 4.5L6 8L9.5 4.5' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+html[data-theme="light"] .pmc-compare-select {
+  color-scheme: light;
+  background-color: #FFFFFF;
+}
+.pmc-compare-select:focus {
+  outline: none;
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+/* Native option list ignores theme text color on some browsers — force readable pairs */
+.pmc-compare-select option {
+  background-color: #FFFFFF;
+  color: #0F172A;
+}
+html[data-theme="dark"] .pmc-compare-select option {
+  background-color: #1E293B;
+  color: #F8FAFC;
 }
 .pmc-compare-close { margin-left: auto; }
 
