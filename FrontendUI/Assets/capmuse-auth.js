@@ -26,12 +26,30 @@
 
   let demoStylesInjected = false;
 
+  function injectDemoCriticalGuard() {
+    if (!DEMO_MODE) return;
+    document.documentElement.classList.add('capmuse-demo');
+    if (document.getElementById('capmuse-demo-nav-critical')) return;
+    let style = document.createElement('style');
+    style.id = 'capmuse-demo-nav-critical';
+    style.textContent =
+      'html.capmuse-demo #overviewToggle,' +
+      'html.capmuse-demo #overviewSub,' +
+      'html.capmuse-demo #crmToggle,' +
+      'html.capmuse-demo #crmSub,' +
+      'html.capmuse-demo #dialerToggle,' +
+      'html.capmuse-demo #dialerSub,' +
+      'html.capmuse-demo #demoMoreSub:not(.open){max-height:0!important;overflow:hidden!important}';
+    (document.head || document.documentElement).appendChild(style);
+  }
+
   function currentPage() {
     return (window.location.pathname.split('/').pop() || 'home.html').toLowerCase();
   }
   
   
   function injectDemoStyles() {
+    injectDemoCriticalGuard();
     if (demoStylesInjected) return;
     demoStylesInjected = true;
     let style = document.createElement('style');
@@ -308,4 +326,16 @@
   window.getCurrentRep = function () {
     return window.CapMuseAuth.getCurrentRep();
   };
+
+  injectDemoCriticalGuard();
+  if (DEMO_MODE) {
+    function runDemoNavEarly() {
+      applyDemoNav();
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', runDemoNavEarly);
+    } else {
+      runDemoNavEarly();
+    }
+  }
 })();

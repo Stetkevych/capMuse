@@ -32,7 +32,9 @@
     customTo: '',
     lender: [],
     productType: [],
-    dealType: []
+    dealType: [],
+    fundingMin: null,
+    fundingMax: null
   };
 
   let FILTER_DEFS = [
@@ -40,10 +42,13 @@
     { key: 'marketingAssist', label: 'Marketing Assist', field: 'marketingAssist', searchable: true },
     { key: 'state', label: 'State', field: 'state', searchable: true },
     { key: 'dateRange', label: 'Date Range', type: 'date' },
+    { key: 'fundingRange', label: 'Funded Amount', type: 'range' },
     { key: 'lender', label: 'Lender', field: 'lender', searchable: true },
     { key: 'productType', label: 'Product Type', field: 'productType', searchable: true, extraOptions: ['Reverse'] },
     { key: 'dealType', label: 'Deal Type', field: 'dealType', searchable: true, grouped: true }
   ];
+
+  let FUNDING_RANGE_STEP = 5000;
 
   let DATE_PRESETS = [
     { id: 'today', label: 'Today' },
@@ -86,6 +91,50 @@
 
   function fmtFull(v) {
     return '$' + Math.round(v || 0).toLocaleString('en-US');
+  }
+
+  function fmtFundingShort(v) {
+    let n = Math.round(v || 0);
+    if (n >= 1000000) return '$' + (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
+    if (n >= 1000) return '$' + Math.round(n / 1000) + 'K';
+    return '$' + n.toLocaleString('en-US');
+  }
+
+  function roundFundingBound(v, up) {
+    if (!v) return 0;
+    let step = FUNDING_RANGE_STEP;
+    return up ? Math.ceil(v / step) * step : Math.floor(v / step) * step;
+  }
+
+  function fundingDataBounds(exceptKey) {
+    let deals = applyFilters(DEALS, exceptKey || 'fundingRange');
+    let amounts = deals.map(function (d) { return d.funding || 0; }).filter(function (v) { return v > 0; });
+    if (!amounts.length) return { min: 0, max: FUNDING_RANGE_STEP };
+    let rawMin = Math.min.apply(null, amounts);
+    let rawMax = Math.max.apply(null, amounts);
+    return {
+      min: roundFundingBound(rawMin, false),
+      max: Math.max(roundFundingBound(rawMax, true), roundFundingBound(rawMin, false) + FUNDING_RANGE_STEP)
+    };
+  }
+
+  function isFundingFilterActive() {
+    return FILTERS.fundingMin != null || FILTERS.fundingMax != null;
+  }
+
+  function inFundingRange(d) {
+    if (!isFundingFilterActive()) return true;
+    let f = d.funding || 0;
+    if (FILTERS.fundingMin != null && f < FILTERS.fundingMin) return false;
+    if (FILTERS.fundingMax != null && f > FILTERS.fundingMax) return false;
+    return true;
+  }
+
+  function fundingRangeLabel(min, max) {
+    if (min != null && max != null) return fmtFundingShort(min) + ' – ' + fmtFundingShort(max);
+    if (min != null) return fmtFundingShort(min) + '+';
+    if (max != null) return 'Up to ' + fmtFundingShort(max);
+    return 'All';
   }
 
   function fmtPts(v) {
@@ -398,6 +447,7 @@
       if (exceptKey !== 'lender' && !matchesMulti('lender', d.lender, FILTERS.lender)) return false;
       if (exceptKey !== 'productType' && !matchesMulti('productType', d.productType, FILTERS.productType)) return false;
       if (exceptKey !== 'dealType' && !matchesMulti('dealType', d.dealType, FILTERS.dealType)) return false;
+      if (exceptKey !== 'fundingRange' && !inFundingRange(d)) return false;
       return true;
     });
   }
@@ -496,6 +546,10 @@
       }
       return preset ? preset.label : 'Year to date';
     }
+    if (key === 'fundingRange') {
+      if (!isFundingFilterActive()) return 'All';
+      return fundingRangeLabel(FILTERS.fundingMin, FILTERS.fundingMax);
+    }
     return multiFilterLabel(key);
   }
 
@@ -584,10 +638,15 @@
     let grid = document.getElementById('fbFilterGrid');
     if (!grid) return;
     grid.innerHTML = FILTER_DEFS.map(function (def) {
-      let active = def.type === 'date'
-        ? FILTERS.dateRange !== 'ytd' || FILTERS.customFrom || FILTERS.customTo
-        : (FILTERS[def.key] && FILTERS[def.key].length > 0);
-      if (def.key === 'dateRange' && FILTERS.dateRange === 'ytd') active = false;
+      let active;
+      if (def.type === 'date') {
+        active = FILTERS.dateRange !== 'ytd' || FILTERS.customFrom || FILTERS.customTo;
+        if (def.key === 'dateRange' && FILTERS.dateRange === 'ytd') active = false;
+      } else if (def.type === 'range') {
+        active = isFundingFilterActive();
+      } else {
+        active = FILTERS[def.key] && FILTERS[def.key].length > 0;
+      }
       let val = filterDisplayValue(def.key);
       return '<button type="button" class="fb-filter-chip' + (active ? ' active' : '') + '"' +
         ' data-filter-key="' + def.key + '">' +
@@ -611,6 +670,12 @@
     FILTER_DEFS.forEach(function (def) {
       if (def.key === 'dateRange') {
         if (FILTERS.dateRange !== 'ytd' || FILTERS.customFrom || FILTERS.customTo) {
+          tags.push({ key: def.key, label: def.label + ': ' + filterDisplayValue(def.key) });
+        }
+        return;
+      }
+      if (def.type === 'range') {
+        if (isFundingFilterActive()) {
           tags.push({ key: def.key, label: def.label + ': ' + filterDisplayValue(def.key) });
         }
         return;
@@ -643,6 +708,9 @@
       FILTERS.dateRange = 'ytd';
       FILTERS.customFrom = '';
       FILTERS.customTo = '';
+    } else if (key === 'fundingRange') {
+      FILTERS.fundingMin = null;
+      FILTERS.fundingMax = null;
     } else {
       FILTERS[key] = [];
     }
@@ -950,6 +1018,12 @@
     popupKey = key;
     if (key === 'dateRange') {
       popupDraft = FILTERS.dateRange;
+    } else if (def.type === 'range') {
+      let bounds = fundingDataBounds('fundingRange');
+      popupDraft = {
+        min: FILTERS.fundingMin != null ? FILTERS.fundingMin : bounds.min,
+        max: FILTERS.fundingMax != null ? FILTERS.fundingMax : bounds.max
+      };
     } else {
       popupDraft = (FILTERS[key] || []).slice();
     }
@@ -961,11 +1035,13 @@
     let options = document.getElementById('fbFilterOptions');
 
     if (title) title.textContent = def.label;
-    if (searchWrap) searchWrap.hidden = def.type === 'date' ? true : !def.searchable;
+    if (searchWrap) searchWrap.hidden = def.type === 'date' || def.type === 'range' ? true : !def.searchable;
     if (searchInput) searchInput.value = '';
 
     if (def.type === 'date') {
       renderDateOptions(options);
+    } else if (def.type === 'range') {
+      renderFundingRangeOptions(options);
     } else {
       renderCheckboxOptions(options, def, '');
     }
@@ -981,6 +1057,81 @@
       requestAnimationFrame(function () { overlay.classList.add('open'); });
     }
     document.body.style.overflow = 'hidden';
+  }
+
+  function updateFundingRangeFill(minInp, maxInp, fill, bounds) {
+    if (!minInp || !maxInp || !fill) return;
+    let span = bounds.max - bounds.min || 1;
+    let lo = (parseInt(minInp.value, 10) - bounds.min) / span * 100;
+    let hi = (parseInt(maxInp.value, 10) - bounds.min) / span * 100;
+    fill.style.left = lo + '%';
+    fill.style.width = (hi - lo) + '%';
+  }
+
+  function renderFundingRangeOptions(container) {
+    if (!container) return;
+    let bounds = fundingDataBounds('fundingRange');
+    let draftMin = popupDraft && popupDraft.min != null ? popupDraft.min : (
+      FILTERS.fundingMin != null ? FILTERS.fundingMin : bounds.min
+    );
+    let draftMax = popupDraft && popupDraft.max != null ? popupDraft.max : (
+      FILTERS.fundingMax != null ? FILTERS.fundingMax : bounds.max
+    );
+    draftMin = Math.max(bounds.min, Math.min(draftMin, bounds.max));
+    draftMax = Math.max(bounds.min, Math.min(draftMax, bounds.max));
+    if (draftMin > draftMax) draftMin = draftMax;
+    popupDraft = { min: draftMin, max: draftMax };
+
+    container.innerHTML =
+      '<div class="fb-range-slider">' +
+        '<div class="fb-range-values">' +
+          '<span class="fb-range-val" id="fbFundingMinLbl">' + fmtFundingShort(draftMin) + '</span>' +
+          '<span class="fb-range-val" id="fbFundingMaxLbl">' + fmtFundingShort(draftMax) + '</span>' +
+        '</div>' +
+        '<div class="fb-range-track-wrap">' +
+          '<div class="fb-range-track"></div>' +
+          '<div class="fb-range-fill" id="fbFundingFill"></div>' +
+          '<input type="range" class="fb-range-input fb-range-input--min" id="fbFundingMinInp"' +
+            ' min="' + bounds.min + '" max="' + bounds.max + '" step="' + FUNDING_RANGE_STEP + '" value="' + draftMin + '" />' +
+          '<input type="range" class="fb-range-input fb-range-input--max" id="fbFundingMaxInp"' +
+            ' min="' + bounds.min + '" max="' + bounds.max + '" step="' + FUNDING_RANGE_STEP + '" value="' + draftMax + '" />' +
+        '</div>' +
+        '<div class="fb-range-hint">Per-deal funded amount · ' + fmtFundingShort(bounds.min) + ' – ' + fmtFundingShort(bounds.max) + '</div>' +
+      '</div>';
+
+    let minInp = document.getElementById('fbFundingMinInp');
+    let maxInp = document.getElementById('fbFundingMaxInp');
+    let minLbl = document.getElementById('fbFundingMinLbl');
+    let maxLbl = document.getElementById('fbFundingMaxLbl');
+    let fill = document.getElementById('fbFundingFill');
+
+    function syncFromMin() {
+      let minVal = parseInt(minInp.value, 10);
+      let maxVal = parseInt(maxInp.value, 10);
+      if (minVal > maxVal) {
+        minVal = maxVal;
+        minInp.value = String(minVal);
+      }
+      popupDraft = { min: minVal, max: maxVal };
+      if (minLbl) minLbl.textContent = fmtFundingShort(minVal);
+      updateFundingRangeFill(minInp, maxInp, fill, bounds);
+    }
+
+    function syncFromMax() {
+      let minVal = parseInt(minInp.value, 10);
+      let maxVal = parseInt(maxInp.value, 10);
+      if (maxVal < minVal) {
+        maxVal = minVal;
+        maxInp.value = String(maxVal);
+      }
+      popupDraft = { min: minVal, max: maxVal };
+      if (maxLbl) maxLbl.textContent = fmtFundingShort(maxVal);
+      updateFundingRangeFill(minInp, maxInp, fill, bounds);
+    }
+
+    if (minInp) minInp.addEventListener('input', syncFromMin);
+    if (maxInp) maxInp.addEventListener('input', syncFromMax);
+    updateFundingRangeFill(minInp, maxInp, fill, bounds);
   }
 
   function renderDateOptions(container) {
@@ -1028,6 +1179,17 @@
       if (FILTERS.dateRange === 'custom' && !FILTERS.customFrom && !FILTERS.customTo) {
         FILTERS.dateRange = 'ytd';
       }
+    } else if (popupKey === 'fundingRange') {
+      let bounds = fundingDataBounds('fundingRange');
+      let minVal = popupDraft && popupDraft.min != null ? popupDraft.min : bounds.min;
+      let maxVal = popupDraft && popupDraft.max != null ? popupDraft.max : bounds.max;
+      if (minVal <= bounds.min && maxVal >= bounds.max) {
+        FILTERS.fundingMin = null;
+        FILTERS.fundingMax = null;
+      } else {
+        FILTERS.fundingMin = minVal > bounds.min ? minVal : null;
+        FILTERS.fundingMax = maxVal < bounds.max ? maxVal : null;
+      }
     } else {
       FILTERS[popupKey] = popupDraft.slice();
     }
@@ -1043,6 +1205,12 @@
       FILTERS.customFrom = '';
       FILTERS.customTo = '';
       renderDateOptions(document.getElementById('fbFilterOptions'));
+    } else if (popupKey === 'fundingRange') {
+      FILTERS.fundingMin = null;
+      FILTERS.fundingMax = null;
+      let bounds = fundingDataBounds('fundingRange');
+      popupDraft = { min: bounds.min, max: bounds.max };
+      renderFundingRangeOptions(document.getElementById('fbFilterOptions'));
     } else {
       popupDraft = [];
       FILTERS[popupKey] = [];
