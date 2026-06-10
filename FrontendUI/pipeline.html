@@ -6,7 +6,7 @@
   <title>Pipeline — CapMuse</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -61,6 +61,31 @@
       --card-shadow:    0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.07);
     }
     :root { --blue:#2563EB; --green:#10B981; --sidebar-w:215px; --sidebar-gap:16px; --ease:cubic-bezier(0.4,0,0.2,1); }
+
+    /* Pipeline page — green accent theme */
+    .pipeline-page {
+      --pl-accent: #10B981;
+      --pl-accent-dark: #059669;
+      --pl-accent-light: #34D399;
+      --pl-accent-glow: rgba(16,185,129,0.14);
+      --nav-active: #059669;
+    }
+    html[data-theme="dark"] .pipeline-page {
+      --pl-accent: #34D399;
+      --pl-accent-dark: #10B981;
+      --pl-accent-light: #6EE7B7;
+      --pl-accent-glow: rgba(52,211,153,0.18);
+      --nav-active: #34D399;
+      --table-hover: rgba(52,211,153,0.05);
+    }
+    html[data-theme="light"] .pipeline-page {
+      --table-hover: rgba(16,185,129,0.04);
+    }
+    .pipeline-page .search-icon-r { color: var(--pl-accent); }
+    .pipeline-page .search-input:focus {
+      border-color: var(--pl-accent);
+      box-shadow: 0 0 0 3px var(--pl-accent-glow);
+    }
 
     html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; background: var(--page-bg); color: var(--text-primary); }
     .layout { display: flex; min-height: 100vh; }
@@ -153,91 +178,122 @@
     .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 250; }
 
     /* ══════════════════════════
-       PIPELINE PAGE SPECIFIC
+       PIPELINE — Funding Book layout
     ══════════════════════════ */
-    .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 4px; }
-    .page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
-    .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-    .page-header-actions { display: flex; align-items: center; gap: 8px; }
-    .btn-primary { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: 8px; border: none; background: var(--blue); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s ease, transform 0.15s ease; text-decoration: none; }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-primary svg { width: 14px; height: 14px; }
-    .btn-secondary { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-secondary); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s ease; text-decoration: none; }
-    .btn-secondary:hover { background: var(--surface-2); color: var(--text-primary); }
-    .btn-secondary svg { width: 14px; height: 14px; }
-
-    .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; box-shadow: var(--card-shadow); border-top: 3px solid transparent; }
-    .kpi-card.kc-blue   { border-top-color: #2563EB; }
-    .kpi-card.kc-green  { border-top-color: #10B981; }
-    .kpi-card.kc-amber  { border-top-color: #F59E0B; }
-    .kpi-card.kc-purple { border-top-color: #8B5CF6; }
-    .kpi-label { font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-    .kpi-value { font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1; }
-    .kpi-delta { display: inline-flex; align-items: center; gap: 3px; margin-top: 6px; font-size: 12px; font-weight: 500; }
-    .kpi-delta.up   { color: #10B981; }
-    .kpi-delta.down { color: #EF4444; }
-    .kpi-delta.neu  { color: var(--text-muted); }
-
-    /* Stage funnel summary */
-    .funnel-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-    .funnel-step {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-      padding: 12px 14px; box-shadow: var(--card-shadow); text-align: center;
-      position: relative; cursor: pointer; transition: transform 0.15s ease;
+    .fb-hero {
+      background:
+        linear-gradient(var(--surface), var(--surface)) padding-box,
+        linear-gradient(135deg, #059669 0%, #10B981 45%, #34D399 100%) border-box;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      padding: 20px 28px;
+      box-shadow: var(--card-shadow), 0 0 0 1px rgba(16,185,129,0.1), 0 8px 28px rgba(16,185,129,0.08);
+      display: flex;
+      align-items: stretch;
+      justify-content: space-between;
+      gap: 0;
+      flex-wrap: nowrap;
+      min-height: 200px;
     }
-    .funnel-step:hover { transform: translateY(-2px); }
-    .funnel-step::after { content: '›'; position: absolute; right: -14px; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--text-muted); pointer-events: none; }
-    .funnel-step:last-child::after { display: none; }
-    .funnel-step-label { font-size: 10.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-    .funnel-step-count { font-size: 22px; font-weight: 700; color: var(--text-primary); line-height: 1; }
-    .funnel-step-amt { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
-    .funnel-step.fs-new    .funnel-step-count { color: #8B5CF6; }
-    .funnel-step.fs-review .funnel-step-count { color: #2563EB; }
-    .funnel-step.fs-approv .funnel-step-count { color: #F59E0B; }
-    .funnel-step.fs-funded .funnel-step-count { color: #10B981; }
-    .funnel-step.fs-decl   .funnel-step-count { color: #EF4444; }
+    html[data-theme="dark"] .fb-hero {
+      background:
+        linear-gradient(var(--surface), var(--surface)) padding-box,
+        linear-gradient(135deg, #10B981 0%, #34D399 55%, #6EE7B7 100%) border-box;
+      box-shadow: var(--card-shadow), 0 0 0 1px rgba(52,211,153,0.16), 0 8px 28px rgba(16,185,129,0.12);
+    }
+    .fb-hero-sep { width: 1px; align-self: stretch; flex-shrink: 0; background: var(--border); margin: 4px 24px; }
+    .fb-hero-spotlight[hidden] + .fb-hero-sep { display: none; }
+    .fb-hero-spotlight {
+      flex: 0 0 auto; display: flex; flex-direction: row; align-items: center;
+      text-align: left; gap: 22px; padding: 4px 0; min-width: 300px; max-width: 400px;
+    }
+    .fb-hero-spotlight[hidden] { display: none !important; }
+    .fb-spot-photo-ring {
+      width: 190px; height: 190px; border-radius: 50%; padding: 4px; flex-shrink: 0; position: relative;
+      background: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
+      box-shadow: 0 10px 30px rgba(16,185,129,0.28);
+    }
+    .fb-spot-photo-ring[data-person-id] { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .fb-spot-photo-ring[data-person-id]:hover { transform: scale(1.03); box-shadow: 0 12px 36px rgba(16,185,129,0.38); }
+    .fb-spot-photo-ring img, .fb-spot-photo-ring .hero-photo-placeholder {
+      position: absolute; top: 4px; left: 4px; width: calc(100% - 8px); height: calc(100% - 8px); border-radius: 50%;
+    }
+    .fb-spot-photo-ring img { object-fit: cover; object-position: center 12%; background: var(--surface-2); }
+    .fb-spot-photo-ring .hero-photo-placeholder {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 48px; font-weight: 700; color: var(--text-muted); background: var(--surface-2);
+    }
+    .fb-spot-photo-ring img[hidden], .fb-spot-photo-ring .hero-photo-placeholder[hidden] { display: none !important; }
+    .fb-spot-info { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; flex: 1; }
+    .fb-spot-lead {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 10px; font-weight: 800; color: var(--pl-accent-dark); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 2px;
+    }
+    html[data-theme="dark"] .fb-spot-lead { color: var(--pl-accent); }
+    .fb-spot-lead::before { content: ''; width: 16px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #059669, #34D399); }
+    .fb-spot-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 22px; font-weight: 800; color: var(--text-primary); line-height: 1.15; letter-spacing: -0.01em; word-break: break-word; }
+    .fb-spot-stat { font-size: 19px; font-weight: 800; color: var(--pl-accent-dark); line-height: 1.2; margin-top: 8px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-family: 'Fira Code', monospace; }
+    html[data-theme="dark"] .fb-spot-stat { color: var(--pl-accent); }
+    .fb-spot-stat-lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 1px; }
+    .fb-spot-meta { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-top: 6px; }
+    .fb-hero-main { flex: 1; min-width: 180px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 8px 0; }
+    .fb-hero-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 32px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1.1; width: 100%; text-align: center; }
+    .fb-hero-context { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-top: 8px; line-height: 1.4; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fb-hero-kpis { display: flex; align-items: stretch; flex-shrink: 0; align-self: center; gap: 0; padding: 4px 0; }
+    .fb-kpi { display: flex; flex-direction: column; justify-content: center; padding: 4px 22px; text-align: center; border-left: 1px solid var(--border); min-width: 96px; }
+    .fb-kpi:first-child { border-left: none; padding-left: 0; }
+    .fb-kpi:last-child { padding-right: 0; }
+    .fb-kpi-val { font-family: 'Fira Code', monospace; font-size: 24px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+    .fb-kpi-lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; }
+    .fb-kpi--primary .fb-kpi-val { color: var(--pl-accent-dark); }
+    html[data-theme="dark"] .fb-kpi--primary .fb-kpi-val { color: var(--pl-accent); }
 
-    .controls-row { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--card-shadow); overflow: hidden; }
-    .tab-bar { display: flex; align-items: center; gap: 2px; padding: 10px 14px 0; border-bottom: 1px solid var(--border); }
-    .tab { display: flex; align-items: center; gap: 5px; padding: 7px 13px 9px; font-size: 13px; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; text-decoration: none; transition: color 0.15s ease, border-color 0.15s ease; white-space: nowrap; }
-    .tab:hover { color: var(--text-primary); }
-    .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
-    .tab-count { font-size: 10px; font-weight: 700; background: var(--surface-2); color: var(--text-muted); border-radius: 20px; padding: 1px 6px; min-width: 20px; text-align: center; }
-    .tab.active .tab-count { background: rgba(37,99,235,0.10); color: var(--blue); }
+    .fb-table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--card-shadow); }
+    .fb-table-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .fb-table-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .fb-table-meta { font-size: 12px; color: var(--text-muted); }
+    .fb-rep-table { width: 100%; border-collapse: collapse; }
+    .fb-rep-table thead tr { background: var(--table-head); }
+    .fb-rep-table th { padding: 11px 14px; font-size: 10.5px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--table-border); white-space: nowrap; }
+    .fb-rep-table th[data-sort] { cursor: pointer; user-select: none; transition: color 0.15s ease; }
+    .fb-rep-table th[data-sort]:hover { color: var(--pl-accent-dark); }
+    .fb-rep-table th.sorted { color: var(--pl-accent-dark); }
+    html[data-theme="dark"] .fb-rep-table th[data-sort]:hover, html[data-theme="dark"] .fb-rep-table th.sorted { color: var(--pl-accent); }
+    .fb-sort-arrow { display: inline-block; margin-left: 4px; font-size: 9px; opacity: 0.9; }
+    .fb-rep-table th:first-child { width: 48px; text-align: center; padding-left: 18px; }
+    .fb-rep-table th:last-child { padding-right: 18px; }
+    .fb-rep-table td { padding: 12px 14px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--table-border); vertical-align: middle; }
+    .fb-rep-table td:first-child { text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600; padding-left: 18px; }
+    .fb-rep-table td:last-child { padding-right: 18px; }
+    .fb-rep-table tbody tr:last-child td { border-bottom: none; }
+    .fb-rep-table tbody tr:hover td { background: var(--table-hover); }
+    .fb-rep-name { font-weight: 600; color: var(--text-primary); cursor: pointer; }
+    .fb-rep-name:hover { color: var(--pl-accent-dark); }
+    html[data-theme="dark"] .fb-rep-name:hover { color: var(--pl-accent); }
+    .fb-money { font-family: 'Fira Code', monospace; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .fb-money-revenue { color: var(--pl-accent-dark) !important; }
+    html[data-theme="dark"] .fb-money-revenue { color: var(--pl-accent) !important; }
+    .fb-pts { font-family: 'Fira Code', monospace; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .fb-row-top td { background: rgba(16,185,129,0.05); }
+    .fb-row-top td:first-child { box-shadow: inset 3px 0 0 var(--pl-accent); }
+    html[data-theme="dark"] .fb-row-top td { background: rgba(52,211,153,0.07); }
+    .fb-empty { padding: 48px 24px; text-align: center; color: var(--text-muted); font-size: 14px; }
 
-    .filter-bar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; flex-wrap: wrap; }
-    .filter-search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 280px; }
-    .filter-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-muted); pointer-events: none; }
-    .filter-search { width: 100%; height: 34px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: inherit; font-size: 12.5px; padding: 0 10px 0 32px; outline: none; transition: border-color 0.18s ease; }
-    .filter-search:focus { border-color: var(--blue); }
-    .filter-select { height: 34px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); font-family: inherit; font-size: 12.5px; padding: 0 28px 0 10px; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M5 8l5 5 5-5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; }
-    .filter-select:focus { border-color: var(--blue); }
-    .filter-spacer { flex: 1; }
-    .filter-export { display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: background 0.15s ease; }
-    .filter-export:hover { background: var(--border); color: var(--text-primary); }
-    .filter-export svg { width: 13px; height: 13px; }
-
-    .data-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--card-shadow); }
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table thead tr { background: var(--table-head); }
-    .data-table th { padding: 10px 12px; font-size: 10.5px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; text-align: left; border-bottom: 1px solid var(--table-border); white-space: nowrap; }
-    .data-table th:first-child { padding-left: 18px; width: 40px; text-align: center; }
-    .data-table th:last-child { padding-right: 18px; text-align: center; }
-    .data-table td { padding: 11px 12px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--table-border); vertical-align: middle; }
-    .data-table td:first-child { padding-left: 18px; text-align: center; color: var(--text-muted); font-size: 12px; }
-    .data-table td:last-child { padding-right: 18px; text-align: center; }
-    .data-table tbody tr:last-child td { border-bottom: none; }
-    .data-table tbody tr:hover td { background: var(--table-hover); }
-
-    .biz-cell { display: flex; align-items: center; gap: 8px; }
-    .biz-dot { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 800; color: #fff; flex-shrink: 0; }
-    .biz-cell-name { font-weight: 600; color: var(--text-primary); font-size: 13px; }
-
-    .factor-rate { font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 700; color: var(--text-secondary); }
-    .action-btn { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); font-family: inherit; font-size: 11.5px; font-weight: 500; cursor: pointer; transition: background 0.15s ease; }
-    .action-btn:hover { background: var(--border); color: var(--text-primary); }
-
+    @media (max-width: 900px) {
+      .fb-hero { flex-direction: column; align-items: stretch; gap: 0; flex-wrap: wrap; min-height: 0; padding: 20px; }
+      .fb-hero-sep { width: 100%; height: 1px; margin: 16px 0; }
+      .fb-hero-spotlight { flex-direction: row; width: 100%; max-width: none; min-width: 0; gap: 18px; }
+      .fb-spot-photo-ring { width: 132px; height: 132px; padding: 3px; }
+      .fb-spot-photo-ring img, .fb-spot-photo-ring .hero-photo-placeholder { top: 3px; left: 3px; width: calc(100% - 6px); height: calc(100% - 6px); }
+      .fb-hero-main { padding: 16px 0 0; }
+      .fb-hero-title { font-size: 26px; }
+      .fb-hero-context { white-space: normal; }
+      .fb-hero-sep--kpis { margin-top: 16px; }
+      .fb-hero-kpis { width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); padding-top: 16px; gap: 16px 0; }
+      .fb-kpi { border-left: none; padding: 0; min-width: 0; text-align: left; }
+      .fb-kpi:nth-child(odd) { padding-right: 12px; }
+      .fb-kpi:nth-child(even) { padding-left: 12px; border-left: 1px solid var(--border); }
+    }
     @media (max-width: 768px) {
       .sidebar { width: min(var(--sidebar-w), calc(100vw - 32px)); transform: translateX(calc(-100% - 24px)); }
       .sidebar.open { transform: translateX(0); }
@@ -246,46 +302,12 @@
       .topbar { height: 66px; justify-content: flex-start; padding: 10px 16px 0; gap: 10px; }
       .search-wrap { flex: 1 1 auto; min-width: 0; }
       .burger { display: flex; }
-      .kpi-strip { grid-template-columns: repeat(2, 1fr); }
-      .funnel-row { grid-template-columns: repeat(3, 1fr); }
-      .cards-col { grid-template-columns: repeat(2, 1fr); }
+      .fb-rep-table { display: block; overflow-x: auto; }
     }
-
-    /* ── Stat Cards Bento Grid ── */
-    .cards-col { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); grid-auto-rows:minmax(110px,auto); gap:12px; align-items:stretch; margin:8px 0 4px; }
-    .stat-card { border-radius:16px; padding:24px 28px; display:flex; align-items:center; justify-content:space-between; gap:16px; position:relative; overflow:hidden; cursor:pointer; transition:transform 0.18s ease,box-shadow 0.18s ease; }
-    .stat-card:hover { transform:translateY(-2px); box-shadow:0 8px 32px -4px rgba(0,0,0,0.25); }
-    .stat-card.blue-1 { background:linear-gradient(135deg,#1a3f9e 0%,#1D4ED8 100%); }
-    .stat-card.navy   { background:linear-gradient(135deg,#0F1F3D 0%,#162848 100%); }
-    .stat-card.teal   { background:linear-gradient(135deg,#064E3B 0%,#0D9488 100%); }
-    .stat-card.plum   { background:linear-gradient(135deg,#2D0F5E 0%,#4A1272 100%); }
-    .stat-card.crimson{ background:linear-gradient(135deg,#2A0505 0%,#7C1212 60%,#2A0A05 100%); }
-    .stat-card.indigo { background:linear-gradient(135deg,#1E1B4B 0%,#3730A3 100%); }
-    .stat-card::after { content:''; position:absolute; right:-30px; bottom:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.06); pointer-events:none; }
-    .card-left { flex:1; position:relative; z-index:1; }
-    .card-right { flex-shrink:0; position:relative; z-index:1; }
-    .card-headline { font-size:14px; font-weight:500; line-height:1.45; color:rgba(255,221,80,0.88); margin-bottom:14px; max-width:320px; }
-    .stat-card.navy .card-headline { color:rgba(255,255,255,0.75); }
-    .card-names { display:flex; flex-direction:column; gap:4px; margin-bottom:12px; }
-    .card-name { font-size:16px; font-weight:700; color:#FCD34D; line-height:1.3; }
-    .stat-card.navy .card-name { color:#FFFFFF; }
-    .card-big-single { display:block; font-family:'Orbitron',sans-serif; font-size:26px; font-weight:800; color:#fff; letter-spacing:-0.02em; margin-top:8px; line-height:1; }
-    .card-rep-photo-wrap { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#E879F9,#A855F7,#7C3AED); padding:3.5px; box-shadow:0 0 0 1px rgba(232,121,249,0.25),0 0 18px rgba(232,121,249,0.55),0 0 40px rgba(168,85,247,0.40),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
-    .card-rep-photo { width:100%; height:100%; border-radius:50%; object-fit:cover; object-position:center 5%; display:block; }
-    .photo-wrap-teal { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#34D399,#0D9488); padding:3px; box-shadow:0 0 18px rgba(16,185,129,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
-    .photo-wrap-blue { width:88px; height:88px; border-radius:50%; background:linear-gradient(135deg,#60A5FA,#2563EB); padding:3px; box-shadow:0 0 18px rgba(96,165,250,0.55),0 6px 20px rgba(0,0,0,0.60); flex-shrink:0; }
-    .vs-card-body { display:flex; flex-direction:column; gap:10px; width:100%; }
-    .vs-row { display:flex; align-items:center; gap:10px; }
-    .vs-label { font-size:11px; font-weight:600; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:0.08em; width:80px; flex-shrink:0; }
-    .vs-rep-wrap { display:flex; align-items:center; gap:8px; flex:1; }
-    .vs-rep-photo { width:36px; height:36px; border-radius:50%; object-fit:cover; object-position:center 8%; border:2px solid rgba(255,255,255,0.25); }
-    .vs-rep-name { font-size:14px; font-weight:700; color:#fff; }
-    .vs-count { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:800; color:#FCD34D; margin-left:auto; }
-    .vs-divider { height:1px; background:rgba(255,255,255,0.1); margin:4px 0; }
   </style>
   <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
-<body>
+<body class="pipeline-page">
 <div class="layout">
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -381,325 +403,48 @@
 
     <main class="page-content" role="main">
 
-      <div class="ticker-bar">
-        <span class="ticker-msg">Deals awaiting review &nbsp;·&nbsp; Active pipeline &nbsp;·&nbsp; Approvals expected this week</span>
-        <a class="ticker-link" href="funding_book.html">
-          Funding Book
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-      </div>
+      <section class="fb-hero" aria-label="Pipeline summary">
+        <div class="fb-hero-spotlight" id="plHeroSpotlight" hidden aria-label="Top rep"></div>
+        <div class="fb-hero-sep" aria-hidden="true"></div>
+        <div class="fb-hero-main">
+          <h1 class="fb-hero-title">Pipeline</h1>
+          <p class="fb-hero-context" id="plHeroContext">Loading pipeline data…</p>
+        </div>
+        <div class="fb-hero-sep fb-hero-sep--kpis" aria-hidden="true"></div>
+        <div class="fb-hero-kpis">
+          <div class="fb-kpi fb-kpi--primary"><div class="fb-kpi-val" id="plKpiApps">—</div><div class="fb-kpi-lbl">Apps</div></div>
+          <div class="fb-kpi"><div class="fb-kpi-val" id="plKpiApprovals">—</div><div class="fb-kpi-lbl">Approvals</div></div>
+          <div class="fb-kpi"><div class="fb-kpi-val" id="plKpiFunded">—</div><div class="fb-kpi-lbl">Funded</div></div>
+          <div class="fb-kpi"><div class="fb-kpi-val" id="plKpiFundedAmt">—</div><div class="fb-kpi-lbl">Funded amount</div></div>
+          <div class="fb-kpi"><div class="fb-kpi-val" id="plKpiRevenue">—</div><div class="fb-kpi-lbl">Revenue</div></div>
+        </div>
+      </section>
 
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Pipeline</h1>
-          <p class="page-subtitle">Active deals tracked from application to funding via Zoho</p>
+      <section class="fb-table-card" aria-label="Pipeline rep leaderboard">
+        <div class="fb-table-head">
+          <h2 class="fb-table-title">Rep Leaderboard</h2>
+          <span class="fb-table-meta" id="plTableMeta">Loading…</span>
         </div>
-        <div class="page-header-actions">
-          <button class="btn-secondary">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2M10 3v10M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Export
-          </button>
-          <button class="btn-primary">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg>
-            Add Deal
-          </button>
-        </div>
-      </div>
-
-      <!-- KPI strip -->
-      <div class="kpi-strip">
-        <div class="kpi-card kc-purple">
-          <div class="kpi-label">Active Deals</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-        <div class="kpi-card kc-blue">
-          <div class="kpi-label">Pipeline Value</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-        <div class="kpi-card kc-amber">
-          <div class="kpi-label">Avg Deal Size</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta neu"></div>
-        </div>
-        <div class="kpi-card kc-green">
-          <div class="kpi-label">Funded This Month</div>
-          <div class="kpi-value"></div>
-          <div class="kpi-delta up"><svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 15V5M5 10l5-5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        </div>
-      </div>
-
-      <!-- ── Stat Cards ── -->
-      <div class="cards-col" id="statCards">
-
-        <!-- Card 1: Most Pulls Today -->
-        <div class="stat-card blue-1" data-person-id="matt" style="grid-column:span 6;align-items:flex-start;padding:20px 24px;">
-          <div class="card-left">
-            <p class="card-headline">Most applications pulled<br />today:</p>
-            <div class="card-names">
-              <span class="card-name">Matt</span>
-            </div>
-            <span class="card-big-single"></span>
-          </div>
-          <div class="card-right">
-            <div class="photo-wrap-blue">
-              <img src="Assets/reps/matthew.png" alt="Matthew" class="card-rep-photo" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 2: Most Owners Today -->
-        <div class="stat-card plum" data-person-id="gabe" style="grid-column:span 6;align-items:flex-start;padding:20px 24px;">
-          <div class="card-left">
-            <p class="card-headline">Most deals owned<br />today:</p>
-            <div class="card-names">
-              <span class="card-name" style="color:#C084FC">Gabe</span>
-            </div>
-            <span class="card-big-single" style="background:linear-gradient(135deg,#F0ABFC,#C084FC,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(232,121,249,0.55))"></span>
-          </div>
-          <div class="card-right">
-            <div class="card-rep-photo-wrap">
-              <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Gabriel" class="card-rep-photo" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 3: Yesterday vs Today -->
-        <div class="stat-card navy" style="grid-column:span 8;align-items:flex-start;padding:22px 26px;">
-          <div class="vs-card-body">
-            <p class="card-headline" style="margin-bottom:16px;">Most owners: Yesterday vs. Today</p>
-            <div class="vs-row">
-              <span class="vs-label">Yesterday</span>
-              <div class="vs-rep-wrap" data-person-id="gabe">
-                <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Gabriel" class="vs-rep-photo" />
-                <span class="vs-rep-name">Gabe</span>
-              </div>
-              <span class="vs-count"></span>
-            </div>
-            <div class="vs-divider"></div>
-            <div class="vs-row">
-              <span class="vs-label">Today</span>
-              <div class="vs-rep-wrap" data-person-id="jason">
-                <img src="Assets/reps/Cartoon/IvanCartoon.png" alt="Jason" class="vs-rep-photo" />
-                <span class="vs-rep-name">Jason</span>
-              </div>
-              <span class="vs-count" style="color:#34D399"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 4: Most Owners Last Week -->
-        <div class="stat-card teal" data-person-id="gabe" style="grid-column:span 4;align-items:flex-start;padding:20px 22px;">
-          <div class="card-left">
-            <p class="card-headline" style="color:rgba(110,231,183,0.85)">Most deals owned<br />last week:</p>
-            <div class="card-names">
-              <span class="card-name" style="color:#34D399">Gabe</span>
-            </div>
-            <span class="card-big-single" style="background:linear-gradient(135deg,#6EE7B7,#34D399,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(52,211,153,0.55))"></span>
-          </div>
-          <div class="card-right">
-            <div class="photo-wrap-teal" style="width:72px;height:72px;">
-              <img src="Assets/reps/Cartoon/AndersonCartoon.png" alt="Gabriel" class="card-rep-photo" />
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <!-- END Stat Cards -->
-
-      <!-- Stage funnel -->
-      <div class="funnel-row">
-        <div class="funnel-step fs-new">
-          <div class="funnel-step-label">New App</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
-        </div>
-        <div class="funnel-step fs-review">
-          <div class="funnel-step-label">Under Review</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
-        </div>
-        <div class="funnel-step fs-approv">
-          <div class="funnel-step-label">Approved</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
-        </div>
-        <div class="funnel-step fs-funded">
-          <div class="funnel-step-label">Funded</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
-        </div>
-        <div class="funnel-step fs-decl">
-          <div class="funnel-step-label">Declined</div>
-          <div class="funnel-step-count"></div>
-          <div class="funnel-step-amt"></div>
-        </div>
-      </div>
-
-      <!-- Controls -->
-      <div class="controls-row">
-        <div class="tab-bar" role="tablist">
-          <a class="tab active" href="#" role="tab">All <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">New App <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Under Review <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Approved <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Funded <span class="tab-count"></span></a>
-          <a class="tab" href="#" role="tab">Declined <span class="tab-count"></span></a>
-        </div>
-        <div class="filter-bar">
-          <div class="filter-search-wrap">
-            <svg class="filter-search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
-            <input class="filter-search" type="search" placeholder="Search deals…" aria-label="Search deals" />
-          </div>
-          <select class="filter-select" aria-label="Filter by rep"><option value="">All Reps</option><option>Anderson</option><option>Frank</option><option>Blake</option><option>Ivan</option><option>Kip</option><option>Colin</option><option>Matthew</option><option>Santi</option><option>Rio</option></select>
-          <select class="filter-select" aria-label="Filter by lender"><option value="">All Lenders</option><option>Credibly</option><option>OnDeck</option><option>BlueVine</option><option>Kabbage</option><option>Fundbox</option><option>Rapid Finance</option></select>
-          <select class="filter-select" aria-label="Filter by position"><option value="">All Positions</option><option>1st</option><option>2nd</option><option>3rd</option></select>
-          <div class="filter-spacer"></div>
-          <button class="filter-export"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2M10 3v10M6 9l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>Export</button>
-        </div>
-      </div>
-
-      <div class="data-card">
-        <table class="data-table" aria-label="Pipeline table">
+        <table class="fb-rep-table" id="plRepTable" aria-label="Pipeline rep leaderboard">
           <thead>
             <tr>
               <th>#</th>
-              <th>Business</th>
-              <th>Requested</th>
-              <th>Lender</th>
-              <th>Rep</th>
-              <th>Stage</th>
-              <th>Factor Rate</th>
-              <th>Position</th>
-              <th>Date Applied</th>
-              <th>Action</th>
+              <th data-sort="name">Rep <span class="fb-sort-arrow"></span></th>
+              <th data-sort="apps">Apps <span class="fb-sort-arrow"></span></th>
+              <th data-sort="approvals">Approvals <span class="fb-sort-arrow"></span></th>
+              <th data-sort="appsToApprovals">A→Ap % <span class="fb-sort-arrow"></span></th>
+              <th data-sort="funded">Funded <span class="fb-sort-arrow"></span></th>
+              <th data-sort="approvalToFunding">Ap→F % <span class="fb-sort-arrow"></span></th>
+              <th data-sort="fundedAmt">Funded Amt <span class="fb-sort-arrow"></span></th>
+              <th data-sort="avgPoints">Avg Pts <span class="fb-sort-arrow"></span></th>
+              <th data-sort="avgAmount">Avg Amt <span class="fb-sort-arrow"></span></th>
+              <th data-sort="revenue">Revenue <span class="fb-sort-arrow"></span></th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#34D399)">MH</div><span class="biz-cell-name">Metro Holdings</span></div></td>
-              <td></td>
-              <td>Credibly</td>
-              <td>Anderson</td>
-              <td><span class="status-chip chip-green">Funded</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>May 15</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#2563EB)">AF</div><span class="biz-cell-name">Apex Financial</span></div></td>
-              <td></td>
-              <td>BlueVine</td>
-              <td>Frank</td>
-              <td><span class="status-chip chip-amber">Approved</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>May 22</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>3</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#34D399,#2563EB)">BC</div><span class="biz-cell-name">BlueStar Capital</span></div></td>
-              <td></td>
-              <td>OnDeck</td>
-              <td>Blake</td>
-              <td><span class="status-chip chip-blue">Under Review</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>May 28</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>4</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#6366F1,#2563EB)">NT</div><span class="biz-cell-name">NovaTech LLC</span></div></td>
-              <td></td>
-              <td>Kabbage</td>
-              <td>Ivan</td>
-              <td><span class="status-chip chip-blue">Under Review</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>2nd</td>
-              <td>Jun 1</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>5</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#10B981)">SD</div><span class="biz-cell-name">Sierra Dynamics</span></div></td>
-              <td></td>
-              <td>Rapid Finance</td>
-              <td>Colin</td>
-              <td><span class="status-chip chip-purple">New App</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>Jun 3</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>6</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#10B981,#0F4C81)">CP</div><span class="biz-cell-name">Capital Partners</span></div></td>
-              <td></td>
-              <td>Credibly</td>
-              <td>Kip</td>
-              <td><span class="status-chip chip-amber">Approved</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>2nd</td>
-              <td>May 18</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>7</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#2563EB,#6366F1)">VS</div><span class="biz-cell-name">Vertex Solutions</span></div></td>
-              <td></td>
-              <td>Fundbox</td>
-              <td>Santi</td>
-              <td><span class="status-chip chip-blue">Under Review</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>Jun 2</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>8</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#0F4C81,#34D399)">PV</div><span class="biz-cell-name">Pacific Ventures</span></div></td>
-              <td></td>
-              <td>OnDeck</td>
-              <td>Matthew</td>
-              <td><span class="status-chip chip-purple">New App</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>Jun 4</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>9</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">SH</div><span class="biz-cell-name">Summit Holdings</span></div></td>
-              <td></td>
-              <td>BlueVine</td>
-              <td>Anderson</td>
-              <td><span class="status-chip chip-green">Funded</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>1st</td>
-              <td>Apr 30</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-            <tr>
-              <td>10</td>
-              <td><div class="biz-cell"><div class="biz-dot" style="background:linear-gradient(135deg,#EF4444,#6366F1)">HF</div><span class="biz-cell-name">Harbor Finance</span></div></td>
-              <td></td>
-              <td>Kabbage</td>
-              <td>Rio</td>
-              <td><span class="status-chip chip-red">Declined</span></td>
-              <td><span class="factor-rate"></span></td>
-              <td>2nd</td>
-              <td>May 25</td>
-              <td><button class="action-btn">View</button></td>
-            </tr>
-          </tbody>
+          <tbody id="plRepTableBody"></tbody>
         </table>
-      </div>
+        <div class="fb-empty" id="plEmptyState" hidden>No pipeline records found.</div>
+      </section>
 
     </main>
   </div>
@@ -738,8 +483,8 @@
 </script>
 <script>
   (function () {
-    var btn  = document.getElementById('avatarBtn');
-    var menu = document.getElementById('avatarMenu');
+    let btn  = document.getElementById('avatarBtn');
+    let menu = document.getElementById('avatarMenu');
     if (!btn || !menu) return;
     btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
     document.addEventListener('click', function () { menu.classList.remove('open'); });
@@ -754,5 +499,6 @@
   })();
 </script>
 <script src="Assets/capmuse-search.js"></script>
+<script src="capmuse-pipeline.js"></script>
 </body>
 </html>

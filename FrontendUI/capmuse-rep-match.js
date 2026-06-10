@@ -11,12 +11,12 @@
   }
 
   function namesMatch(recordName, targetName) {
-    var rec = normalize(recordName);
-    var target = normalize(targetName);
+    let rec = normalize(recordName);
+    let target = normalize(targetName);
     if (!rec || !target) return false;
     if (rec === target) return true;
 
-    var targetTokens = tokens(targetName);
+    let targetTokens = tokens(targetName);
     if (targetTokens.length >= 2) {
       return targetTokens.every(function (t) {
         if (t.length <= 1) return true;
@@ -25,10 +25,11 @@
     }
 
     if (targetTokens.length === 1) {
-      var first = targetTokens[0];
-      var recTokens = tokens(recordName);
-      if (recTokens.length === 1) return recTokens[0] === first;
-      return false;
+      let token = targetTokens[0];
+      if (token.length <= 2) return false;
+      let recTokens = tokens(recordName);
+      if (recTokens.length === 1) return recTokens[0] === token;
+      return recTokens[0] === token || recTokens[recTokens.length - 1] === token;
     }
 
     return false;
@@ -40,34 +41,35 @@
     return userId || '';
   }
 
-  var ROLE_FIELD_KEYS = {
+  let ROLE_FIELD_KEYS = {
     package_owner: ['package_owner', 'Package_Owner.name', 'Owner.name'],
     puller: ['puller', 'Puller.name', 're_puller']
   };
 
   function fieldValues(record, role) {
-    var keys = ROLE_FIELD_KEYS[role] || [role];
-    var out = [];
+    let keys = ROLE_FIELD_KEYS[role] || [role];
+    let out = [];
     keys.forEach(function (key) {
-      var val = record[key];
+      let val = record[key];
       if (val && String(val).trim()) out.push(String(val).trim());
     });
     return out;
   }
 
   function matchRolesFor(rep, options) {
-    if (rep && rep.bookRoles && rep.bookRoles.length) return rep.bookRoles;
     if (options && options.fundedOnly) return ['package_owner'];
+    if (options && options.pullerOnly) return ['puller'];
+    if (rep && rep.bookRoles && rep.bookRoles.length) return rep.bookRoles;
     return ['package_owner', 'puller'];
   }
 
   function recordMatchesRep(record, rep, userId, options) {
     options = options || {};
-    var target = repTargetName(rep, userId);
+    let target = repTargetName(rep, userId);
     if (!target) return false;
 
-    var roles = matchRolesFor(rep, options);
-    var fields = [];
+    let roles = matchRolesFor(rep, options);
+    let fields = [];
     roles.forEach(function (role) {
       fields = fields.concat(fieldValues(record, role));
     });

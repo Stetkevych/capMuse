@@ -8,6 +8,7 @@ import AnswerCard from './components/AnswerCard';
 import LeaderboardPage from './pages/LeaderboardPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import InsightsPage from './pages/InsightsPage';
+import PipelinePage from './pages/PipelinePage';
 import { processQuery, initData } from './hooks/useCapMuse';
 
 export default function App() {
@@ -196,11 +197,12 @@ function MainApp() {
           {page === 'leaderboard' && <LeaderboardPage />}
           {page === 'analytics' && <AnalyticsPage />}
           {page === 'insights' && <InsightsPage />}
+          {page === 'pipeline' && <PipelinePage />}
           {page === 'reps' && <LeaderboardPage />}
           {page === 'deals' && <DealsPlaceholder />}
           {page === 'lenders' && <AnalyticsPage />}
           {page === 'sources' && <AnalyticsPage />}
-          {!['dashboard', 'ask', 'leaderboard', 'analytics', 'insights', 'reps', 'deals', 'lenders', 'sources'].includes(page) && <ComingSoon page={page} />}
+          {!['dashboard', 'ask', 'leaderboard', 'analytics', 'insights', 'pipeline', 'reps', 'deals', 'lenders', 'sources'].includes(page) && <ComingSoon page={page} />}
         </div>
       </main>
     </div>

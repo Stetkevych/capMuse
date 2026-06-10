@@ -1,4 +1,5 @@
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { mergeFundingBookRecord } = require('./funding-book-normalize');
 
 const BUCKET = 'capmuse-data-882611632216';
 const s3 = new S3Client({ region: 'us-east-1' });
@@ -36,10 +37,10 @@ exports.handler = async (event) => {
       existing = JSON.parse(text);
     } catch { }
 
-    // Upsert by record_id
+    // Upsert by record_id — package_owner from Package Owner lookup only, never puller
     const idx = existing.findIndex(r => r.record_id === record.record_id);
-    if (idx > -1) existing[idx] = record;
-    else existing.push(record);
+    if (idx > -1) existing[idx] = mergeFundingBookRecord(existing[idx], record);
+    else existing.push(mergeFundingBookRecord(null, record));
 
     // Save
     await s3.send(new PutObjectCommand({

@@ -2,11 +2,11 @@
 (function () {
   if (!document.body.classList.contains('home-page')) return;
 
-  function init() {
+  function start() {
     if (!window.CapMuseAuth || !window.CapMuseAuth.getUserId()) return;
     if (!window.CapMuseRepStats || !window.CapMuseData) return;
 
-    var userId = window.CapMuseAuth.getUserId();
+    let userId = window.CapMuseAuth.getUserId();
     if (window.ensureRepProfile) userId = window.ensureRepProfile(userId);
 
     function load(uid) {
@@ -19,10 +19,15 @@
     load(userId);
 
     window.addEventListener('capmuse:deals-updated', function () {
-      var uid = window.CapMuseAuth.getUserId();
+      let uid = window.CapMuseAuth.getUserId();
       if (window.ensureRepProfile) uid = window.ensureRepProfile(uid);
       load(uid);
     });
+  }
+
+  function init() {
+    let ready = window.ensureLiveDeps ? window.ensureLiveDeps() : Promise.resolve();
+    ready.then(start);
   }
 
   if (document.readyState === 'loading') {

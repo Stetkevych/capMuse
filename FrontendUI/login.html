@@ -1245,26 +1245,26 @@
   <script>
     /* ─── Intro sequence ─────────────────────────────────────────── */
     (function () {
-      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduced) {
         document.getElementById('loginWrapper').classList.add('visible');
         document.getElementById('themeToggle').classList.add('intro-done');
         return;
       }
 
-      var intro     = document.getElementById('intro');
-      var iCanvas   = document.getElementById('introCanvas');
-      var bStage    = document.querySelector('.badge-stage');
-      var hexOut    = document.querySelector('.hex-outer');
-      var hexIn     = document.querySelector('.hex-inner');
-      var accents   = document.querySelectorAll('.corner-accent');
-      var iLogo     = document.querySelector('.intro-logo');
-      var iTag      = document.querySelector('.intro-tagline');
-      var hGlow     = document.querySelector('.horizon-glow');
-      var lWrap     = document.getElementById('loginWrapper');
-      var toggle    = document.getElementById('themeToggle');
-      var timers    = [];
-      var skipped   = false;
+      let intro     = document.getElementById('intro');
+      let iCanvas   = document.getElementById('introCanvas');
+      let bStage    = document.querySelector('.badge-stage');
+      let hexOut    = document.querySelector('.hex-outer');
+      let hexIn     = document.querySelector('.hex-inner');
+      let accents   = document.querySelectorAll('.corner-accent');
+      let iLogo     = document.querySelector('.intro-logo');
+      let iTag      = document.querySelector('.intro-tagline');
+      let hGlow     = document.querySelector('.horizon-glow');
+      let lWrap     = document.getElementById('loginWrapper');
+      let toggle    = document.getElementById('themeToggle');
+      let timers    = [];
+      let skipped   = false;
 
       function schedule(fn, ms) {
         timers.push(setTimeout(fn, ms));
@@ -1282,9 +1282,9 @@
       }
 
       /* ── 3-phase particle system ── */
-      var ictx = iCanvas.getContext('2d');
-      var iW, iH, pts = [], phase = 0, p2t = 0, raf;
-      var COLS = [
+      let ictx = iCanvas.getContext('2d');
+      let iW, iH, pts = [], phase = 0, p2t = 0, raf;
+      let COLS = [
         'rgba(57,255,20,',
         'rgba(37,99,235,',
         'rgba(16,185,129,',
@@ -1297,9 +1297,9 @@
       }
 
       function spawn() {
-        var n = Math.min(Math.floor((iW * iH) / 6500), 200);
+        let n = Math.min(Math.floor((iW * iH) / 6500), 200);
         pts = [];
-        for (var i = 0; i < n; i++) {
+        for (let i = 0; i < n; i++) {
           pts.push({
             x:   Math.random() * iW,
             y:   Math.random() * iH,
@@ -1316,10 +1316,10 @@
 
       function draw() {
         ictx.clearRect(0, 0, iW, iH);
-        var cx = iW / 2, cy = iH / 2;
+        let cx = iW / 2, cy = iH / 2;
 
-        for (var i = 0; i < pts.length; i++) {
-          var p = pts[i];
+        for (let i = 0; i < pts.length; i++) {
+          let p = pts[i];
 
           if (phase === 0) {
             /* Phase 1 — free drift */
@@ -1329,17 +1329,17 @@
 
           } else if (phase === 1) {
             /* Phase 2 — converge to centre */
-            var dx = cx - p.x, dy = cy - p.y;
-            var d  = Math.sqrt(dx * dx + dy * dy) || 1;
-            var s  = Math.min(p.spd * 2.8, d);
+            let dx = cx - p.x, dy = cy - p.y;
+            let d  = Math.sqrt(dx * dx + dy * dy) || 1;
+            let s  = Math.min(p.spd * 2.8, d);
             p.x += dx / d * s;
             p.y += dy / d * s;
 
           } else {
             /* Phase 3 — scatter / orbit outward */
             p.ang += .013 + p.spd * .004;
-            var elapsed = Date.now() - p2t;
-            var orb = Math.min(p.spd * 220, 55 + elapsed * .13 + p.spd * 90);
+            let elapsed = Date.now() - p2t;
+            let orb = Math.min(p.spd * 220, 55 + elapsed * .13 + p.spd * 90);
             p.x = cx + Math.cos(p.ang) * orb;
             p.y = cy + Math.sin(p.ang) * orb;
           }
@@ -1352,7 +1352,7 @@
 
           /* Glow halo for larger dots */
           if (p.r > 1.15) {
-            var g = ictx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4.5);
+            let g = ictx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4.5);
             g.addColorStop(0, p.c + (p.a * .38) + ')');
             g.addColorStop(1, p.c + '0)');
             ictx.beginPath();
@@ -1394,7 +1394,7 @@
 
       document.addEventListener('keydown', function (e) {
         if (e.code !== 'Space' && e.key !== ' ') return;
-        var tag = e.target && e.target.tagName;
+        let tag = e.target && e.target.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
         e.preventDefault();
         skipIntro();
