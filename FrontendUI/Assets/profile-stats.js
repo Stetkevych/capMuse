@@ -547,20 +547,17 @@
   function profileStatsPanelHTML(kpis) {
     let k = kpis || {};
     return '' +
-      '<div class="pmc-stats-row">' +
+      '<div class="pmc-stats-row pmc-stats-row-2">' +
         '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Time in Company</span></div>' +
         '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Age</span></div>' +
-        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Height</span></div>' +
-      '</div>' +
-      '<div class="pmc-div slim"></div>' +
-      '<div class="pmc-stats-row">' +
-        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Avg Deal Size</span></div>' +
-        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Avg Time to Fund</span></div>' +
-        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Deals Funded</span></div>' +
       '</div>' +
       '<div class="pmc-div slim"></div>' +
       '<div class="pmc-stats-row pmc-stats-row-2">' +
-        '<div class="pmc-stat s-green"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Pulled Apps</span></div>' +
+        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Avg Deal Size</span></div>' +
+        '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Deals Funded</span></div>' +
+      '</div>' +
+      '<div class="pmc-div slim"></div>' +
+      '<div class="pmc-stats-row pmc-stats-row-1">' +
         '<div class="pmc-stat s-gold"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Amount Funded</span></div>' +
       '</div>' +
       '<div class="pmc-div"></div>' +
@@ -575,10 +572,9 @@
   function profileStatsLoadingHTML() {
     return '' +
       '<div class="pmc-stats-loading" aria-live="polite">Loading live stats…</div>' +
-      '<div class="pmc-stats-row pmc-stats-skeleton">' +
+      '<div class="pmc-stats-row pmc-stats-row-2 pmc-stats-skeleton">' +
         '<div class="pmc-stat"><span class="pmc-stat-val pmc-skel"></span><span class="pmc-stat-lbl">Time in Company</span></div>' +
         '<div class="pmc-stat"><span class="pmc-stat-val pmc-skel"></span><span class="pmc-stat-lbl">Age</span></div>' +
-        '<div class="pmc-stat"><span class="pmc-stat-val pmc-skel"></span><span class="pmc-stat-lbl">Height</span></div>' +
       '</div>';
   }
 
@@ -660,11 +656,8 @@
     let statTexts = [
       hr.timeInCompany || '',
       hr.age != null ? String(hr.age) : '',
-      '',
       displayStat(s.avgDeal, live),
-      live ? formatProfileStat('timeToFund', s.timeToFund) : '',
       live && s.totalDeals != null ? String(s.totalDeals) : '',
-      '',
       displayStat(s.volume, live)
     ];
     statVals.forEach(function (el, i) {
