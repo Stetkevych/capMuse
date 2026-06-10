@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Home — CapMuse</title>
+  <link rel="preconnect" href="https://capmuse-data-882611632216.s3.amazonaws.com" crossorigin />
+  <link rel="dns-prefetch" href="https://capmuse-data-882611632216.s3.amazonaws.com" />
+  <script src="capmuse-data.js"></script>
+  <script>if (window.CapMuseData) window.CapMuseData.prefetch();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -137,6 +141,7 @@
       box-shadow: 0 0 0 1px rgba(99,102,241,0.25), 0 0 28px rgba(59,130,246,0.45), 0 0 60px rgba(59,130,246,0.2), 0 10px 40px rgba(0,0,0,0.45);
       animation: scaleIn 0.65s cubic-bezier(0.22,1,0.36,1) 0.08s both;
       position: relative; z-index: 1;
+      overflow: hidden;
     }
     .hero-photo-ring[data-person-id] {
       cursor: pointer;
@@ -150,7 +155,32 @@
       outline: 2px solid var(--blue);
       outline-offset: 4px;
     }
-    .hero-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center 8%; display: block; }
+    .hero-photo,
+    .hero-photo-placeholder {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: calc(100% - 8px);
+      height: calc(100% - 8px);
+      border-radius: 50%;
+    }
+    .hero-photo { object-fit: cover; object-position: center 8%; display: block; }
+    .hero-photo-placeholder {
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(145deg, #64748B 0%, #475569 100%);
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 88px; font-weight: 700; line-height: 1;
+      user-select: none;
+    }
+    .hero-photo[hidden],
+    .hero-photo-placeholder[hidden] {
+      display: none !important;
+    }
+    html[data-theme="dark"] .hero-photo-placeholder {
+      background: linear-gradient(145deg, #334155 0%, #1E293B 100%);
+      color: #CBD5E1;
+    }
 
     .hero-info { flex: 1; animation: slideUp 0.52s ease-out 0.12s both; position: relative; z-index: 1; }
     .hero-greeting { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; letter-spacing: 0.01em; }
@@ -315,6 +345,7 @@
       .topbar { padding: 14px 16px 0; }
       .home-hero { flex-direction: column; padding: 28px 24px; gap: 24px; align-items: flex-start; }
       .hero-photo-ring { width: 150px; height: 150px; }
+      .hero-photo-placeholder { font-size: 56px; }
       .hero-name { font-size: 32px; }
       .hero-qs-row { gap: 20px; }
       .perf-grid { grid-template-columns: 1fr 1fr; }
@@ -324,7 +355,7 @@
   </style>
   <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
-<body>
+<body class="home-page">
 <div class="layout">
 
   <!-- ── SIDEBAR ── -->
@@ -431,7 +462,8 @@
       <!-- HERO -->
       <section class="home-hero" aria-label="Personal overview">
         <div class="hero-photo-ring" id="heroPhotoRing" role="button" tabindex="0" aria-label="View your stats card">
-          <img id="heroPhoto" src="Assets/reps/anderson.png" alt="Profile" class="hero-photo" />
+          <div class="hero-photo-placeholder" id="heroPhotoPlaceholder" aria-hidden="true">?</div>
+          <img id="heroPhoto" src="" alt="Profile" class="hero-photo" hidden />
         </div>
         <div class="hero-info">
           <p class="hero-greeting" id="heroGreeting">Welcome back 👋</p>
@@ -515,6 +547,7 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
 /* ── Main populate ── */
 (function () {
   if (!window.CapMuseAuth.requireLogin()) return;
+  window.CapMuseAuth.guardDemoPage();
 
   var userId = window.CapMuseAuth.getUserId();
   if (window.ensureRepProfile) userId = window.ensureRepProfile(userId);
@@ -536,8 +569,9 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
   var first = rep.name.split(' ')[0];
 
   /* Hero */
-  document.getElementById('heroPhoto').src  = rep.photo;
-  document.getElementById('heroPhoto').alt  = rep.name;
+  if (window.setHeroRepPhoto) {
+    window.setHeroRepPhoto(document.getElementById('heroPhotoRing'), document.getElementById('heroPhoto'), rep);
+  }
   document.getElementById('heroGreeting').textContent = 'Welcome back, ' + first + ' 👋';
   document.getElementById('heroName').textContent     = rep.name;
   document.getElementById('heroRole').textContent     = rep.role;
@@ -552,7 +586,7 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
   document.getElementById('heroQuickStats').innerHTML =
     '<div class="hero-qs"><span class="hero-qs-val"></span><span class="hero-qs-lbl">Volume today</span></div>' +
     '<div class="hero-qs"><span class="hero-qs-val"></span><span class="hero-qs-lbl">Funded today</span></div>' +
-    '<div class="hero-qs"><span class="hero-qs-val"></span><span class="hero-qs-lbl">Leads today</span></div>';
+    '<div class="hero-qs"><span class="hero-qs-val"></span><span class="hero-qs-lbl">MTD volume</span></div>';
 
   var dateEl = document.getElementById('todayDate');
   if (dateEl) {
@@ -561,6 +595,7 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
 
   window.CapMuseAuth.populateSidebar(rep);
   window.CapMuseAuth.wireLogoutLinks();
+  window.CapMuseAuth.applyDemoNav();
 
   if (window.renderTodayPerfPanel) {
     window.renderTodayPerfPanel(document.getElementById('perfGrid'), userId, { animate: true });
@@ -574,6 +609,9 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
   }
 })();
 </script>
+<script src="capmuse-rep-match.js"></script>
+<script src="capmuse-rep-stats.js"></script>
+<script src="capmuse-home.js"></script>
 <script src="Assets/capmuse-search.js"></script>
 </body>
 </html>

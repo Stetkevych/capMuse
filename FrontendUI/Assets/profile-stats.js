@@ -121,6 +121,7 @@
     },
     dominic: {
       name: 'Dominic',
+      bookName: 'Dominic Basilio',
       role: 'Junior Advisor',
       company: 'Capital Infusion',
       badge: 'Learning Fast',
@@ -129,22 +130,24 @@
       kpis:  { bestMonth: 'June 2024', largestDeal: '$1.4M', avgCommission: '$1,900', retention: '70%' }
     },
     gabriel: {
-      name: 'Gabriel',
+      name: 'Gabriel Sulca',
+      bookName: 'Gabriel Sulca',
+      bookRoles: ['package_owner', 'puller'],
       role: 'Funding Advisor',
       company: 'Capital Infusion',
       badge: 'Momentum',
-      photo: 'Assets/reps/Cartoon/AndersonCartoon.png',
-      stats: { experience: 3, age: 26, height: "6'1\"", avgDeal: 64, timeToFund: 4.9, totalDeals: 163, volume: 10.4, approvalRate: 70, activeClients: 52 },
-      kpis:  { bestMonth: 'May 2024', largestDeal: '$2.5M', avgCommission: '$2,600', retention: '80%' }
+      stats: { experience: 3, age: 26, height: "6'1\"", avgDeal: 34, timeToFund: 4.9, totalDeals: 1, volume: 0.03, approvalRate: 70, activeClients: 52 },
+      kpis:  { bestMonth: 'May 2026', largestDeal: '$34K', avgCommission: '$2,600', retention: '80%' }
     },
     gabe: {
-      name: 'Gabriel',
+      name: 'Gabriel Sulca',
+      bookName: 'Gabriel Sulca',
+      bookRoles: ['package_owner', 'puller'],
       role: 'Funding Advisor',
       company: 'Capital Infusion',
       badge: 'Momentum',
-      photo: 'Assets/reps/Cartoon/AndersonCartoon.png',
-      stats: { experience: 3, age: 26, height: "6'1\"", avgDeal: 64, timeToFund: 4.9, totalDeals: 163, volume: 10.4, approvalRate: 70, activeClients: 52 },
-      kpis:  { bestMonth: 'May 2024', largestDeal: '$2.5M', avgCommission: '$2,600', retention: '80%' }
+      stats: { experience: 3, age: 26, height: "6'1\"", avgDeal: 34, timeToFund: 4.9, totalDeals: 1, volume: 0.03, approvalRate: 70, activeClients: 52 },
+      kpis:  { bestMonth: 'May 2026', largestDeal: '$34K', avgCommission: '$2,600', retention: '80%' }
     },
     cipriani: {
       name: 'Cipriani',
@@ -403,8 +406,8 @@
       kpis: {
         bestMonth: 'May 2024',
         largestDeal: '$2.0M',
-        avgCommission: '$2,500',
-        retention: '78%'
+        totalFunded: null,
+        avgRevenue: null
       }
     };
   }
@@ -448,7 +451,7 @@
       role: data.role || 'Funding Advisor',
       company: data.company || 'Capital Infusion',
       badge: data.badge || 'Funding Pro',
-      photo: data.photo || 'Assets/reps/Cartoon/AndersonCartoon.png',
+      photo: data.photo || '',
       stats: data.stats || {},
       kpis: data.kpis || {},
       today: data.today || {}
@@ -491,23 +494,106 @@
       '</div>' +
       '<div class="pmc-div slim"></div>' +
       '<div class="pmc-stats-row">' +
-        '<div class="pmc-stat s-green"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Approval Rate</span></div>' +
+        '<div class="pmc-stat s-green"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Pulled Apps</span></div>' +
         '<div class="pmc-stat s-gold"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Volume</span></div>' +
         '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Active Clients</span></div>' +
       '</div>' +
       '<div class="pmc-div"></div>' +
       '<div class="pmc-kpis pmc-kpis-visible">' +
-        '<div class="pmc-kpi"><div class="pmc-kpi-icon">📅</div><div class="pmc-kpi-val">' + (k.bestMonth || '') + '</div><div class="pmc-kpi-lbl">Best Funding Month</div></div>' +
+        '<div class="pmc-kpi"><div class="pmc-kpi-icon">📅</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Best Funding Month</div></div>' +
         '<div class="pmc-kpi"><div class="pmc-kpi-icon">🏆</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Largest Deal Funded</div></div>' +
-        '<div class="pmc-kpi"><div class="pmc-kpi-icon">💰</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Avg Commission</div></div>' +
-        '<div class="pmc-kpi"><div class="pmc-kpi-icon">🔄</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Client Retention</div></div>' +
+        '<div class="pmc-kpi"><div class="pmc-kpi-icon">💵</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Total Amount Funded</div></div>' +
+        '<div class="pmc-kpi"><div class="pmc-kpi-icon">💰</div><div class="pmc-kpi-val"></div><div class="pmc-kpi-lbl">Average Revenue</div></div>' +
       '</div>';
+  }
+
+  function fmtPerfMoney(v) {
+    if (v == null || v === '' || v === '—') return '';
+    if (typeof v === 'string' && v.indexOf('$') === 0) return v;
+    var n = parseFloat(v) || 0;
+    if (!n) return '';
+    if (n >= 1e6 || Math.round(n / 1000) >= 1000) {
+      return '$' + (n / 1e6).toFixed(2) + 'M';
+    }
+    if (n >= 1e3) return '$' + Math.round(n / 1000) + 'K';
+    return '$' + Math.round(n).toLocaleString();
+  }
+
+  function emptyStat(val) {
+    return val == null || val === '' || val === '—';
+  }
+
+  function formatProfileStat(key, val) {
+    if (emptyStat(val)) return '';
+    if (key === 'experience') return val + ' yrs';
+    if (key === 'timeToFund') return val + ' days';
+    if (key === 'approvalRate') return val + '%';
+    return String(val);
+  }
+
+  var TODAY_FIELD_KEYS = ['leads', 'pulls', 'dealsOwned', 'funded', 'volume', 'commission', 'pipeline', 'calls'];
+  var BOOK_TODAY_KEYS = { funded: 1, volume: 1 };
+
+  function formatTodayMetric(key, val) {
+    if (val == null || val === '' || val === '—') return '';
+    if (key === 'volume' || key === 'commission') return val === 0 ? '$0' : fmtPerfMoney(val);
+    return String(val);
+  }
+
+  function fillTodayPerfValues(container, personId, compact) {
+    if (!container) return;
+    var rep = getRepData(personId);
+    var t = rep.today || {};
+    var sel = compact ? '.pmc-compare-perf-val' : '.perf-val';
+    var cards = container.querySelectorAll(sel);
+    TODAY_FIELD_KEYS.forEach(function (key, i) {
+      if (!cards[i]) return;
+      if (!BOOK_TODAY_KEYS[key]) {
+        cards[i].textContent = '';
+        return;
+      }
+      cards[i].textContent = formatTodayMetric(key, t[key]);
+    });
+    if (cards[8]) cards[8].textContent = '';
+  }
+
+  function fillProfileStatsValues(container, personId) {
+    if (!container) return;
+    var rep = getRepData(personId);
+    var s = rep.stats || {};
+    var k = rep.kpis || {};
+    var statVals = container.querySelectorAll('.pmc-stat-val');
+    var statTexts = [
+      '',
+      '',
+      '',
+      s.avgDeal || '',
+      formatProfileStat('timeToFund', s.timeToFund),
+      s.totalDeals != null ? String(s.totalDeals) : '',
+      s.totalPulled != null ? String(s.totalPulled) : '',
+      s.volume || '',
+      ''
+    ];
+    statVals.forEach(function (el, i) {
+      el.textContent = statTexts[i] || '';
+    });
+    var kpiVals = container.querySelectorAll('.pmc-kpi-val');
+    var kpiTexts = [
+      k.bestMonth || '',
+      k.largestDeal || '',
+      k.totalFunded || s.volume || '',
+      k.avgRevenue || ''
+    ];
+    kpiVals.forEach(function (el, i) {
+      el.textContent = kpiTexts[i] || '';
+    });
   }
 
   function renderProfileStatsPanel(container, personId) {
     if (!container) return;
     var rep = getRepData(personId);
     container.innerHTML = profileStatsPanelHTML(rep.kpis);
+    fillProfileStatsValues(container, personId);
   }
 
   var TODAY_METRICS = [
@@ -544,9 +630,61 @@
         '</div>';
       container.appendChild(el);
     });
+    fillTodayPerfValues(container, personId, compact);
+  }
+
+  var PLACEHOLDER_REP_PHOTOS = {
+    'assets/reps/cartoon/andersoncartoon.png': 1,
+    'assets/reps/anderson.png': 1
+  };
+
+  function normalizePhotoPath(photo) {
+    return String(photo || '').trim().toLowerCase();
+  }
+
+  function hasRepPhoto(photo) {
+    var path = normalizePhotoPath(photo);
+    if (!path) return false;
+    return !PLACEHOLDER_REP_PHOTOS[path];
+  }
+
+  function setHeroRepPhoto(ringEl, imgEl, rep) {
+    if (!ringEl || !imgEl) return;
+    var placeholder = ringEl.querySelector('.hero-photo-placeholder');
+    if (!placeholder) {
+      placeholder = document.createElement('div');
+      placeholder.className = 'hero-photo-placeholder';
+      placeholder.setAttribute('aria-hidden', 'true');
+      placeholder.textContent = '?';
+      ringEl.appendChild(placeholder);
+    }
+
+    function showPlaceholder() {
+      imgEl.hidden = true;
+      imgEl.removeAttribute('src');
+      placeholder.hidden = false;
+    }
+
+    function showPhoto(src) {
+      placeholder.hidden = true;
+      imgEl.hidden = false;
+      imgEl.onerror = showPlaceholder;
+      imgEl.src = src;
+      imgEl.alt = (rep && rep.name) || 'Profile';
+    }
+
+    if (rep && hasRepPhoto(rep.photo)) {
+      showPhoto(rep.photo);
+    } else {
+      showPlaceholder();
+    }
   }
 
   window.getRepData = getRepData;
+  window.hasRepPhoto = hasRepPhoto;
+  window.setHeroRepPhoto = setHeroRepPhoto;
+  window.fillTodayPerfValues = fillTodayPerfValues;
+  window.fillProfileStatsValues = fillProfileStatsValues;
   window.listComparableReps = listComparableReps;
   window.renderProfileStatsPanel = renderProfileStatsPanel;
   window.renderTodayPerfPanel = renderTodayPerfPanel;
@@ -557,6 +695,29 @@
   var overlay, flipEl, closeBtn;
   var compareOverlay, compareSelect, compareSelfCol, compareOtherCol, compareCloseBtn;
   var compareSelfId = '';
+  var currentProfileId = '';
+
+  function setModalRepPhoto(imgEl, rep) {
+    if (!imgEl) return;
+    var ring = imgEl.parentElement;
+    if (hasRepPhoto(rep.photo)) {
+      imgEl.hidden = false;
+      imgEl.onerror = function () { setModalRepPhoto(imgEl, { name: rep.name, photo: '' }); };
+      imgEl.src = rep.photo;
+      imgEl.alt = rep.name;
+      if (ring) ring.classList.remove('pmc-photo-missing');
+    } else {
+      imgEl.hidden = true;
+      imgEl.removeAttribute('src');
+      imgEl.alt = rep.name || '';
+      if (ring) ring.classList.add('pmc-photo-missing');
+    }
+  }
+
+  function loadLiveStatsForRep(personId) {
+    if (!window.CapMuseRepStats) return Promise.resolve(null);
+    return window.CapMuseRepStats.applyForRep(personId);
+  }
 
   function buildModal() {
     var html = '' +
@@ -618,23 +779,34 @@
   /* ═══════════════════════════════════════════════════════════════
      Populate modal with person data
   ═══════════════════════════════════════════════════════════════ */
-  function populate(personId) {
+  function renderProfileView(personId) {
     var rep = getRepData(personId);
 
-    document.getElementById('pmcFrontPhoto').src = rep.photo;
-    document.getElementById('pmcFrontPhoto').alt = rep.name;
+    setModalRepPhoto(document.getElementById('pmcFrontPhoto'), rep);
     document.getElementById('pmcFrontName').textContent = rep.name;
     document.getElementById('pmcFrontRole').textContent = rep.role;
     document.getElementById('pmcFrontCo').textContent   = rep.company;
 
-    document.getElementById('pmcBackPhoto').src  = rep.photo;
-    document.getElementById('pmcBackPhoto').alt  = rep.name;
+    setModalRepPhoto(document.getElementById('pmcBackPhoto'), rep);
     document.getElementById('pmcPersonName').textContent = rep.name;
     document.getElementById('pmcBackRole').textContent   = rep.role;
     document.getElementById('pmcBackCo').textContent     = rep.company;
     document.getElementById('pmcBadge').textContent      = rep.badge;
 
     renderProfileStatsPanel(document.getElementById('pmcStatsPanel'), rep.id);
+  }
+
+  function populate(personId) {
+    currentProfileId = ensureRepProfile(personId);
+    if (window.CapMuseRepStats && window.CapMuseData) {
+      loadLiveStatsForRep(currentProfileId).then(function () {
+        if (currentProfileId === ensureRepProfile(personId)) {
+          renderProfileView(currentProfileId);
+        }
+      });
+      return;
+    }
+    renderProfileView(currentProfileId);
   }
 
   function renderCompareColumn(colEl, personId, columnLabel) {
@@ -657,6 +829,9 @@
 
     renderProfileStatsPanel(colEl.querySelector('.pmc-compare-stats'), rep.id);
     renderTodayPerfPanel(colEl.querySelector('.pmc-compare-today-grid'), rep.id, { compact: true, animate: false });
+
+    var compareImg = colEl.querySelector('.pmc-back-photo-ring img');
+    if (compareImg) setModalRepPhoto(compareImg, rep);
   }
 
   function buildCompareModal() {
@@ -696,7 +871,11 @@
       if (e.target === compareOverlay) closeCompare();
     });
     compareSelect.addEventListener('change', function () {
-      renderCompareColumn(compareOtherCol, compareSelect.value, compareSelect.options[compareSelect.selectedIndex].text);
+      var otherId = compareSelect.value;
+      renderCompareColumn(compareOtherCol, otherId, compareSelect.options[compareSelect.selectedIndex].text);
+      loadLiveStatsForRep(otherId).then(function () {
+        renderCompareColumn(compareOtherCol, otherId, compareSelect.options[compareSelect.selectedIndex].text);
+      });
     });
   }
 
@@ -728,8 +907,17 @@
       : reps[0].id;
     compareSelect.value = otherId;
 
-    renderCompareColumn(compareSelfCol, compareSelfId, 'You');
-    renderCompareColumn(compareOtherCol, otherId, compareSelect.options[compareSelect.selectedIndex].text);
+    function renderCompareView() {
+      renderCompareColumn(compareSelfCol, compareSelfId, 'You');
+      renderCompareColumn(compareOtherCol, compareSelect.value, compareSelect.options[compareSelect.selectedIndex].text);
+    }
+
+    renderCompareView();
+
+    Promise.all([
+      loadLiveStatsForRep(compareSelfId),
+      loadLiveStatsForRep(compareSelect.value)
+    ]).then(renderCompareView);
 
     compareOverlay.removeAttribute('hidden');
     requestAnimationFrame(function () {
@@ -804,6 +992,22 @@
     buildModal();
     buildCompareModal();
   }
+
+  window.addEventListener('capmuse:rep-stats-updated', function (e) {
+    var uid = e.detail && e.detail.userId;
+    if (!uid) return;
+    if (overlay && overlay.classList.contains('pmc-open') && currentProfileId === uid) {
+      renderProfileView(currentProfileId);
+    }
+    if (compareOverlay && compareOverlay.classList.contains('pmc-open')) {
+      if (uid === compareSelfId) {
+        renderCompareColumn(compareSelfCol, compareSelfId, 'You');
+      }
+      if (compareSelect && uid === compareSelect.value) {
+        renderCompareColumn(compareOtherCol, compareSelect.value, compareSelect.options[compareSelect.selectedIndex].text);
+      }
+    }
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initModals);
