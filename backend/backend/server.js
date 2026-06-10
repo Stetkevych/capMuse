@@ -381,6 +381,6 @@ app.post("/convoso/call-log", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Convoso server running on http://127.0.0.1:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Convoso server running on port ${PORT}`);
 });
