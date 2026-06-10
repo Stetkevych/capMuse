@@ -269,6 +269,35 @@ app.get("/convoso/debug-ni", async (req, res) => {
   }
 });
 
+/* Debug: show talk_sec raw + parseHMMSS result for all 3 dispositions today */
+app.get("/convoso/debug-talktime", async (req, res) => {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const results = {};
+    for (const sid of ["inst", "NI", "NC"]) {
+      const raw = await fetchConvosoData("/v1/agent-performance/search", {
+        date_start: `${today} 00:00:00`,
+        date_end:   `${today} 23:59:59`,
+        status_ids: sid,
+        call_type:  "OUTBOUND",
+        page: 1,
+        per_page: 5,
+      });
+      const records = recordsFromConvoso(raw);
+      results[sid] = records.slice(0, 5).map(r => ({
+        name:          r.name || r.user,
+        calls:         r.calls,
+        talk_sec_raw:  r.talk_sec,
+        talk_sec_parsed: parseHMMSS(r.talk_sec),
+        human_answered: r.human_answered,
+      }));
+    }
+    res.json({ note: "talk_sec raw vs parsed per disposition (today)", results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 /* Debug: fetch ONE page with NO status filter to see all fields on each row */
 app.get("/convoso/debug-raw", async (req, res) => {
   try {
