@@ -148,7 +148,7 @@
 
       byRep[rep].apps++;
 
-      if (r['Funder'] || r['Date Applied']) {
+      if (r['Date Applied'] || amt > 0) {
         byRep[rep].approvals++;
       }
 
