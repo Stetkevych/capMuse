@@ -557,6 +557,11 @@
         '<div class="pmc-stat"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Deals Funded</span></div>' +
       '</div>' +
       '<div class="pmc-div slim"></div>' +
+      '<div class="pmc-stats-row pmc-stats-row-2">' +
+        '<div class="pmc-stat s-green"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Apps</span></div>' +
+        '<div class="pmc-stat s-green"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Approvals</span></div>' +
+      '</div>' +
+      '<div class="pmc-div slim"></div>' +
       '<div class="pmc-stats-row pmc-stats-row-1">' +
         '<div class="pmc-stat s-gold"><span class="pmc-stat-val"></span><span class="pmc-stat-lbl">Total Amount Funded</span></div>' +
       '</div>' +
@@ -658,6 +663,8 @@
       hr.age != null ? String(hr.age) : '',
       displayStat(s.avgDeal, live),
       live && s.totalDeals != null ? String(s.totalDeals) : '',
+      live && s.totalApps != null ? String(s.totalApps) : '',
+      live && s.totalApprovals != null ? String(s.totalApprovals) : '',
       displayStat(s.volume, live)
     ];
     statVals.forEach(function (el, i) {
