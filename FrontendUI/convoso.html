@@ -558,7 +558,7 @@
   var CONVOSO = 'https://capmuse.onrender.com';
 
   /* ── STATE ── */
-  var activePeriod   = 'today';
+  var activePeriod   = 'last7days';
   var activeDisp     = 'inst';
   var activeCampaign = '';
   var customStart    = '';
@@ -571,14 +571,14 @@
 
   /* ── MODAL STATE ── */
   var currentChip      = null;
-  var pendingPeriod    = 'today';
+  var pendingPeriod    = 'last7days';
   var pendingCampaign  = '';
   var pendingCustStart = '';
   var pendingCustEnd   = '';
 
   /* ── CONSTANTS ── */
   var PERIOD_LABELS = {
-    today:'Today', yesterday:'Yesterday', thisweek:'This Week', lastweek:'Last Week',
+    last7days:'Last 7 Days', today:'Today', yesterday:'Yesterday', thisweek:'This Week', lastweek:'Last Week',
     thismonth:'This Month', lastmonth:'Last Month', last3months:'Last 3 Months',
     last6months:'Last 6 Months', ytd:'Year to Date', alltime:'All Time', custom:'Custom Range'
   };
@@ -606,6 +606,7 @@
   function getDateRange(period) {
     var now=new Date(), y=now.getFullYear(), m=now.getMonth(), d=now.getDate(), dow=now.getDay(), today=isoDate(now);
     switch(period){
+      case 'last7days':{ var s7=new Date(now); s7.setDate(d-6); return {start:isoDate(s7),end:today}; }
       case 'today': return {start:today,end:today};
       case 'yesterday':{ var yy=new Date(now); yy.setDate(d-1); var ys=isoDate(yy); return {start:ys,end:ys}; }
       case 'thisweek':{ var ws=new Date(now); ws.setDate(d-(dow===0?6:dow-1)); return {start:isoDate(ws),end:today}; }
@@ -747,7 +748,7 @@
 
   function renderActiveTags() {
     var tags = [];
-    if (activePeriod !== 'today') tags.push({label:PERIOD_LABELS[activePeriod]||activePeriod, chip:'period'});
+    if (activePeriod !== 'last7days') tags.push({label:PERIOD_LABELS[activePeriod]||activePeriod, chip:'period'});
     if (activeCampaign) {
       var c = campaigns.find(function(x){ return x.id===activeCampaign; });
       tags.push({label:c?c.name:activeCampaign, chip:'campaign'});
@@ -801,7 +802,7 @@
     setText('cvChipPeriodVal', PERIOD_LABELS[activePeriod]||activePeriod);
     var c=campaigns.find(function(x){ return x.id===activeCampaign; });
     setText('cvChipCampaignVal', activeCampaign ? (c?c.name:activeCampaign) : 'All Campaigns');
-    document.getElementById('cvChipPeriod').classList.toggle('active',   activePeriod!=='today');
+    document.getElementById('cvChipPeriod').classList.toggle('active',   activePeriod!=='last7days');
     document.getElementById('cvChipCampaign').classList.toggle('active', !!activeCampaign);
   }
 
@@ -835,6 +836,7 @@
 
     if (chipType==='period') {
       var periods=[
+        {val:'last7days',label:'Last 7 Days'},
         {val:'today',label:'Today'},{val:'yesterday',label:'Yesterday'},
         {val:'thisweek',label:'This Week'},{val:'lastweek',label:'Last Week'},
         {val:'thismonth',label:'This Month'},{val:'lastmonth',label:'Last Month'},
@@ -885,7 +887,7 @@
   }
 
   function clearFilterModal() {
-    if(currentChip==='period')   { pendingPeriod='today'; customStart=''; customEnd=''; }
+    if(currentChip==='period')   { pendingPeriod='last7days'; customStart=''; customEnd=''; }
     else if(currentChip==='campaign') { pendingCampaign=''; }
     buildModalOptions(currentChip,'');
   }
@@ -994,7 +996,7 @@
       if(!btn) return;
       var chip=btn.getAttribute('data-clear-chip');
       var reload=false;
-      if(chip==='period')        { activePeriod='today';  reload=true; }
+      if(chip==='period')        { activePeriod='last7days'; reload=true; }
       else if(chip==='campaign') { activeCampaign=''; reload=true; }
       updateChipLabels();
       if(reload) loadData(); else renderAll(currentUsers);
