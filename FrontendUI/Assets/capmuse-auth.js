@@ -14,14 +14,12 @@
   let DEMO_DISABLED_PAGES = [
     'dashboard.html',
     'lead.html',
-    'pipeline.html',
     'lender_recommendation.html',
     'ringcentral.html'
   ];
   let DEMO_HIDDEN_NAV = [
     { href: 'dashboard.html', label: 'Dashboard' },
     { href: 'lead.html', label: 'Leads' },
-    { href: 'pipeline.html', label: 'Pipeline' },
     { href: 'lender_recommendation.html', label: 'Lender Match' },
     { href: 'ringcentral.html', label: 'RingCentral' }
   ];
@@ -126,6 +124,10 @@
         (page === 'funding_book.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('funding_book.html') +
         'Funding Book</a>' +
+      '<a class="nav-item' + (page === 'pipeline.html' ? ' active' : '') + '" href="pipeline.html"' +
+        (page === 'pipeline.html' ? ' aria-current="page"' : '') + '>' +
+        linkIconHtml('pipeline.html') +
+        'Pipeline</a>' +
       '<a class="nav-item' + (page === 'convoso.html' ? ' active' : '') + '" href="convoso.html"' +
         (page === 'convoso.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('convoso.html') +
