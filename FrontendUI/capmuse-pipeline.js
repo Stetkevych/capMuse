@@ -146,8 +146,7 @@
       let stage = (r['Stage of Package'] || '').toLowerCase();
       let amt = parseFloat(String(r['Amount'] || '0').replace(/[$,]/g, '')) || 0;
 
-      if (r['Date Applied'] || stage.indexOf('pack') > -1 || stage.indexOf('review') > -1 ||
-          stage.indexOf('approv') > -1 || stage.indexOf('fund') > -1) {
+      if (r['Date Applied']) {
         byRep[rep].apps++;
       }
 
