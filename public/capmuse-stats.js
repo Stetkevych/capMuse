@@ -2,8 +2,8 @@
 // This file supplements capmuse-engine.js with rich stat cards
 
 (function(){
-  var BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
-  var DATA = [];
+  let BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
+  let DATA = [];
 
   function load() {
     fetch(BUCKET + '/funding_book_live.json')
@@ -20,24 +20,24 @@
   function pct(a,b){ return b?Math.round(a/b*100)+'%':'0%'; }
 
   function buildStatCards() {
-    var totalFunding = 0, totalPayback = 0, totalRevenue = 0, totalDeals = DATA.length;
-    var byRep = {}, byLender = {}, byState = {}, bySource = {}, byMonth = {}, byPosition = {}, byType = {};
-    var usdCount = 0, cadCount = 0, usdVol = 0, cadVol = 0;
-    var rates = [], terms = [];
+    let totalFunding = 0, totalPayback = 0, totalRevenue = 0, totalDeals = DATA.length;
+    let byRep = {}, byLender = {}, byState = {}, bySource = {}, byMonth = {}, byPosition = {}, byType = {};
+    let usdCount = 0, cadCount = 0, usdVol = 0, cadVol = 0;
+    let rates = [], terms = [];
 
     DATA.forEach(function(d){
-      var funding = nn(d.funding || d.Funded_Amount);
-      var payback = nn(d.payback || d.Payback_Amount);
-      var rev = nn(d.revenue || d.Total_rev);
-      var rate = nn(d.buy_rate || d.Buy_Rate);
-      var rep = d.package_owner || d.puller || d['Owner.name'] || '';
-      var lender = d.lender || d.Lender || '';
-      var state = d.state || d.State || '';
-      var source = d.lead_source || d.Lead_Source2 || '';
-      var pos = d.position || d.Position || '';
-      var type = d.deal_type || d.Deal_Type || '';
-      var dateFunded = d.date_funded || d.Date_Funded || '';
-      var currency = d.usd_cad || d.USD_CAD || '';
+      let funding = nn(d.funding || d.Funded_Amount);
+      let payback = nn(d.payback || d.Payback_Amount);
+      let rev = nn(d.revenue || d.Total_rev);
+      let rate = nn(d.buy_rate || d.Buy_Rate);
+      let rep = d.package_owner || d.puller || d['Owner.name'] || '';
+      let lender = d.lender || d.Lender || '';
+      let state = d.state || d.State || '';
+      let source = d.lead_source || d.Lead_Source2 || '';
+      let pos = d.position || d.Position || '';
+      let type = d.deal_type || d.Deal_Type || '';
+      let dateFunded = d.date_funded || d.Date_Funded || '';
+      let currency = d.usd_cad || d.USD_CAD || '';
 
       totalFunding += funding;
       totalPayback += payback;
@@ -78,7 +78,7 @@
 
       // By month
       if (dateFunded) {
-        var month = dateFunded.substring(0,7);
+        let month = dateFunded.substring(0,7);
         if (!byMonth[month]) byMonth[month] = {month:month, deals:0, volume:0};
         byMonth[month].deals++;
         byMonth[month].volume += funding;
@@ -86,7 +86,7 @@
 
       // By position
       if (pos) {
-        var p = String(pos).replace(/[^0-9]/g,'') || 'Other';
+        let p = String(pos).replace(/[^0-9]/g,'') || 'Other';
         if (!byPosition[p]) byPosition[p] = {pos:p, deals:0, volume:0};
         byPosition[p].deals++;
         byPosition[p].volume += funding;
@@ -104,24 +104,24 @@
       else { usdCount++; usdVol += funding; }
     });
 
-    var avgRate = rates.length ? (rates.reduce(function(s,v){return s+v;},0)/rates.length).toFixed(4) : '—';
-    var avgDeal = totalDeals ? fmt(totalFunding / totalDeals) : '—';
+    let avgRate = rates.length ? (rates.reduce(function(s,v){return s+v;},0)/rates.length).toFixed(4) : '—';
+    let avgDeal = totalDeals ? fmt(totalFunding / totalDeals) : '—';
 
     // Sort rankings
-    var repRank = Object.values(byRep).sort(function(a,b){return b.volume-a.volume;});
-    var lenderRank = Object.values(byLender).sort(function(a,b){return b.volume-a.volume;});
-    var stateRank = Object.values(byState).sort(function(a,b){return b.volume-a.volume;});
-    var sourceRank = Object.values(bySource).sort(function(a,b){return b.deals-a.deals;});
-    var monthRank = Object.values(byMonth).sort(function(a,b){return a.month>b.month?-1:1;});
-    var posRank = Object.values(byPosition).sort(function(a,b){return b.deals-a.deals;});
-    var typeRank = Object.values(byType).sort(function(a,b){return b.volume-a.volume;});
+    let repRank = Object.values(byRep).sort(function(a,b){return b.volume-a.volume;});
+    let lenderRank = Object.values(byLender).sort(function(a,b){return b.volume-a.volume;});
+    let stateRank = Object.values(byState).sort(function(a,b){return b.volume-a.volume;});
+    let sourceRank = Object.values(bySource).sort(function(a,b){return b.deals-a.deals;});
+    let monthRank = Object.values(byMonth).sort(function(a,b){return a.month>b.month?-1:1;});
+    let posRank = Object.values(byPosition).sort(function(a,b){return b.deals-a.deals;});
+    let typeRank = Object.values(byType).sort(function(a,b){return b.volume-a.volume;});
 
     // Inject stats into the stat cards area if it exists
-    var cardsCol = document.querySelector('.cards-col');
+    let cardsCol = document.querySelector('.cards-col');
     if (!cardsCol) return;
 
     // Build a stats summary section below the existing cards
-    var statsHTML = '<div class="capmuse-stats" style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">';
+    let statsHTML = '<div class="capmuse-stats" style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">';
 
     // KPI summary row
     statsHTML += kpiCard('Total Funded', fmt(totalFunding), totalDeals + ' deals');
@@ -138,13 +138,13 @@
 
     // Rep leaderboard
     statsHTML += tableCard('Rep Leaderboard', ['Rep','Deals','Volume','Avg Rate'], repRank.slice(0,15).map(function(r){
-      var ar = r.rates.length ? (r.rates.reduce(function(s,v){return s+v;},0)/r.rates.length).toFixed(3) : '—';
+      let ar = r.rates.length ? (r.rates.reduce(function(s,v){return s+v;},0)/r.rates.length).toFixed(3) : '—';
       return [r.name, r.deals, fmt(r.volume), ar];
     }));
 
     // Lender breakdown
     statsHTML += tableCard('Lender Breakdown', ['Lender','Deals','Volume','Avg Rate'], lenderRank.slice(0,15).map(function(l){
-      var ar = l.rates.length ? (l.rates.reduce(function(s,v){return s+v;},0)/l.rates.length).toFixed(3) : '—';
+      let ar = l.rates.length ? (l.rates.reduce(function(s,v){return s+v;},0)/l.rates.length).toFixed(3) : '—';
       return [l.name, l.deals, fmt(l.volume), ar];
     }));
 
@@ -181,11 +181,11 @@
     statsHTML += '</div>';
 
     // Append after the cards column
-    var statsContainer = document.getElementById('capmuseStats');
+    let statsContainer = document.getElementById('capmuseStats');
     if (statsContainer) {
       statsContainer.innerHTML = statsHTML;
     } else {
-      var div = document.createElement('div');
+      let div = document.createElement('div');
       div.id = 'capmuseStats';
       div.innerHTML = statsHTML;
       cardsCol.parentNode.insertBefore(div, cardsCol.nextSibling);
@@ -201,7 +201,7 @@
   }
 
   function tableCard(title, headers, rows) {
-    var h = '<div style="background:var(--surface,#fff);border:1px solid var(--border,#e8e8e8);border-radius:12px;overflow:hidden">';
+    let h = '<div style="background:var(--surface,#fff);border:1px solid var(--border,#e8e8e8);border-radius:12px;overflow:hidden">';
     h += '<div style="padding:12px 16px;font-size:13px;font-weight:700;color:var(--text-primary,#111);border-bottom:1px solid var(--border,#e8e8e8)">' + title + '</div>';
     h += '<div style="max-height:300px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
     h += '<thead><tr style="background:var(--table-head,#f8f8f8)">';
@@ -210,8 +210,8 @@
     rows.forEach(function(row, i){
       h += '<tr style="border-bottom:1px solid var(--table-border,#eee)">';
       row.forEach(function(cell, j){
-        var align = j >= 2 ? 'right' : 'left';
-        var weight = j === 0 ? '600' : '400';
+        let align = j >= 2 ? 'right' : 'left';
+        let weight = j === 0 ? '600' : '400';
         h += '<td style="padding:7px 10px;text-align:'+align+';font-weight:'+weight+';color:var(--text-'+(j===0?'primary':'secondary')+',#333)">' + cell + '</td>';
       });
       h += '</tr>';
