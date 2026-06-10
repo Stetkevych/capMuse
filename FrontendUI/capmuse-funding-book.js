@@ -103,7 +103,13 @@
   }
 
   function normState(s) { return String(s || '').trim().toUpperCase(); }
-  function normStr(s) { return String(s || '').trim().toLowerCase(); }
+  function normStr(s) {
+    return String(s || '')
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .trim()
+      .toLowerCase();
+  }
 
   function normLeadKey(s) {
     return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();

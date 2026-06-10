@@ -94,7 +94,11 @@
   }
 
   function normStr(s) {
-    return String(s || '').trim().toLowerCase();
+    return String(s || '')
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .trim()
+      .toLowerCase();
   }
 
   function repPersonId(name) {
@@ -229,48 +233,35 @@
   function renderHeroContext(appCount) {
     let el = document.getElementById('plHeroContext');
     if (el) {
-      el.textContent = appCount.toLocaleString('en-US') + ' applications · All time · Zoho CRM';
+      el.textContent = appCount.toLocaleString('en-US') + ' applications · All time';
     }
   }
 
-  function leaderForSortKey(rows) {
-    if (!rows.length || SORT_KEY === 'name') return null;
-    let leader = rows[0];
-    let best = leader[SORT_KEY];
-    if (SORT_KEY === 'avgPoints') best = leader.avgPointsNum;
-    if (SORT_KEY === 'avgAmount') best = leader.avgAmountNum;
-    for (let i = 1; i < rows.length; i++) {
-      let v = rows[i][SORT_KEY];
-      if (SORT_KEY === 'avgPoints') v = rows[i].avgPointsNum;
-      if (SORT_KEY === 'avgAmount') v = rows[i].avgAmountNum;
-      if ((v || 0) > (best || 0)) {
-        best = v;
-        leader = rows[i];
-      }
-    }
-    return leader;
+  let SPOT_KPI_KEYS = ['apps', 'approvals', 'funded', 'fundedAmt', 'revenue'];
+
+  function spotKpiValue(row, key) {
+    if (key === 'fundedAmt' || key === 'revenue') return fmt(row[key]);
+    return (row[key] || 0).toLocaleString('en-US');
   }
 
-  function formatSpotlightValue(row) {
-    if (SORT_KEY === 'fundedAmt' || SORT_KEY === 'revenue' || SORT_KEY === 'avgAmount') {
-      let v = SORT_KEY === 'avgAmount' ? row.avgAmountNum : row[SORT_KEY];
-      return fmtFull(v);
-    }
-    if (SORT_KEY === 'avgPoints') return row.avgPoints;
-    if (SORT_KEY === 'appsToApprovals' || SORT_KEY === 'approvalToFunding') return row[SORT_KEY];
-    let v = row[SORT_KEY];
-    return v != null ? v.toLocaleString('en-US') : '—';
+  function renderSpotKpi(row, key, highlightKey) {
+    let sizeCls = (key === 'fundedAmt' || key === 'revenue') ? ' fb-spot-kpi--money' : ' fb-spot-kpi--count';
+    let cls = 'fb-spot-kpi' + sizeCls + (key === highlightKey ? ' fb-kpi--primary' : '');
+    return '<div class="' + cls + '" data-kpi="' + key + '">' +
+      '<div class="fb-spot-kpi-val">' + spotKpiValue(row, key) + '</div>' +
+      '<div class="fb-spot-kpi-lbl">' + esc(SORT_LABELS[key] || key) + '</div>' +
+    '</div>';
   }
 
   function renderHeroSpotlight(rows) {
     let el = document.getElementById('plHeroSpotlight');
     if (!el) return;
-    let top = leaderForSortKey(rows);
-    if (!top) {
+    if (!rows.length || SORT_KEY === 'name') {
       el.innerHTML = '';
       el.hidden = true;
       return;
     }
+    let top = rows[0];
     el.hidden = false;
     let pid = repPersonId(top.name);
     let rep = pid && window.REPS ? window.REPS[pid] : null;
@@ -279,6 +270,10 @@
       ringAttrs += ' data-person-id="' + esc(pid) + '" role="button" tabindex="0"' +
         ' aria-label="View ' + esc(top.name) + ' stats card" title="View stats card"';
     }
+    let highlightKey = SPOT_KPI_KEYS.indexOf(SORT_KEY) > -1 ? SORT_KEY : '';
+    let kpisHtml = SPOT_KPI_KEYS.map(function (key) {
+      return renderSpotKpi(top, key, highlightKey);
+    }).join('');
     el.innerHTML =
       '<div' + ringAttrs + '>' +
         '<img id="plSpotPhoto" alt="" hidden />' +
@@ -287,9 +282,8 @@
       '<div class="fb-spot-info">' +
         '<div class="fb-spot-lead">Leading rep</div>' +
         '<div class="fb-spot-name">' + esc(top.name) + '</div>' +
-        '<div class="fb-spot-stat">' + formatSpotlightValue(top) + '</div>' +
-        '<div class="fb-spot-stat-lbl">' + esc(SORT_LABELS[SORT_KEY] || 'Funded amount') + '</div>' +
-        '<div class="fb-spot-meta">' + top.funded.toLocaleString('en-US') + ' funded</div>' +
+        '<div class="fb-spot-sort-lbl">Leading by ' + esc(SORT_LABELS[SORT_KEY] || SORT_KEY) + '</div>' +
+        '<div class="fb-spot-kpis">' + kpisHtml + '</div>' +
       '</div>';
 
     if (window.setHeroRepPhoto && rep) {

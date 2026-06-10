@@ -160,7 +160,7 @@
       kpis:  { bestMonth: 'December 2023', largestDeal: '$12.4M', avgCommission: '$6,200', retention: '93%' }
     },
     pina: {
-      name: 'Pina',
+      name: 'Piña',
       role: 'Funding Advisor',
       company: 'Capital Infusion',
       badge: 'Team Player',
@@ -366,7 +366,7 @@
     michael: 'Michael Cifuentes',
     nikholas: 'Nikholas Lazo',
     diaz: 'Anthony Diaz',
-    pina: 'Cristian Pina',
+    pina: 'Cristian Piña',
     daniel: 'Daniel Pineda',
     edward: 'Edward Jeudy',
     evan: 'Evan Kruer',
