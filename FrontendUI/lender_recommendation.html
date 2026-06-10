@@ -677,8 +677,8 @@
 </script>
 <script>
   (function () {
-    var btn  = document.getElementById('avatarBtn');
-    var menu = document.getElementById('avatarMenu');
+    let btn  = document.getElementById('avatarBtn');
+    let menu = document.getElementById('avatarMenu');
     if (!btn || !menu) return;
     btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
     document.addEventListener('click', function () { menu.classList.remove('open'); });

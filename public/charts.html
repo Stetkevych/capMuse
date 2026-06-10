@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CapMuse — Graphical Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:#0C0F14;color:#F1F5F9;min-height:100vh;padding:24px 32px}
+    h1{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:800;background:linear-gradient(135deg,#2563EB,#10B981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+    .subtitle{font-size:13px;color:#7A8FA8;margin-bottom:28px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:20px;margin-bottom:24px}
+    .card{background:#141C28;border:1px solid #1A2435;border-radius:16px;padding:20px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+    .card-title{font-size:13px;font-weight:700;color:#7A8FA8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px}
+    canvas{max-height:300px}
+    .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+    .kpi{background:#141C28;border:1px solid #1A2435;border-radius:12px;padding:16px 20px}
+    .kpi-label{font-size:11px;font-weight:600;color:#4A5F78;text-transform:uppercase;letter-spacing:0.05em}
+    .kpi-value{font-size:26px;font-weight:700;color:#F1F5F9;margin-top:4px}
+    .kpi-sub{font-size:12px;color:#7A8FA8;margin-top:2px}
+    .back-link{display:inline-flex;align-items:center;gap:6px;color:#60A5FA;font-size:13px;font-weight:600;text-decoration:none;margin-bottom:20px}
+    .back-link:hover{text-decoration:underline}
+    .loading{text-align:center;padding:60px;color:#7A8FA8;font-size:15px}
+  </style>
+</head>
+<body>
+  <a class="back-link" href="dashboard.html">← Back to Dashboard</a>
+  <h1>Graphical Analysis</h1>
+  <p class="subtitle">Live data from funding book — auto-refreshes every 4 hours via Zoho sync</p>
+
+  <div id="loading" class="loading">Loading data from S3...</div>
+  <div id="content" style="display:none">
+    <div class="kpi-row" id="kpis"></div>
+    <div class="grid" id="charts"></div>
+  </div>
+
+<script>
+const BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
+
+async function init() {
+  const res = await fetch(BUCKET + '/funding_book_live.json');
+  if (!res.ok) { document.getElementById('loading').textContent = 'Failed to load data'; return; }
+  const data = await res.json();
+  const deals = data.filter(d => d.company && d.date_funded && parseFloat(d.funding) > 0);
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  const nn = v => parseFloat(String(v||'').replace(/[$,]/g,''))||0;
+  const fmt = v => v >= 1e6 ? '$'+(v/1e6).toFixed(1)+'M' : v >= 1e3 ? '$'+(v/1e3).toFixed(0)+'K' : '$'+Math.round(v).toLocaleString();
+
+  // KPIs
+  const totalVol = deals.reduce((s,d) => s + nn(d.funding), 0);
+  const totalPayback = deals.reduce((s,d) => s + nn(d.payback), 0);
+  const totalRev = deals.reduce((s,d) => s + nn(d.revenue), 0);
+  const avgDeal = totalVol / deals.length;
+  const now = new Date();
+  const thisMonth = now.toISOString().substring(0,7);
+  const mtdDeals = deals.filter(d => d.date_funded.startsWith(thisMonth));
+  const mtdVol = mtdDeals.reduce((s,d) => s + nn(d.funding), 0);
+
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Total Funded</div><div class="kpi-value">${fmt(totalVol)}</div><div class="kpi-sub">${deals.length.toLocaleString()} deals</div></div>
+    <div class="kpi"><div class="kpi-label">MTD Volume</div><div class="kpi-value">${fmt(mtdVol)}</div><div class="kpi-sub">${mtdDeals.length} deals this month</div></div>
+    <div class="kpi"><div class="kpi-label">Total Payback</div><div class="kpi-value">${fmt(totalPayback)}</div><div class="kpi-sub">Avg rate: ${(totalPayback/totalVol).toFixed(3)}</div></div>
+    <div class="kpi"><div class="kpi-label">Total Revenue</div><div class="kpi-value">${fmt(totalRev)}</div><div class="kpi-sub">Avg/deal: ${fmt(totalRev/deals.length)}</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Deal Size</div><div class="kpi-value">${fmt(avgDeal)}</div><div class="kpi-sub">${[...new Set(deals.map(d=>d.lender))].filter(Boolean).length} lenders</div></div>
+    <div class="kpi"><div class="kpi-label">Active Reps</div><div class="kpi-value">${[...new Set(deals.map(d=>d.package_owner||d.puller))].filter(Boolean).length}</div><div class="kpi-sub">Unique pullers</div></div>
+  `;
+
+  // Chart configs
+  const charts = document.getElementById('charts');
+  const colors = ['#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4','#84CC16','#F97316','#6366F1','#14B8A6','#E11D48'];
+
+  // 1. Monthly Volume Trend
+  const byMonth = {};
+  deals.forEach(d => { const m = d.date_funded.substring(0,7); if(m>='2024-01'){if(!byMonth[m])byMonth[m]={vol:0,deals:0};byMonth[m].vol+=nn(d.funding);byMonth[m].deals++;}});
+  const months = Object.keys(byMonth).sort();
+  addChart(charts, 'Monthly Funding Volume', 'bar', months.map(m=>m.substring(2)), months.map(m=>byMonth[m].vol), '#2563EB');
+
+  // 2. Monthly Deal Count
+  addChart(charts, 'Monthly Deal Count', 'line', months.map(m=>m.substring(2)), months.map(m=>byMonth[m].deals), '#10B981');
+
+  // 3. Top 15 Reps by Volume
+  const byRep = {};
+  deals.forEach(d => { const r = d.package_owner||d.puller||''; if(r&&!r.toLowerCase().includes('house')){if(!byRep[r])byRep[r]=0;byRep[r]+=nn(d.funding);}});
+  const topReps = Object.entries(byRep).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  addChart(charts, 'Top 15 Reps by Volume', 'bar', topReps.map(r=>r[0].split(' ')[0]), topReps.map(r=>r[1]), colors, true);
+
+  // 4. Top 15 Lenders by Volume
+  const byLender = {};
+  deals.forEach(d => { const l = d.lender||''; if(l){if(!byLender[l])byLender[l]=0;byLender[l]+=nn(d.funding);}});
+  const topLenders = Object.entries(byLender).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  addChart(charts, 'Top 15 Lenders by Volume', 'bar', topLenders.map(l=>l[0]), topLenders.map(l=>l[1]), colors, true);
+
+  // 5. Deal Type (Pie)
+  const byType = {};
+  deals.forEach(d => { const t = d.deal_type||'Unknown'; if(!byType[t])byType[t]=0; byType[t]++; });
+  addPie(charts, 'Deal Type Distribution', Object.keys(byType), Object.values(byType));
+
+  // 6. Position Breakdown (Pie)
+  const byPos = {};
+  deals.forEach(d => { const p = String(d.position||'').replace(/[^0-9]/g,'')||'Other'; if(!byPos[p])byPos[p]=0; byPos[p]++; });
+  addPie(charts, 'Position Breakdown', Object.keys(byPos).sort(), Object.keys(byPos).sort().map(k=>byPos[k]));
+
+  // 7. USD vs CAD
+  let usd=0, cad=0;
+  deals.forEach(d => { if((d.usd_cad||'').toUpperCase().includes('CAD')) cad+=nn(d.funding); else usd+=nn(d.funding); });
+  addPie(charts, 'USD vs CAD Volume', ['USD','CAD'], [usd, cad]);
+
+  // 8. Top States
+  const byState = {};
+  deals.forEach(d => { const s = d.state||''; if(s&&s.length<=3){if(!byState[s])byState[s]=0;byState[s]+=nn(d.funding);}});
+  const topStates = Object.entries(byState).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  addChart(charts, 'Top States by Volume', 'bar', topStates.map(s=>s[0]), topStates.map(s=>s[1]), '#F59E0B', true);
+
+  // 9. Lead Sources
+  const bySource = {};
+  deals.forEach(d => { const s = d.lead_source||''; if(s&&s!=='0.0%'){if(!bySource[s])bySource[s]=0;bySource[s]++;}});
+  const topSources = Object.entries(bySource).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  addChart(charts, 'Top Lead Sources (Deal Count)', 'bar', topSources.map(s=>s[0].substring(0,15)), topSources.map(s=>s[1]), '#8B5CF6', true);
+
+  // 10. Revenue by Rep
+  const revByRep = {};
+  deals.forEach(d => { const r = d.package_owner||d.puller||''; const rev = nn(d.revenue); if(r&&rev>0&&!r.toLowerCase().includes('house')){if(!revByRep[r])revByRep[r]=0;revByRep[r]+=rev;}});
+  const topRevReps = Object.entries(revByRep).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  addChart(charts, 'Top 15 Reps by Revenue', 'bar', topRevReps.map(r=>r[0].split(' ')[0]), topRevReps.map(r=>r[1]), '#EC4899', true);
+}
+
+function addChart(container, title, type, labels, data, color, horizontal) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = '<div class="card-title">' + title + '</div><canvas></canvas>';
+  container.appendChild(card);
+  const ctx = card.querySelector('canvas').getContext('2d');
+  const isMultiColor = Array.isArray(color);
+  new Chart(ctx, {
+    type: type,
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: isMultiColor ? color.slice(0, data.length) : (type==='bar' ? color+'CC' : 'transparent'),
+        borderColor: isMultiColor ? color.slice(0, data.length) : color,
+        borderWidth: type==='line' ? 2.5 : 0,
+        borderRadius: type==='bar' ? 4 : 0,
+        tension: 0.4,
+        fill: type==='line',
+        pointBackgroundColor: color,
+      }]
+    },
+    options: {
+      indexAxis: horizontal ? 'y' : 'x',
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '$' + Math.round(ctx.raw).toLocaleString() }}},
+      scales: {
+        x: { grid: { color: '#1A2435' }, ticks: { color: '#4A5F78', font: { size: 10 } }},
+        y: { grid: { color: '#1A2435' }, ticks: { color: '#4A5F78', font: { size: 10 }, callback: v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v }}
+      }
+    }
+  });
+}
+
+function addPie(container, title, labels, data) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = '<div class="card-title">' + title + '</div><canvas></canvas>';
+  container.appendChild(card);
+  const ctx = card.querySelector('canvas').getContext('2d');
+  const colors = ['#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4','#84CC16','#F97316','#6366F1'];
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels: labels, datasets: [{ data: data, backgroundColor: colors.slice(0, data.length), borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right', labels: { color: '#7A8FA8', font: { size: 11 } } } } }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

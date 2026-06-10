@@ -1,9 +1,9 @@
 // CapMuse Stats Engine — live KPI panels for analytics (and legacy pages)
 
 (function () {
-  var DATA = [];
-  var isAnalytics = document.body.classList.contains('analytics-page');
-  var KPI_ACCENTS = ['#10B981', '#06B6D4', '#8B5CF6', '#F59E0B', '#EC4899', '#6366F1'];
+  let DATA = [];
+  let isAnalytics = document.body.classList.contains('analytics-page');
+  let KPI_ACCENTS = ['#10B981', '#06B6D4', '#8B5CF6', '#F59E0B', '#EC4899', '#6366F1'];
 
   function load(records) {
     if (records && records.length) {
@@ -11,7 +11,7 @@
       buildStatCards();
       return;
     }
-    var loader = window.CapMuseData ? window.CapMuseData.getRawDeals() : null;
+    let loader = window.CapMuseData ? window.CapMuseData.getRawDeals() : null;
     if (!loader) return;
     loader.then(function (raw) {
       if (!raw || !raw.length) return;
@@ -24,24 +24,24 @@
   function fmt(v) { if (v >= 1e6) return '$' + (v / 1e6).toFixed(1) + 'M'; if (v >= 1e3) return '$' + (v / 1e3).toFixed(0) + 'K'; return '$' + Math.round(v).toLocaleString(); }
 
   function computeMetrics() {
-    var totalFunding = 0, totalPayback = 0, totalRevenue = 0, totalDeals = DATA.length;
-    var byRep = {}, byLender = {}, byState = {}, bySource = {}, byMonth = {}, byPosition = {}, byType = {};
-    var usdCount = 0, cadCount = 0, usdVol = 0, cadVol = 0;
-    var rates = [];
+    let totalFunding = 0, totalPayback = 0, totalRevenue = 0, totalDeals = DATA.length;
+    let byRep = {}, byLender = {}, byState = {}, bySource = {}, byMonth = {}, byPosition = {}, byType = {};
+    let usdCount = 0, cadCount = 0, usdVol = 0, cadVol = 0;
+    let rates = [];
 
     DATA.forEach(function (d) {
-      var funding = nn(d.funding || d.Funded_Amount);
-      var payback = nn(d.payback || d.Payback_Amount);
-      var rev = nn(d.revenue || d.Total_rev);
-      var rate = nn(d.buy_rate || d.Buy_Rate);
-      var rep = d.package_owner || d.puller || d['Owner.name'] || '';
-      var lender = d.lender || d.Lender || '';
-      var state = d.state || d.State || '';
-      var source = d.lead_source || d.Lead_Source2 || '';
-      var pos = d.position || d.Position || '';
-      var type = d.deal_type || d.Deal_Type || '';
-      var dateFunded = d.date_funded || d.Date_Funded || '';
-      var currency = d.usd_cad || d.USD_CAD || '';
+      let funding = nn(d.funding || d.Funded_Amount);
+      let payback = nn(d.payback || d.Payback_Amount);
+      let rev = nn(d.revenue || d.Total_rev);
+      let rate = nn(d.buy_rate || d.Buy_Rate);
+      let rep = d.package_owner || d.puller || d['Owner.name'] || '';
+      let lender = d.lender || d.Lender || '';
+      let state = d.state || d.State || '';
+      let source = d.lead_source || d.Lead_Source2 || '';
+      let pos = d.position || d.Position || '';
+      let type = d.deal_type || d.Deal_Type || '';
+      let dateFunded = d.date_funded || d.Date_Funded || '';
+      let currency = d.usd_cad || d.USD_CAD || '';
 
       totalFunding += funding;
       totalPayback += payback;
@@ -72,13 +72,13 @@
         bySource[source].volume += funding;
       }
       if (dateFunded) {
-        var month = dateFunded.substring(0, 7);
+        let month = dateFunded.substring(0, 7);
         if (!byMonth[month]) byMonth[month] = { month: month, deals: 0, volume: 0 };
         byMonth[month].deals++;
         byMonth[month].volume += funding;
       }
       if (pos) {
-        var p = String(pos).replace(/[^0-9]/g, '') || 'Other';
+        let p = String(pos).replace(/[^0-9]/g, '') || 'Other';
         if (!byPosition[p]) byPosition[p] = { pos: p, deals: 0, volume: 0 };
         byPosition[p].deals++;
         byPosition[p].volume += funding;
@@ -114,19 +114,19 @@
   }
 
   function buildStatCards() {
-    var statsContainer = document.getElementById('capmuseStats');
+    let statsContainer = document.getElementById('capmuseStats');
     if (!statsContainer) {
-      var cardsCol = document.querySelector('.cards-col');
+      let cardsCol = document.querySelector('.cards-col');
       if (!cardsCol) return;
       statsContainer = document.createElement('div');
       statsContainer.id = 'capmuseStats';
-      var mainGrid = cardsCol.closest('.content-grid') || cardsCol.parentNode;
+      let mainGrid = cardsCol.closest('.content-grid') || cardsCol.parentNode;
       statsContainer.style.gridColumn = '1 / -1';
       mainGrid.appendChild(statsContainer);
     }
 
-    var m = computeMetrics();
-    var kpis = [
+    let m = computeMetrics();
+    let kpis = [
       ['Total Funded', fmt(m.totalFunding), m.totalDeals + ' deals'],
       ['Total Payback', fmt(m.totalPayback), 'Avg Rate: ' + m.avgRate],
       ['Total Revenue', fmt(m.totalRevenue), 'Avg Deal: ' + m.avgDeal],
@@ -135,7 +135,7 @@
       ['Positions', m.posRank.map(function (p) { return p.pos + 'st:' + p.deals; }).slice(0, 4).join(' | '), '']
     ];
 
-    var kpiHTML = isAnalytics
+    let kpiHTML = isAnalytics
       ? '<div class="analytics-kpi-grid">' + kpis.map(function (k, i) { return kpiCard(k[0], k[1], k[2], KPI_ACCENTS[i % KPI_ACCENTS.length]); }).join('') + '</div>'
       : '<div class="capmuse-stats" style="margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">' + kpis.map(function (k) { return kpiCard(k[0], k[1], k[2]); }).join('') + '</div>';
 
@@ -143,9 +143,9 @@
     statsContainer.classList.remove('is-loading');
     statsContainer.classList.add('analytics-loaded');
 
-    var tablesHTML = buildTablesHTML(m);
+    let tablesHTML = buildTablesHTML(m);
     requestAnimationFrame(function () {
-      var wrap = document.createElement('div');
+      let wrap = document.createElement('div');
       wrap.className = isAnalytics ? 'analytics-tables' : 'capmuse-tables';
       if (!isAnalytics) wrap.style.cssText = 'margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px';
       wrap.innerHTML = tablesHTML;
@@ -154,13 +154,13 @@
   }
 
   function buildTablesHTML(m) {
-    var h = '';
+    let h = '';
     h += tableCard('Rep Leaderboard', ['Rep', 'Deals', 'Volume', 'Avg Rate'], m.repRank.slice(0, 15).map(function (r) {
-      var ar = r.rates.length ? (r.rates.reduce(function (s, v) { return s + v; }, 0) / r.rates.length).toFixed(3) : '—';
+      let ar = r.rates.length ? (r.rates.reduce(function (s, v) { return s + v; }, 0) / r.rates.length).toFixed(3) : '—';
       return [r.name, r.deals, fmt(r.volume), ar];
     }));
     h += tableCard('Lender Breakdown', ['Lender', 'Deals', 'Volume', 'Avg Rate'], m.lenderRank.slice(0, 15).map(function (l) {
-      var ar = l.rates.length ? (l.rates.reduce(function (s, v) { return s + v; }, 0) / l.rates.length).toFixed(3) : '—';
+      let ar = l.rates.length ? (l.rates.reduce(function (s, v) { return s + v; }, 0) / l.rates.length).toFixed(3) : '—';
       return [l.name, l.deals, fmt(l.volume), ar];
     }));
     h += tableCard('Monthly Trend', ['Month', 'Deals', 'Volume'], m.monthRank.slice(0, 12).map(function (mo) {
@@ -201,7 +201,7 @@
 
   function tableCard(title, headers, rows) {
     if (isAnalytics) {
-      var h = '<div class="analytics-table-card">';
+      let h = '<div class="analytics-table-card">';
       h += '<div class="analytics-table-head">' + title + '</div>';
       h += '<div class="analytics-table-scroll"><table class="analytics-table">';
       h += '<thead><tr>';
@@ -217,7 +217,7 @@
       h += '</tbody></table></div></div>';
       return h;
     }
-    var leg = '<div style="background:var(--surface,#fff);border:1px solid var(--border,#e8e8e8);border-radius:12px;overflow:hidden">';
+    let leg = '<div style="background:var(--surface,#fff);border:1px solid var(--border,#e8e8e8);border-radius:12px;overflow:hidden">';
     leg += '<div style="padding:12px 16px;font-size:13px;font-weight:700;color:var(--text-primary,#111);border-bottom:1px solid var(--border,#e8e8e8)">' + title + '</div>';
     leg += '<div style="max-height:300px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">';
     leg += '<thead><tr style="background:var(--table-head,#f8f8f8)">';
@@ -226,8 +226,8 @@
     rows.forEach(function (row) {
       leg += '<tr style="border-bottom:1px solid var(--table-border,#eee)">';
       row.forEach(function (cell, j) {
-        var align = j >= 2 ? 'right' : 'left';
-        var weight = j === 0 ? '600' : '400';
+        let align = j >= 2 ? 'right' : 'left';
+        let weight = j === 0 ? '600' : '400';
         leg += '<td style="padding:7px 10px;text-align:' + align + ';font-weight:' + weight + ';color:var(--text-' + (j === 0 ? 'primary' : 'secondary') + ',#333)">' + cell + '</td>';
       });
       leg += '</tr>';

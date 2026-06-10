@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, MessageSquare, Trophy, Users, FileText, Building2, Zap, BarChart3, Brain, FileBarChart, Settings, Target } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Trophy, Users, FileText, Building2, Zap, BarChart3, Brain, FileBarChart, Settings, Target, GitBranch } from 'lucide-react';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'reps', label: 'Reps', icon: Users },
   { id: 'deals', label: 'Deals', icon: FileText },
+  { id: 'pipeline', label: 'Pipeline', icon: GitBranch },
   { id: 'applications', label: 'Applications', icon: Target },
   { id: 'lenders', label: 'Lenders', icon: Building2 },
   { id: 'sources', label: 'Lead Sources', icon: Zap },

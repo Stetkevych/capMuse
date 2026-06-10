@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { mergeFundingBookRecord } = require('./funding-book-normalize');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,7 +22,6 @@ app.post('/api/funding-book', async (req, res) => {
     const record = req.body;
     if (!record || !record.record_id) return res.status(400).json({ error: 'Invalid payload' });
 
-    // Add timestamp
     record.received_at = new Date().toISOString();
 
     // Load existing funding book data
@@ -32,12 +32,12 @@ app.post('/api/funding-book', async (req, res) => {
       existing = JSON.parse(text);
     } catch { }
 
-    // Upsert by record_id
+    // Upsert by record_id — package_owner from Package Owner lookup only, never puller
     const idx = existing.findIndex(r => r.record_id === record.record_id);
     if (idx > -1) {
-      existing[idx] = record;
+      existing[idx] = mergeFundingBookRecord(existing[idx], record);
     } else {
-      existing.push(record);
+      existing.push(mergeFundingBookRecord(null, record));
     }
 
     // Save back

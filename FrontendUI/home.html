@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Home — CapMuse</title>
+  <link rel="preconnect" href="https://capmuse-data-882611632216.s3.amazonaws.com" crossorigin />
+  <link rel="dns-prefetch" href="https://capmuse-data-882611632216.s3.amazonaws.com" />
+  <script src="capmuse-data.js"></script>
+  <script>if (window.CapMuseData) window.CapMuseData.prefetch();</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -137,6 +141,7 @@
       box-shadow: 0 0 0 1px rgba(99,102,241,0.25), 0 0 28px rgba(59,130,246,0.45), 0 0 60px rgba(59,130,246,0.2), 0 10px 40px rgba(0,0,0,0.45);
       animation: scaleIn 0.65s cubic-bezier(0.22,1,0.36,1) 0.08s both;
       position: relative; z-index: 1;
+      overflow: hidden;
     }
     .hero-photo-ring[data-person-id] {
       cursor: pointer;
@@ -150,7 +155,32 @@
       outline: 2px solid var(--blue);
       outline-offset: 4px;
     }
-    .hero-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; object-position: center 8%; display: block; }
+    .hero-photo,
+    .hero-photo-placeholder {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: calc(100% - 8px);
+      height: calc(100% - 8px);
+      border-radius: 50%;
+    }
+    .hero-photo { object-fit: cover; object-position: center 8%; display: block; }
+    .hero-photo-placeholder {
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(145deg, #64748B 0%, #475569 100%);
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 88px; font-weight: 700; line-height: 1;
+      user-select: none;
+    }
+    .hero-photo[hidden],
+    .hero-photo-placeholder[hidden] {
+      display: none !important;
+    }
+    html[data-theme="dark"] .hero-photo-placeholder {
+      background: linear-gradient(145deg, #334155 0%, #1E293B 100%);
+      color: #CBD5E1;
+    }
 
     .hero-info { flex: 1; animation: slideUp 0.52s ease-out 0.12s both; position: relative; z-index: 1; }
     .hero-greeting { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; letter-spacing: 0.01em; }
@@ -199,10 +229,6 @@
     .perf-card:nth-child(3) { animation-delay: 0.28s; }
     .perf-card:nth-child(4) { animation-delay: 0.33s; }
     .perf-card:nth-child(5) { animation-delay: 0.38s; }
-    .perf-card:nth-child(6) { animation-delay: 0.43s; }
-    .perf-card:nth-child(7) { animation-delay: 0.48s; }
-    .perf-card:nth-child(8) { animation-delay: 0.53s; }
-    .perf-card:nth-child(9) { animation-delay: 0.58s; }
     .perf-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .pi-blue    { background: rgba(37,99,235,0.11); color: #2563EB; }
     html[data-theme="dark"] .pi-blue { color: #60A5FA; }
@@ -315,6 +341,7 @@
       .topbar { padding: 14px 16px 0; }
       .home-hero { flex-direction: column; padding: 28px 24px; gap: 24px; align-items: flex-start; }
       .hero-photo-ring { width: 150px; height: 150px; }
+      .hero-photo-placeholder { font-size: 56px; }
       .hero-name { font-size: 32px; }
       .hero-qs-row { gap: 20px; }
       .perf-grid { grid-template-columns: 1fr 1fr; }
@@ -324,7 +351,7 @@
   </style>
   <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
-<body>
+<body class="home-page">
 <div class="layout">
 
   <!-- ── SIDEBAR ── -->
@@ -431,7 +458,8 @@
       <!-- HERO -->
       <section class="home-hero" aria-label="Personal overview">
         <div class="hero-photo-ring" id="heroPhotoRing" role="button" tabindex="0" aria-label="View your stats card">
-          <img id="heroPhoto" src="Assets/reps/anderson.png" alt="Profile" class="hero-photo" />
+          <div class="hero-photo-placeholder" id="heroPhotoPlaceholder" aria-hidden="true">?</div>
+          <img id="heroPhoto" src="" alt="Profile" class="hero-photo" hidden />
         </div>
         <div class="hero-info">
           <p class="hero-greeting" id="heroGreeting">Welcome back 👋</p>
@@ -467,13 +495,13 @@
 <script>
 /* ── Theme toggle ── */
 (function () {
-  var html = document.documentElement;
-  var btn  = document.getElementById('themeBtn');
-  var KEY  = 'capmuse-theme';
-  var saved = localStorage.getItem(KEY);
+  let html = document.documentElement;
+  let btn  = document.getElementById('themeBtn');
+  let KEY  = 'capmuse-theme';
+  let saved = localStorage.getItem(KEY);
   html.setAttribute('data-theme', saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
   btn.addEventListener('click', function () {
-    var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    let next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', next);
     localStorage.setItem(KEY, next);
   });
@@ -481,8 +509,8 @@
 
 /* ── Avatar dropdown ── */
 (function () {
-  var btn  = document.getElementById('avatarBtn');
-  var menu = document.getElementById('avatarMenu');
+  let btn  = document.getElementById('avatarBtn');
+  let menu = document.getElementById('avatarMenu');
   btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
   document.addEventListener('click', function () { menu.classList.remove('open'); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.classList.remove('open'); });
@@ -490,9 +518,9 @@
 
 /* ── Mobile sidebar ── */
 (function () {
-  var burger  = document.getElementById('burgerBtn');
-  var sidebar = document.getElementById('sidebar');
-  var overlay = document.getElementById('sidebarOverlay');
+  let burger  = document.getElementById('burgerBtn');
+  let sidebar = document.getElementById('sidebar');
+  let overlay = document.getElementById('sidebarOverlay');
   function open()  { sidebar.classList.add('mobile-open');    overlay.classList.add('open');    document.body.style.overflow = 'hidden'; }
   function close() { sidebar.classList.remove('mobile-open'); overlay.classList.remove('open'); document.body.style.overflow = ''; }
   burger.addEventListener('click', open);
@@ -503,9 +531,9 @@
 /* ── Sidebar section toggles ── */
 document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
   toggle.addEventListener('click', function () {
-    var subId = this.id.replace('Toggle', 'Sub');
-    var sub   = document.getElementById(subId);
-    var open  = sub && sub.classList.contains('open');
+    let subId = this.id.replace('Toggle', 'Sub');
+    let sub   = document.getElementById(subId);
+    let open  = sub && sub.classList.contains('open');
     document.querySelectorAll('.nav-sub').forEach(function (s) { s.classList.remove('open'); });
     document.querySelectorAll('.nav-section-toggle').forEach(function (t) { t.classList.remove('open'); });
     if (!open && sub) { sub.classList.add('open'); this.classList.add('open'); }
@@ -515,13 +543,14 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
 /* ── Main populate ── */
 (function () {
   if (!window.CapMuseAuth.requireLogin()) return;
+  window.CapMuseAuth.guardDemoPage();
 
-  var userId = window.CapMuseAuth.getUserId();
+  let userId = window.CapMuseAuth.getUserId();
   if (window.ensureRepProfile) userId = window.ensureRepProfile(userId);
-  var rep = window.REPS[userId];
+  let rep = window.REPS[userId];
   if (!rep) return;
 
-  var photoRing = document.getElementById('heroPhotoRing');
+  let photoRing = document.getElementById('heroPhotoRing');
   if (photoRing) {
     photoRing.setAttribute('data-person-id', userId);
     photoRing.setAttribute('title', 'View your stats card');
@@ -533,11 +562,12 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
     });
   }
 
-  var first = rep.name.split(' ')[0];
+  let first = rep.name.split(' ')[0];
 
   /* Hero */
-  document.getElementById('heroPhoto').src  = rep.photo;
-  document.getElementById('heroPhoto').alt  = rep.name;
+  if (window.setHeroRepPhoto) {
+    window.setHeroRepPhoto(document.getElementById('heroPhotoRing'), document.getElementById('heroPhoto'), rep);
+  }
   document.getElementById('heroGreeting').textContent = 'Welcome back, ' + first + ' 👋';
   document.getElementById('heroName').textContent     = rep.name;
   document.getElementById('heroRole').textContent     = rep.role;
@@ -552,21 +582,22 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
   document.getElementById('heroQuickStats').innerHTML =
     '<div class="hero-qs"><span class="hero-qs-val"></span><span class="hero-qs-lbl">Volume today</span></div>' +
     '<div class="hero-qs"><span class="hero-qs-val"></span><span class="hero-qs-lbl">Funded today</span></div>' +
-    '<div class="hero-qs"><span class="hero-qs-val"></span><span class="hero-qs-lbl">Leads today</span></div>';
+    '<div class="hero-qs"><span class="hero-qs-val"></span><span class="hero-qs-lbl">MTD volume</span></div>';
 
-  var dateEl = document.getElementById('todayDate');
+  let dateEl = document.getElementById('todayDate');
   if (dateEl) {
     dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   }
 
   window.CapMuseAuth.populateSidebar(rep);
   window.CapMuseAuth.wireLogoutLinks();
+  window.CapMuseAuth.applyDemoNav();
 
   if (window.renderTodayPerfPanel) {
     window.renderTodayPerfPanel(document.getElementById('perfGrid'), userId, { animate: true });
   }
 
-  var compareBtn = document.getElementById('btnCompareStats');
+  let compareBtn = document.getElementById('btnCompareStats');
   if (compareBtn) {
     compareBtn.addEventListener('click', function () {
       if (window.CapMuseCompare) window.CapMuseCompare.open();
@@ -574,6 +605,9 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
   }
 })();
 </script>
+<script src="capmuse-rep-match.js"></script>
+<script src="capmuse-rep-stats.js"></script>
+<script src="capmuse-home.js"></script>
 <script src="Assets/capmuse-search.js"></script>
 </body>
 </html>
