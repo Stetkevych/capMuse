@@ -149,7 +149,7 @@ function parseHMMSS(str) {
   return parseFloat(str) || 0;
 }
 
-async function fetchAllRepPages(dateStart, dateEnd, statusId) {
+async function fetchAllRepPages(dateStart, dateEnd, statusId, extraParams = {}) {
   const users = {};
   let page = 1;
   let totalPages = null;
@@ -160,6 +160,7 @@ async function fetchAllRepPages(dateStart, dateEnd, statusId) {
       date_end: dateEnd,
       status_ids: statusId,
       call_type: "OUTBOUND",
+      ...extraParams,
       page,
       per_page: 100,
     });
@@ -177,10 +178,11 @@ async function fetchAllRepPages(dateStart, dateEnd, statusId) {
       const userName = String(row.name || row.user || "").trim();
       if (!userId || !userName) continue;
       if (/^deleted user/i.test(userName)) continue;
-      if (!users[userId]) users[userId] = { user: userName, user_id: userId, calls: 0, connects: 0, talk_time: 0 };
-      users[userId].calls     += Number(row.calls || 0);
-      users[userId].connects  += Number(row.human_answered || row.connects || row.connect || row.num_connects || 0);
-      users[userId].talk_time += parseHMMSS(row.talk_sec) || Number(row.talk_time || row.talktime || row.total_talk_time || 0);
+      if (!users[userId]) users[userId] = { user: userName, user_id: userId, calls: 0, connects: 0, talk_time: 0, pause_time: 0 };
+      users[userId].calls      += Number(row.calls || 0);
+      users[userId].connects   += Number(row.human_answered || row.connects || row.connect || row.num_connects || 0);
+      users[userId].talk_time  += parseHMMSS(row.talk_sec) || Number(row.talk_time || row.talktime || row.total_talk_time || 0);
+      users[userId].pause_time += parseHMMSS(row.pause_sec) || Number(row.pause_time || row.agent_pause_time || row.on_pause_sec || row.total_pause || 0);
     }
 
     if (records.length === 0) break;
@@ -194,19 +196,22 @@ async function fetchAllRepPages(dateStart, dateEnd, statusId) {
 
 app.post("/convoso/all-users-summary", async (req, res) => {
   try {
-    const { start_date, end_date } = req.body;
- 
+    const { start_date, end_date, campaign_id, list_id } = req.body;
+
     if (!start_date || !end_date) {
       return res.status(400).json({ error: "Missing start_date or end_date" });
     }
 
     const dateStart = `${start_date} 00:00:00`;
     const dateEnd   = `${end_date} 23:59:59`;
+    const extraParams = {};
+    if (campaign_id) extraParams.campaign_id = campaign_id;
+    if (list_id)     extraParams.list_id     = list_id;
 
     const [instMap, niMap, ncMap] = await Promise.all([
-      fetchAllRepPages(dateStart, dateEnd, "inst"),
-      fetchAllRepPages(dateStart, dateEnd, "NI"),
-      fetchAllRepPages(dateStart, dateEnd, "NC"),
+      fetchAllRepPages(dateStart, dateEnd, "inst", extraParams),
+      fetchAllRepPages(dateStart, dateEnd, "NI",   extraParams),
+      fetchAllRepPages(dateStart, dateEnd, "NC",   extraParams),
     ]);
 
     const allIds = new Set([
@@ -226,15 +231,18 @@ app.post("/convoso/all-users-summary", async (req, res) => {
       users[uid] = {
         user:     userName,
         user_id:  uid,
-        inst:     instRow.calls     || 0,
-        inst_con: instRow.connects  || 0,
-        inst_tt:  instRow.talk_time || 0,
-        ni:       niRow.calls       || 0,
-        ni_con:   niRow.connects    || 0,
-        ni_tt:    niRow.talk_time   || 0,
-        nc:       ncRow.calls       || 0,
-        nc_con:   ncRow.connects    || 0,
-        nc_tt:    ncRow.talk_time   || 0,
+        inst:     instRow.calls      || 0,
+        inst_con: instRow.connects   || 0,
+        inst_tt:  instRow.talk_time  || 0,
+        inst_pt:  instRow.pause_time || 0,
+        ni:       niRow.calls        || 0,
+        ni_con:   niRow.connects     || 0,
+        ni_tt:    niRow.talk_time    || 0,
+        ni_pt:    niRow.pause_time   || 0,
+        nc:       ncRow.calls        || 0,
+        nc_con:   ncRow.connects     || 0,
+        nc_tt:    ncRow.talk_time    || 0,
+        nc_pt:    ncRow.pause_time   || 0,
       };
     }
 
@@ -432,6 +440,134 @@ app.post("/convoso/call-log", async (req, res) => {
   }
 });
  
+function extractRecords(data) {
+  /* Handles: {data:[...]}, {data:{1:{...},2:{...}}}, {campaigns:[...]}, {lists:[...]},
+     {results:[...]}, {records:[...]}, {rows:[...]}, or top-level array */
+  if (Array.isArray(data)) return data;
+  const raw =
+    data.data      || data.results  || data.records ||
+    data.rows      || data.campaigns || data.lists   || [];
+  return Array.isArray(raw) ? raw : Object.values(raw);
+}
+
+app.get("/convoso/campaigns", async (req, res) => {
+  try {
+    const data = await fetchConvosoData("/v1/campaigns", {});
+    const records = extractRecords(data);
+    const campaigns = records
+      .map(c => ({
+        id:   String(c.id || c.campaign_id || ""),
+        name: c.name || c.campaign_name || c.title || "",
+      }))
+      .filter(c => c.id && c.name);
+    console.log(`[campaigns] extracted ${campaigns.length} from keys: ${Object.keys(data).join(", ")}`);
+    res.json({ campaigns });
+  } catch (err) {
+    console.error("[campaigns]", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* Debug: raw Convoso response + parsed result for campaigns */
+app.get("/convoso/debug-campaigns", async (req, res) => {
+  try {
+    const data = await fetchConvosoData("/v1/campaigns", {});
+    const records = extractRecords(data);
+    const campaigns = records
+      .map(c => ({ id: String(c.id || c.campaign_id || ""), name: c.name || c.campaign_name || c.title || "" }))
+      .filter(c => c.id && c.name);
+    res.json({ raw_keys: Object.keys(data), parsed_count: campaigns.length, campaigns, raw: data });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* Debug: test campaign_id filtering on agent-performance search */
+app.get("/convoso/debug-campaign-filter", async (req, res) => {
+  try {
+    const { campaign_id } = req.query;
+    const today = new Date().toISOString().slice(0, 10);
+    const withFilter    = await fetchConvosoData("/v1/agent-performance/search", {
+      date_start: `${today} 00:00:00`, date_end: `${today} 23:59:59`,
+      call_type: "OUTBOUND", status_ids: "inst",
+      ...(campaign_id ? { campaign_id } : {}),
+      page: 1, per_page: 5,
+    });
+    const noFilter = await fetchConvosoData("/v1/agent-performance/search", {
+      date_start: `${today} 00:00:00`, date_end: `${today} 23:59:59`,
+      call_type: "OUTBOUND", status_ids: "inst",
+      page: 1, per_page: 5,
+    });
+    const wRecords = recordsFromConvoso(withFilter);
+    const nRecords = recordsFromConvoso(noFilter);
+    res.json({
+      note: `Pass ?campaign_id=X to test filtering`,
+      campaign_id_tested: campaign_id || "(none — use ?campaign_id=X)",
+      with_filter_count:  withFilter.total_count  || withFilter.total || wRecords.length,
+      no_filter_count:    noFilter.total_count     || noFilter.total   || nRecords.length,
+      with_filter_sample: wRecords.slice(0, 3).map(r => ({ name: r.name, calls: r.calls })),
+      no_filter_sample:   nRecords.slice(0, 3).map(r => ({ name: r.name, calls: r.calls })),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+async function fetchListsFromConvoso() {
+  /* Try the paths Convoso uses for call lists, return first non-empty result */
+  const paths = ["/v1/lists/search", "/v1/lists", "/v1/list"];
+  for (const path of paths) {
+    try {
+      const data = await fetchConvosoData(path, {});
+      const records = extractRecords(data);
+      const lists = records
+        .map(l => ({
+          id:   String(l.id || l.list_id || ""),
+          name: l.name || l.list_name || l.title || "",
+        }))
+        .filter(l => l.id && l.name);
+      console.log(`[lists] path=${path} raw_keys=${Object.keys(data).join(",")} extracted=${lists.length}`);
+      if (lists.length > 0) return { lists, path };
+    } catch (e) {
+      console.error(`[lists] path=${path} error:`, e.message);
+    }
+  }
+  return { lists: [], path: null };
+}
+
+app.get("/convoso/lists", async (req, res) => {
+  try {
+    const { lists } = await fetchListsFromConvoso();
+    res.json({ lists });
+  } catch (err) {
+    console.error("[lists]", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* Debug: raw Convoso response + parsed result for lists across all tried paths */
+app.get("/convoso/debug-lists", async (req, res) => {
+  try {
+    const results = {};
+    for (const path of ["/v1/lists/search", "/v1/lists", "/v1/list"]) {
+      try {
+        const data = await fetchConvosoData(path, {});
+        const records = extractRecords(data);
+        results[path] = {
+          raw_keys: Object.keys(data),
+          record_count: records.length,
+          sample: records.slice(0, 3),
+        };
+      } catch (e) {
+        results[path] = { error: e.message };
+      }
+    }
+    res.json({ note: "Trying all known Convoso list endpoints", results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Convoso server running on http://127.0.0.1:${PORT}`);
 });
