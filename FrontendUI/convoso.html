@@ -142,7 +142,7 @@
     .fb-filter-section { display:flex; flex-direction:column; gap:10px; }
     .cv-filter-row-top { display:flex; align-items:center; justify-content:space-between; }
     .fb-filter-label { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.07em; }
-    .fb-filter-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .fb-filter-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
     .fb-filter-chip { display:flex; flex-direction:column; align-items:flex-start; gap:4px; min-height:56px; padding:12px 14px; background:var(--surface); border:1px solid var(--border); border-radius:12px; cursor:pointer; text-align:left; font-family:inherit; transition:border-color 0.15s,box-shadow 0.15s,transform 0.15s; box-shadow:var(--card-shadow); }
     .fb-filter-chip:hover { border-color:rgba(37,99,235,0.45); transform:translateY(-1px); }
     .fb-filter-chip.active { border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,0.10); }
@@ -245,7 +245,7 @@
 
     @keyframes cvFadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
 
-    @media (max-width:1100px) { .fb-filter-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:1100px) { .fb-filter-grid { grid-template-columns:repeat(2,1fr); } /* already 2 cols */ }
     @media (max-width:900px) {
       .fb-hero { flex-direction:column; align-items:stretch; flex-wrap:wrap; min-height:0; padding:20px; }
       .fb-hero-sep { width:100%; height:1px; margin:16px 0; }
@@ -433,17 +433,9 @@
             <span class="fb-filter-chip-name">Date Range</span>
             <span class="fb-filter-chip-val" id="cvChipPeriodVal">Today</span>
           </button>
-          <button class="fb-filter-chip" id="cvChipDisp" data-chip="disposition">
-            <span class="fb-filter-chip-name">Disposition</span>
-            <span class="fb-filter-chip-val" id="cvChipDispVal">Interested</span>
-          </button>
           <button class="fb-filter-chip" id="cvChipCampaign" data-chip="campaign">
             <span class="fb-filter-chip-name">Campaign</span>
             <span class="fb-filter-chip-val" id="cvChipCampaignVal">All Campaigns</span>
-          </button>
-          <button class="fb-filter-chip" id="cvChipList" data-chip="list">
-            <span class="fb-filter-chip-name">List</span>
-            <span class="fb-filter-chip-val" id="cvChipListVal">All Lists</span>
           </button>
         </div>
         <div class="cv-status-line"><span id="cvStatus"></span></div>
@@ -569,22 +561,18 @@
   var activePeriod   = 'today';
   var activeDisp     = 'inst';
   var activeCampaign = '';
-  var activeList     = '';
   var customStart    = '';
   var customEnd      = '';
 
   /* ── DATA ── */
   var campaigns    = [];
-  var lists        = [];
   var currentUsers = [];
   var allTimeCache = [];
 
   /* ── MODAL STATE ── */
   var currentChip      = null;
   var pendingPeriod    = 'today';
-  var pendingDisp      = 'inst';
   var pendingCampaign  = '';
-  var pendingList      = '';
   var pendingCustStart = '';
   var pendingCustEnd   = '';
 
@@ -679,45 +667,22 @@
   }
 
   /* ── API ── */
-  var DEFAULT_CAMPAIGNS = [
-    'Capital Infusion LLC','Outbound Campaign - East Coast','Unlisted Inbound Callers',
-    'Jason TESTING','ORGANICS - RU','CANADA - RU','EQUIPMENT - RU',
-    'TEXT REPLIERS AND PHILS - RU','PUERTO RICO LEADS - RU','RECENT CAMRYS - RU',
-    'RECENT DODGES - RU','2026 MAILER SEQUENCING - RU','UCC BEST LEADS','HIDDEN LIST',
-    'Dodge - Granny Smith','Toyota - Facebook'
-  ].map(function(n,i){ return {id:String(i+1),name:n}; });
-
   async function fetchCampaigns() {
     try {
       var res = await fetch(CONVOSO+'/convoso/campaigns');
       if (!res.ok) throw new Error('HTTP '+res.status);
       var data = await res.json();
-      if (data.campaigns && data.campaigns.length) {
-        campaigns = data.campaigns;
-        console.log('[campaigns] loaded from API:', campaigns.length, 'first id:', campaigns[0] && campaigns[0].id);
-      } else {
-        campaigns = DEFAULT_CAMPAIGNS;
-        console.warn('[campaigns] API returned empty, using defaults with fake IDs');
-      }
+      campaigns = (data.campaigns && data.campaigns.length) ? data.campaigns : [];
+      console.log('[campaigns] loaded:', campaigns.length, campaigns[0] && campaigns[0].id);
     } catch(e) {
-      campaigns = DEFAULT_CAMPAIGNS;
-      console.error('[campaigns] fetch failed, using defaults:', e);
+      campaigns = [];
+      console.error('[campaigns] fetch failed:', e);
     }
-  }
-
-  async function fetchLists() {
-    try {
-      var res = await fetch(CONVOSO+'/convoso/lists');
-      if (!res.ok) return;
-      var data = await res.json();
-      lists = data.lists || [];
-    } catch(e) { console.error('lists:', e); }
   }
 
   async function fetchPeriod(start, end) {
     var body = {start_date:start, end_date:end};
     if (activeCampaign) body.campaign_id = activeCampaign;
-    if (activeList)     body.list_id     = activeList;
     var res = await fetch(CONVOSO+'/convoso/all-users-summary', {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
     });
@@ -776,14 +741,9 @@
   function renderActiveTags() {
     var tags = [];
     if (activePeriod !== 'today') tags.push({label:PERIOD_LABELS[activePeriod]||activePeriod, chip:'period'});
-    if (activeDisp   !== 'inst')  tags.push({label:DISP_LABELS[activeDisp]||activeDisp,       chip:'disposition'});
     if (activeCampaign) {
       var c = campaigns.find(function(x){ return x.id===activeCampaign; });
       tags.push({label:c?c.name:activeCampaign, chip:'campaign'});
-    }
-    if (activeList) {
-      var l = lists.find(function(x){ return x.id===activeList; });
-      tags.push({label:l?l.name:activeList, chip:'list'});
     }
     var container = document.getElementById('cvActiveTags');
     if (!container) return;
@@ -831,34 +791,27 @@
 
   /* ── CHIP LABELS ── */
   function updateChipLabels() {
-    setText('cvChipPeriodVal',   PERIOD_LABELS[activePeriod]||activePeriod);
-    setText('cvChipDispVal',     DISP_LABELS[activeDisp]||activeDisp);
+    setText('cvChipPeriodVal', PERIOD_LABELS[activePeriod]||activePeriod);
     var c=campaigns.find(function(x){ return x.id===activeCampaign; });
     setText('cvChipCampaignVal', activeCampaign ? (c?c.name:activeCampaign) : 'All Campaigns');
-    var l=lists.find(function(x){ return x.id===activeList; });
-    setText('cvChipListVal',     activeList ? (l?l.name:activeList) : 'All Lists');
     document.getElementById('cvChipPeriod').classList.toggle('active',   activePeriod!=='today');
-    document.getElementById('cvChipDisp').classList.toggle('active',     activeDisp!=='inst');
     document.getElementById('cvChipCampaign').classList.toggle('active', !!activeCampaign);
-    document.getElementById('cvChipList').classList.toggle('active',     !!activeList);
   }
 
   /* ── FILTER MODAL ── */
   function openFilterModal(chipType) {
     currentChip     = chipType;
     pendingPeriod   = activePeriod;
-    pendingDisp     = activeDisp;
     pendingCampaign = activeCampaign;
-    pendingList     = activeList;
     pendingCustStart= customStart;
     pendingCustEnd  = customEnd;
 
-    var titles={period:'Date Range',disposition:'Disposition',campaign:'Campaign',list:'List'};
+    var titles={period:'Date Range',campaign:'Campaign'};
     setText('cvModalTitle', titles[chipType]||'Filter');
 
     var searchWrap=document.getElementById('cvModalSearchWrap');
     var searchInput=document.getElementById('cvModalSearch');
-    if (chipType==='campaign'||chipType==='list') {
+    if (chipType==='campaign') {
       searchWrap.removeAttribute('hidden'); if(searchInput) searchInput.value='';
     } else {
       searchWrap.setAttribute('hidden','');
@@ -892,21 +845,12 @@
         +'<label>From<input type="date" id="cvModalDateStart" value="'+(pendingCustStart||today)+'" /></label>'
         +'<label>To<input type="date" id="cvModalDateEnd" value="'+(pendingCustEnd||today)+'" /></label>'
         +'</div>';
-    } else if (chipType==='disposition') {
-      var disps=[{val:'all',label:'All Calls'},{val:'inst',label:'Interested (INST)'},{val:'ni',label:'Not Interested (NI)'},{val:'nc',label:'No Contact (NC)'}];
-      html=disps.map(function(d){ var sel=pendingDisp===d.val?' selected':''; return '<button class="fb-filter-option'+sel+'" data-val="'+d.val+'">'+d.label+'</button>'; }).join('');
     } else if (chipType==='campaign') {
       var cItems=[{id:'',name:'All Campaigns'}].concat(campaigns);
       var cq=searchTerm.toLowerCase();
       if(cq) cItems=cItems.filter(function(c){ return c.name.toLowerCase().indexOf(cq)>=0; });
       html=cItems.map(function(c){ var sel=pendingCampaign===c.id?' selected':''; return '<button class="fb-filter-option'+sel+'" data-val="'+escHtml(c.id)+'">'+escHtml(c.name)+'</button>'; }).join('');
       if(!cItems.length) html='<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px">No campaigns found</div>';
-    } else if (chipType==='list') {
-      var lItems=[{id:'',name:'All Lists'}].concat(lists);
-      var lq=searchTerm.toLowerCase();
-      if(lq) lItems=lItems.filter(function(l){ return l.name.toLowerCase().indexOf(lq)>=0; });
-      html=lItems.map(function(l){ var sel=pendingList===l.id?' selected':''; return '<button class="fb-filter-option'+sel+'" data-val="'+escHtml(l.id)+'">'+escHtml(l.name)+'</button>'; }).join('');
-      if(!lItems.length) html='<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px">No lists found</div>';
     }
     container.innerHTML=html;
   }
@@ -925,12 +869,8 @@
         var ds=document.getElementById('cvModalDateStart'), de=document.getElementById('cvModalDateEnd');
         if(ds) customStart=ds.value; if(de) customEnd=de.value; needsReload=true;
       }
-    } else if (currentChip==='disposition') {
-      if(activeDisp!==pendingDisp){ activeDisp=pendingDisp; }
     } else if (currentChip==='campaign') {
       if(activeCampaign!==pendingCampaign){ activeCampaign=pendingCampaign; needsReload=true; }
-    } else if (currentChip==='list') {
-      if(activeList!==pendingList){ activeList=pendingList; needsReload=true; }
     }
     closeFilterModal();
     updateChipLabels();
@@ -938,10 +878,8 @@
   }
 
   function clearFilterModal() {
-    if(currentChip==='period')      { pendingPeriod='today'; customStart=''; customEnd=''; }
-    else if(currentChip==='disposition') { pendingDisp='inst'; }
-    else if(currentChip==='campaign')    { pendingCampaign=''; }
-    else if(currentChip==='list')        { pendingList=''; }
+    if(currentChip==='period')   { pendingPeriod='today'; customStart=''; customEnd=''; }
+    else if(currentChip==='campaign') { pendingCampaign=''; }
     buildModalOptions(currentChip,'');
   }
 
@@ -1014,8 +952,7 @@
 
   /* ── INIT ── */
   function init() {
-    /* Fetch campaigns + lists in parallel (no-op on error) */
-    Promise.all([fetchCampaigns(), fetchLists()]);
+    fetchCampaigns();
 
     /* Filter chips → open modal */
     document.getElementById('cvFilterGrid') && document.getElementById('cvFilterGrid').addEventListener('click',function(e){
@@ -1031,10 +968,8 @@
       var btn=e.target.closest('.fb-filter-option');
       if(!btn) return;
       var val=btn.getAttribute('data-val');
-      if(currentChip==='period')      { pendingPeriod=val; var cr=document.getElementById('cvModalCustomRange'); if(cr) cr.style.display=(val==='custom'?'':'none'); }
-      else if(currentChip==='disposition') { pendingDisp=val; }
-      else if(currentChip==='campaign')    { pendingCampaign=val; }
-      else if(currentChip==='list')        { pendingList=val; }
+      if(currentChip==='period')        { pendingPeriod=val; var cr=document.getElementById('cvModalCustomRange'); if(cr) cr.style.display=(val==='custom'?'':'none'); }
+      else if(currentChip==='campaign') { pendingCampaign=val; }
       document.querySelectorAll('#cvModalOptions .fb-filter-option').forEach(function(b){ b.classList.toggle('selected',b.getAttribute('data-val')===val); });
     });
 
@@ -1054,10 +989,8 @@
       if(!btn) return;
       var chip=btn.getAttribute('data-clear-chip');
       var reload=false;
-      if(chip==='period')      { activePeriod='today';  reload=true; }
-      else if(chip==='disposition') { activeDisp='inst';          }
-      else if(chip==='campaign')    { activeCampaign=''; reload=true; }
-      else if(chip==='list')        { activeList='';     reload=true; }
+      if(chip==='period')        { activePeriod='today';  reload=true; }
+      else if(chip==='campaign') { activeCampaign=''; reload=true; }
       updateChipLabels();
       if(reload) loadData(); else renderAll(currentUsers);
     });
