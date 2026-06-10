@@ -666,19 +666,26 @@
     }).filter(function(r){ return r.val>0; }).sort(function(a,b){ return b.val-a.val; });
   }
 
-  /* ── API ── */
-  async function fetchCampaigns() {
-    try {
-      var res = await fetch(CONVOSO+'/convoso/campaigns');
-      if (!res.ok) throw new Error('HTTP '+res.status);
-      var data = await res.json();
-      campaigns = (data.campaigns && data.campaigns.length) ? data.campaigns : [];
-      console.log('[campaigns] loaded:', campaigns.length, campaigns[0] && campaigns[0].id);
-    } catch(e) {
-      campaigns = [];
-      console.error('[campaigns] fetch failed:', e);
-    }
-  }
+  /* ── CAMPAIGNS (hardcoded — Convoso API has no list endpoint) ── */
+  var CAMPAIGNS = [
+    {id:'8065', name:'Capital Infusion LLC'},
+    {id:'8067', name:'Outbound Campaign - East Coast'},
+    {id:'8097', name:'Unlisted Inbound Callers'},
+    {id:'8185', name:'Jason TESTING'},
+    {id:'8539', name:'ORGANICS - RU'},
+    {id:'8541', name:'CANADA - RU'},
+    {id:'8545', name:'EQUIPMENT - RU'},
+    {id:'8547', name:'TEXT REPLIERS AND PHILS - RU'},
+    {id:'8549', name:'PUERTO RICO LEADS - RU'},
+    {id:'8551', name:'RECENT CAMRYS - RU'},
+    {id:'8553', name:'RECENT DODGES - RU'},
+    {id:'8555', name:'2026 MAILER SEQUENCING - RU'},
+    {id:'8735', name:'UCC BEST LEADS'},
+    {id:'8789', name:'HIDDEN LIST'},
+    {id:'8883', name:'Dodge - Granny Smith'},
+    {id:'9061', name:'Toyota - Facebook'},
+  ];
+  campaigns = CAMPAIGNS;
 
   async function fetchPeriod(start, end) {
     var body = {start_date:start, end_date:end};
@@ -952,8 +959,6 @@
 
   /* ── INIT ── */
   function init() {
-    fetchCampaigns();
-
     /* Filter chips → open modal */
     document.getElementById('cvFilterGrid') && document.getElementById('cvFilterGrid').addEventListener('click',function(e){
       var chip=e.target.closest('[data-chip]');
