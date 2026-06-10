@@ -5,20 +5,20 @@
 (function () {
   'use strict';
 
-  var USER_KEY = 'capmuse-user';
-  var SHARED_PASSWORD = 'Inc5000DataAnalytics!';
+  let USER_KEY = 'capmuse-user';
+  let SHARED_PASSWORD = 'Inc5000DataAnalytics!';
 
   // Demo mode — set false after exec demo to restore full sidebar.
-  var DEMO_MODE = true;
-  var DEMO_HOME_HREF = 'home.html';
-  var DEMO_DISABLED_PAGES = [
+  let DEMO_MODE = true;
+  let DEMO_HOME_HREF = 'home.html';
+  let DEMO_DISABLED_PAGES = [
     'dashboard.html',
     'lead.html',
     'pipeline.html',
     'lender_recommendation.html',
     'ringcentral.html'
   ];
-  var DEMO_HIDDEN_NAV = [
+  let DEMO_HIDDEN_NAV = [
     { href: 'dashboard.html', label: 'Dashboard' },
     { href: 'lead.html', label: 'Leads' },
     { href: 'pipeline.html', label: 'Pipeline' },
@@ -26,7 +26,7 @@
     { href: 'ringcentral.html', label: 'RingCentral' }
   ];
 
-  var demoStylesInjected = false;
+  let demoStylesInjected = false;
 
   function currentPage() {
     return (window.location.pathname.split('/').pop() || 'home.html').toLowerCase();
@@ -36,7 +36,7 @@
   function injectDemoStyles() {
     if (demoStylesInjected) return;
     demoStylesInjected = true;
-    var style = document.createElement('style');
+    let style = document.createElement('style');
     style.id = 'capmuse-demo-nav-styles';
     style.textContent =
       '.nav-disabled,' +
@@ -63,7 +63,7 @@
   }
 
   function linkIconHtml(href) {
-    var existing = document.querySelector(
+    let existing = document.querySelector(
       '.sidebar-nav a[href="' + href + '"] .sub-icon, .sidebar-nav a[href="' + href + '"] .nav-icon,' +
       '.sidebar-nav a[data-page="dashboard"] .sub-icon'
     );
@@ -73,8 +73,8 @@
 
   function wireDemoMoreToggle(toggle) {
     toggle.addEventListener('click', function () {
-      var sub = document.getElementById('demoMoreSub');
-      var open = sub && sub.classList.contains('open');
+      let sub = document.getElementById('demoMoreSub');
+      let open = sub && sub.classList.contains('open');
       if (!open && sub) {
         sub.classList.add('open');
         toggle.classList.add('open');
@@ -94,13 +94,13 @@
       el.classList.add('nav-demo-legacy');
     });
     ['trendingToggle', 'trendingSub', 'dataToggle', 'dataSub'].forEach(function (id) {
-      var el = document.getElementById(id);
+      let el = document.getElementById(id);
       if (el) el.classList.add('nav-demo-legacy');
     });
   }
 
   function restructureDemoNav() {
-    var nav = document.querySelector('.sidebar-nav');
+    let nav = document.querySelector('.sidebar-nav');
     if (!nav || nav.getAttribute('data-demo-nav') === 'true') return;
 
     nav.setAttribute('data-demo-nav', 'true');
@@ -112,8 +112,8 @@
       el.classList.add('nav-demo-legacy');
     });
 
-    var page = currentPage();
-    var topHtml =
+    let page = currentPage();
+    let topHtml =
       '<a class="nav-item' + (page === 'home.html' ? ' active' : '') + '" href="home.html"' +
         (page === 'home.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('home.html') +
@@ -131,12 +131,12 @@
         linkIconHtml('convoso.html') +
         'Convoso</a>';
 
-    var hiddenItems = DEMO_HIDDEN_NAV.map(function (item) {
+    let hiddenItems = DEMO_HIDDEN_NAV.map(function (item) {
       return '<a class="nav-sub-item nav-disabled" href="' + item.href + '" aria-disabled="true" title="Unavailable for demo">' +
         linkIconHtml(item.href) + item.label + '</a>';
     }).join('');
 
-    var moreHtml =
+    let moreHtml =
       '<div class="nav-demo-more-wrap">' +
         '<div class="nav-section-toggle" id="demoMoreToggle" role="button" tabindex="0" aria-expanded="false">' +
           '<div class="toggle-left">' +
@@ -151,16 +151,16 @@
         '<div class="nav-sub" id="demoMoreSub">' + hiddenItems + '</div>' +
       '</div>';
 
-    var mount = document.createElement('div');
+    let mount = document.createElement('div');
     mount.innerHTML = topHtml;
-    var topNodes = Array.prototype.slice.call(mount.childNodes);
-    for (var i = topNodes.length - 1; i >= 0; i--) {
+    let topNodes = Array.prototype.slice.call(mount.childNodes);
+    for (let i = topNodes.length - 1; i >= 0; i--) {
       nav.insertBefore(topNodes[i], nav.firstChild);
     }
 
     nav.insertAdjacentHTML('beforeend', moreHtml);
 
-    var moreToggle = document.getElementById('demoMoreToggle');
+    let moreToggle = document.getElementById('demoMoreToggle');
     if (moreToggle) wireDemoMoreToggle(moreToggle);
 
     nav.querySelectorAll('#demoMoreSub .nav-sub-item').forEach(disableNavTarget);
@@ -185,13 +185,13 @@
   }
 
   function buildRepUsers() {
-    var map = {};
+    let map = {};
     if (!window.REPS) return map;
     Object.keys(window.REPS).forEach(function (id) {
-      var rep = window.REPS[id];
+      let rep = window.REPS[id];
       if (!rep || !rep.name) return;
-      var parts = rep.name.split(/\s+/).filter(Boolean);
-      var first = parts[0].toLowerCase();
+      let parts = rep.name.split(/\s+/).filter(Boolean);
+      let first = parts[0].toLowerCase();
       map[first] = id;
       map[id] = id;
       if (rep.bookName) {
@@ -218,19 +218,19 @@
     },
 
     getCurrentRep: function () {
-      var id = this.getUserId();
+      let id = this.getUserId();
       if (!id || !window.REPS) return null;
       return window.REPS[id] || null;
     },
 
     resolveRepId: function (username) {
-      var key = (username || '').trim().toLowerCase();
-      var map = buildRepUsers();
+      let key = (username || '').trim().toLowerCase();
+      let map = buildRepUsers();
       return map[key] || null;
     },
 
     login: function (username, password) {
-      var repId = this.resolveRepId(username);
+      let repId = this.resolveRepId(username);
       if (repId && password === SHARED_PASSWORD) {
         localStorage.setItem(USER_KEY, repId);
         return repId;
@@ -256,12 +256,12 @@
       if (!rep) rep = this.getCurrentRep();
       if (!rep) return;
 
-      var init = initials(rep.name);
+      let init = initials(rep.name);
 
-      var sidebarAvatar = document.getElementById('sidebarAvatar');
-      var sidebarName   = document.getElementById('sidebarName');
-      var sidebarRole   = document.getElementById('sidebarRole');
-      var avatarBtn     = document.getElementById('avatarBtn');
+      let sidebarAvatar = document.getElementById('sidebarAvatar');
+      let sidebarName   = document.getElementById('sidebarName');
+      let sidebarRole   = document.getElementById('sidebarRole');
+      let avatarBtn     = document.getElementById('avatarBtn');
 
       if (sidebarAvatar) sidebarAvatar.textContent = init;
       if (sidebarName)   sidebarName.textContent   = rep.name;

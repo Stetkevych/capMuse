@@ -645,25 +645,25 @@
 
 <script>
   (function () {
-    var html = document.documentElement;
-    var btn  = document.getElementById('themeBtn');
-    var KEY  = 'capmuse-theme';
-    var saved = localStorage.getItem(KEY);
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let html = document.documentElement;
+    let btn  = document.getElementById('themeBtn');
+    let KEY  = 'capmuse-theme';
+    let saved = localStorage.getItem(KEY);
+    let prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     html.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
     btn.addEventListener('click', function () {
-      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      let next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
       html.setAttribute('data-theme', next);
       localStorage.setItem(KEY, next);
     });
   })();
   (function () {
     function bindToggle(toggleId, subId) {
-      var toggle = document.getElementById(toggleId);
-      var sub    = document.getElementById(subId);
+      let toggle = document.getElementById(toggleId);
+      let sub    = document.getElementById(subId);
       if (!toggle || !sub) return;
       toggle.addEventListener('click', function () {
-        var isOpen = sub.classList.contains('open');
+        let isOpen = sub.classList.contains('open');
         sub.classList.toggle('open', !isOpen);
         toggle.classList.toggle('open', !isOpen);
         toggle.setAttribute('aria-expanded', String(!isOpen));
@@ -674,18 +674,18 @@
     bindToggle('dialerToggle', 'dialerSub');
   })();
   (function () {
-    var sidebar = document.getElementById('sidebar');
-    var overlay = document.getElementById('sidebarOverlay');
-    var burger  = document.getElementById('burgerBtn');
-    var open  = function () { sidebar.classList.add('open'); overlay.classList.add('visible'); document.body.style.overflow = 'hidden'; };
-    var close = function () { sidebar.classList.remove('open'); overlay.classList.remove('visible'); document.body.style.overflow = ''; };
+    let sidebar = document.getElementById('sidebar');
+    let overlay = document.getElementById('sidebarOverlay');
+    let burger  = document.getElementById('burgerBtn');
+    let open  = function () { sidebar.classList.add('open'); overlay.classList.add('visible'); document.body.style.overflow = 'hidden'; };
+    let close = function () { sidebar.classList.remove('open'); overlay.classList.remove('visible'); document.body.style.overflow = ''; };
     burger.addEventListener('click', open);
     overlay.addEventListener('click', close);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
   })();
   (function () {
-    var btn  = document.getElementById('avatarBtn');
-    var menu = document.getElementById('avatarMenu');
+    let btn  = document.getElementById('avatarBtn');
+    let menu = document.getElementById('avatarMenu');
     if (!btn || !menu) return;
     btn.addEventListener('click', function (e) { e.stopPropagation(); menu.classList.toggle('open'); });
     document.addEventListener('click', function () { menu.classList.remove('open'); });
@@ -704,16 +704,16 @@
 (function () {
 'use strict';
 
-var RC         = 'http://127.0.0.1:8002';
-var REFRESH_MS = 3 * 60 * 1000;
-var LIVE_KEYS  = ['today','week','month'];
-var ALL_KEYS   = ['today','week','lastweek','month'];
-var AT_LOADED  = false;
+let RC         = 'http://127.0.0.1:8002';
+let REFRESH_MS = 3 * 60 * 1000;
+let LIVE_KEYS  = ['today','week','month'];
+let ALL_KEYS   = ['today','week','lastweek','month'];
+let AT_LOADED  = false;
 
 /* Populated dynamically from API response — same pattern as Convoso */
-var REPS = [];
+let REPS = [];
 
-var PHOTO_MAP = {
+let PHOTO_MAP = {
   'Anthony Diaz':       'diaz.png',
   'Blake Fiorito':      'blake.png',
   "Colin O'Bryan":      'colin.png',
@@ -733,19 +733,19 @@ var PHOTO_MAP = {
 function pad(n){ return String(n).padStart(2,'0'); }
 function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function todayStr(){ return iso(new Date()); }
-function monday(d){ var r=new Date(d),day=r.getDay(),diff=day===0?-6:1-day; r.setDate(r.getDate()+diff); return r; }
+function monday(d){ let r=new Date(d),day=r.getDay(),diff=day===0?-6:1-day; r.setDate(r.getDate()+diff); return r; }
 
 function getRange(key){
-  var t=todayStr(), now=new Date();
+  let t=todayStr(), now=new Date();
   if(key==='today')    return [t, t];
   if(key==='week')     return [iso(monday(now)), t];
   if(key==='lastweek'){
-    var lm=monday(now); lm.setDate(lm.getDate()-7);
-    var ls=new Date(lm); ls.setDate(ls.getDate()+6);
+    let lm=monday(now); lm.setDate(lm.getDate()-7);
+    let ls=new Date(lm); ls.setDate(ls.getDate()+6);
     return [iso(lm), iso(ls)];
   }
   if(key==='month'){
-    var n2=new Date();
+    let n2=new Date();
     return [n2.getFullYear()+'-'+pad(n2.getMonth()+1)+'-01', t];
   }
   if(key==='alltime')  return ['2020-01-01', t];
@@ -753,31 +753,31 @@ function getRange(key){
 }
 
 /* ── state ── */
-var cache         = {};
-var nextRefreshAt = 0;
-var isRunning     = false;
+let cache         = {};
+let nextRefreshAt = 0;
+let isRunning     = false;
 
 /* ── helpers ── */
-function setText(id, v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+function setText(id, v){ let e=document.getElementById(id); if(e) e.textContent=v; }
 function fmtN(n){ return n == null ? '0' : Number(n).toLocaleString(); }
 function fmtT(s){ if(!s) return '—'; return Math.floor(s/60)+'m '+(s%60)+'s'; }
 function sName(full){
-  var p=(full||'').trim().split(/\s+/);
+  let p=(full||'').trim().split(/\s+/);
   return p.length===1 ? p[0] : p[0]+' '+p[p.length-1][0]+'.';
 }
 function getInitials(name){
-  var p=(name||'').trim().split(/\s+/);
+  let p=(name||'').trim().split(/\s+/);
   return p.length===1 ? p[0].slice(0,2).toUpperCase() : (p[0][0]+p[p.length-1][0]).toUpperCase();
 }
 
 /* ── fetch ── */
 /* Single call returns all 14 reps — mirrors Convoso's all-users-summary pattern */
 function fetchPeriod(key, force){
-  var range = getRange(key);
-  var timeout = key==='alltime' ? 600000 : 300000;
-  var controller = typeof AbortController!=='undefined' ? new AbortController() : null;
-  var timer = controller ? setTimeout(function(){ controller.abort(); }, timeout) : null;
-  var opts = {
+  let range = getRange(key);
+  let timeout = key==='alltime' ? 600000 : 300000;
+  let controller = typeof AbortController!=='undefined' ? new AbortController() : null;
+  let timer = controller ? setTimeout(function(){ controller.abort(); }, timeout) : null;
+  let opts = {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({start_date: range[0], end_date: range[1], force: !!force})
@@ -800,12 +800,12 @@ function fetchPeriod(key, force){
 }
 
 /* ── render leaderboard column ── */
-var BADGES = ['rb-1','rb-2','rb-3','rb-n','rb-n'];
+let BADGES = ['rb-1','rb-2','rb-3','rb-n','rb-n'];
 function renderCol(id, data, metric){
-  var el = document.getElementById(id);
+  let el = document.getElementById(id);
   if(!el) return;
   if(!data || !data.length){ el.innerHTML='<div class="cv-placeholder">No data</div>'; return; }
-  var sorted = data.slice().sort(function(a,b){ return (b[metric]||0)-(a[metric]||0); }).slice(0,5);
+  let sorted = data.slice().sort(function(a,b){ return (b[metric]||0)-(a[metric]||0); }).slice(0,5);
   if(!sorted.length){ el.innerHTML='<div class="cv-placeholder">No data</div>'; return; }
   el.innerHTML = sorted.map(function(d,i){
     return '<div class="cv-rank-row">'
@@ -818,7 +818,7 @@ function renderCol(id, data, metric){
 
 function setColError(key, msg){
   ['callers-'+key,'msgers-'+key].forEach(function(id){
-    var el=document.getElementById(id);
+    let el=document.getElementById(id);
     if(el) el.innerHTML='<div class="cv-placeholder err">'+msg+'</div>';
   });
 }
@@ -826,27 +826,27 @@ function setColError(key, msg){
 /* ── hero updates ── */
 function updateHero(key, data){
   if(key!=='today' || !data || !data.length) return;
-  var totalCalls = data.reduce(function(s,d){ return s+(d.outbound_calls||0); }, 0);
-  var totalMsgs  = data.reduce(function(s,d){ return s+(d.outbound_messages||0); }, 0);
+  let totalCalls = data.reduce(function(s,d){ return s+(d.outbound_calls||0); }, 0);
+  let totalMsgs  = data.reduce(function(s,d){ return s+(d.outbound_messages||0); }, 0);
   setText('rcHeroCalls', totalCalls.toLocaleString());
   setText('rcHeroMsgs',  totalMsgs.toLocaleString());
-  var ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   setText('rcHeroSub', 'Updated '+ts+' · '+data.length+' reps active');
 }
 
 /* ── all-time full tables ── */
 function renderATTables(data){
   if(!data || !data.length) return;
-  var ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   setText('atCallersStatus', 'Updated '+ts);
   setText('atMsgersStatus',  'Updated '+ts);
 
-  var atTotal = data.reduce(function(s,d){ return s+(d.outbound_calls||0); }, 0);
+  let atTotal = data.reduce(function(s,d){ return s+(d.outbound_calls||0); }, 0);
   setText('rcHeroCalls', atTotal.toLocaleString()); // optional: keep hero as total calls
 
-  var byCalls = data.slice().sort(function(a,b){ return (b.outbound_calls||0)-(a.outbound_calls||0); });
+  let byCalls = data.slice().sort(function(a,b){ return (b.outbound_calls||0)-(a.outbound_calls||0); });
   document.getElementById('atCallersBody').innerHTML = byCalls.map(function(d,i){
-    var rc = i===0?'row-gold':i===1?'row-silver':i===2?'row-bronze':'';
+    let rc = i===0?'row-gold':i===1?'row-silver':i===2?'row-bronze':'';
     return '<tr class="'+rc+'">'
       +'<td class="at-rank">'+(i+1)+'</td>'
       +'<td>'+d.user+'</td>'
@@ -857,9 +857,9 @@ function renderATTables(data){
       +'</tr>';
   }).join('');
 
-  var byMsgs = data.slice().sort(function(a,b){ return (b.outbound_messages||0)-(a.outbound_messages||0); });
+  let byMsgs = data.slice().sort(function(a,b){ return (b.outbound_messages||0)-(a.outbound_messages||0); });
   document.getElementById('atMsgersBody').innerHTML = byMsgs.map(function(d,i){
-    var rc = i===0?'row-gold':i===1?'row-silver':i===2?'row-bronze':'';
+    let rc = i===0?'row-gold':i===1?'row-silver':i===2?'row-bronze':'';
     return '<tr class="'+rc+'">'
       +'<td class="at-rank">'+(i+1)+'</td>'
       +'<td>'+d.user+'</td>'
@@ -870,8 +870,8 @@ function renderATTables(data){
       +'</tr>';
   }).join('');
 
-  var atCard1 = document.getElementById('atCallersCard');
-  var atCard2 = document.getElementById('atMsgersCard');
+  let atCard1 = document.getElementById('atCallersCard');
+  let atCard2 = document.getElementById('atMsgersCard');
   if(atCard1) atCard1.style.display='';
   if(atCard2) atCard2.style.display='';
 }
@@ -879,20 +879,20 @@ function renderATTables(data){
 /* ── rep stats dropdown ── */
 /* Build dropdown from all names seen across cached periods — mirrors Convoso */
 function buildDropdown(){
-  var sel = document.getElementById('rcRepSelect');
+  let sel = document.getElementById('rcRepSelect');
   if(!sel) return;
-  var current = sel.value;
-  var nameSet = {};
+  let current = sel.value;
+  let nameSet = {};
   ['today','week','lastweek','month','alltime'].forEach(function(key){
     (cache[key]||[]).forEach(function(d){ if(d.user) nameSet[d.user]=true; });
   });
-  var names = Object.keys(nameSet).sort();
+  let names = Object.keys(nameSet).sort();
   if(!names.length) return;
   /* Merge into REPS so photo lookup still works */
   REPS = names;
   sel.innerHTML = '<option value="">— Select a rep —</option>';
   names.forEach(function(name){
-    var opt = document.createElement('option');
+    let opt = document.createElement('option');
     opt.value = name; opt.textContent = name;
     if(name===current) opt.selected = true;
     sel.appendChild(opt);
@@ -900,21 +900,21 @@ function buildDropdown(){
 }
 
 function renderRepStats(){
-  var sel     = document.getElementById('rcRepSelect');
-  var emptyEl = document.getElementById('rcRepEmpty');
-  var detail  = document.getElementById('rcRepDetail');
+  let sel     = document.getElementById('rcRepSelect');
+  let emptyEl = document.getElementById('rcRepEmpty');
+  let detail  = document.getElementById('rcRepDetail');
   if(!sel || !sel.value){
     if(emptyEl) emptyEl.style.display='';
     if(detail)  detail.style.display='none';
     return;
   }
-  var name = sel.value;
+  let name = sel.value;
   function find(arr){ return (arr||[]).find(function(d){ return d.user===name; })||{}; }
-  var t  = find(cache.today);
-  var w  = find(cache.week);
-  var lw = find(cache.lastweek);
-  var m  = find(cache.month);
-  var at = find(cache.alltime);
+  let t  = find(cache.today);
+  let w  = find(cache.week);
+  let lw = find(cache.lastweek);
+  let m  = find(cache.month);
+  let at = find(cache.alltime);
 
   setText('rrCallsT',  fmtN(t.outbound_calls));   setText('rrMsgsT',  fmtN(t.outbound_messages));  setText('rrHandleT',  fmtT(t.avg_handle_time_seconds));
   setText('rrCallsW',  fmtN(w.outbound_calls));   setText('rrMsgsW',  fmtN(w.outbound_messages));  setText('rrHandleW',  fmtT(w.avg_handle_time_seconds));
@@ -925,10 +925,10 @@ function renderRepStats(){
   setText('rrHandleAT',AT_LOADED ? fmtT(at.avg_handle_time_seconds) : '—');
 
   /* Photo */
-  var photoEl    = document.getElementById('rcRepPhoto');
-  var initialsEl = document.getElementById('rcRepInitials');
+  let photoEl    = document.getElementById('rcRepPhoto');
+  let initialsEl = document.getElementById('rcRepInitials');
   setText('rcRepName', name);
-  var photoFile = PHOTO_MAP[name] || null;
+  let photoFile = PHOTO_MAP[name] || null;
   if(photoFile && photoEl){
     photoEl.onload  = function(){ photoEl.style.display=''; if(initialsEl) initialsEl.style.display='none'; };
     photoEl.onerror = function(){ photoEl.style.display='none'; if(initialsEl){ initialsEl.textContent=getInitials(name); initialsEl.style.display=''; }};
@@ -947,7 +947,7 @@ function renderRepStats(){
 function loadPeriod(key, force){
   if(!cache[key]){
     ['callers-'+key,'msgers-'+key].forEach(function(id){
-      var el=document.getElementById(id);
+      let el=document.getElementById(id);
       if(el) el.innerHTML='<div class="cv-placeholder">Loading…</div>';
     });
   }
@@ -961,7 +961,7 @@ function loadPeriod(key, force){
       renderRepStats();
     })
     .catch(function(e){
-      var msg = e.message==='SERVER_DOWN' ? 'Server offline' : 'Error loading';
+      let msg = e.message==='SERVER_DOWN' ? 'Server offline' : 'Error loading';
       setColError(key, msg);
       if(e.message==='SERVER_DOWN'){
         setText('rcStatus', 'Cannot connect to server at 127.0.0.1:8002');
@@ -970,16 +970,16 @@ function loadPeriod(key, force){
 }
 
 /* ── sequential load ── */
-var PERIOD_LABELS = {today:'Today',week:'This Week',lastweek:'Last Week',month:'This Month',alltime:'All Time'};
+let PERIOD_LABELS = {today:'Today',week:'This Week',lastweek:'Last Week',month:'This Month',alltime:'All Time'};
 
 function loadSequential(keys, force){
   if(isRunning) return;
   isRunning = true;
-  var refreshBtn = document.getElementById('refreshBtn');
+  let refreshBtn = document.getElementById('refreshBtn');
   if(refreshBtn) refreshBtn.disabled=true;
   setText('rcStatus', 'Loading '+PERIOD_LABELS[keys[0]]+'…');
 
-  var idx = 0;
+  let idx = 0;
   keys.reduce(function(chain, key){
     return chain.then(function(){
       idx++;
@@ -991,7 +991,7 @@ function loadSequential(keys, force){
     isRunning = false;
     if(refreshBtn) refreshBtn.disabled=false;
     nextRefreshAt = Date.now()+REFRESH_MS;
-    var ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setText('rcStatus', '');
     setText('callersUpdated', 'Updated '+ts);
     setText('msgersUpdated',  'Updated '+ts);
@@ -1017,10 +1017,10 @@ function scheduleAutoRefresh(){
 document.addEventListener('DOMContentLoaded', function(){
   buildDropdown();
 
-  var repSel = document.getElementById('rcRepSelect');
+  let repSel = document.getElementById('rcRepSelect');
   if(repSel) repSel.addEventListener('change', renderRepStats);
 
-  var refreshBtn = document.getElementById('refreshBtn');
+  let refreshBtn = document.getElementById('refreshBtn');
   if(refreshBtn) refreshBtn.addEventListener('click', function(){
     if(!isRunning){
       cache = {};
@@ -1028,7 +1028,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  var btnAT = document.getElementById('btnLoadAllTime');
+  let btnAT = document.getElementById('btnLoadAllTime');
   if(btnAT) btnAT.addEventListener('click', function(){
     if(AT_LOADED || isRunning) return;
     AT_LOADED = true;
