@@ -1245,6 +1245,7 @@
   function wireSearch() {
     let inputs = document.querySelectorAll('.search-input, input[aria-label="Search"]');
     inputs.forEach(function (input) {
+      // Submit on Enter
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && input.value.trim()) {
           let q = input.value.trim();
@@ -1252,6 +1253,24 @@
           openOverlay(q);
         }
       });
+
+      // Submit on click of sibling search icon button
+      var wrap = input.closest('.search-wrap') || input.parentElement;
+      if (wrap) {
+        var icons = wrap.querySelectorAll('.search-icon-r, button[type="submit"], .search-btn');
+        icons.forEach(function (icon) {
+          icon.style.cursor = 'pointer';
+          icon.addEventListener('click', function () {
+            if (input.value.trim()) {
+              var q = input.value.trim();
+              input.value = '';
+              openOverlay(q);
+            } else {
+              input.focus();
+            }
+          });
+        });
+      }
     });
   }
 

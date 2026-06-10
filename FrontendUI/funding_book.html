@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="Assets/capmuse-auth.js"></script>
   <title>Funding Book â€” CapMuse</title>
   <link rel="preconnect" href="https://capmuse-data-882611632216.s3.amazonaws.com" crossorigin />
   <link rel="dns-prefetch" href="https://capmuse-data-882611632216.s3.amazonaws.com" />
@@ -371,6 +372,37 @@
     .fb-date-custom { display: flex; gap: 10px; padding: 12px 6px 4px; flex-wrap: wrap; }
     .fb-date-custom label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 600; color: var(--text-muted); flex: 1; min-width: 120px; }
     .fb-date-custom input { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-2); color: var(--text-primary); font-family: inherit; font-size: 13px; }
+    .fb-range-slider { padding: 8px 6px 4px; }
+    .fb-range-values { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .fb-range-val { font-size: 18px; font-weight: 700; color: var(--blue); letter-spacing: -0.02em; }
+    html[data-theme="dark"] .fb-range-val { color: #60A5FA; }
+    .fb-range-track-wrap { position: relative; height: 28px; margin: 0 4px 8px; }
+    .fb-range-track { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 6px; border-radius: 100px; background: var(--border); }
+    .fb-range-fill {
+      position: absolute; top: 50%; transform: translateY(-50%); height: 6px; border-radius: 100px;
+      background: linear-gradient(90deg, var(--blue), #1d4ed8); pointer-events: none;
+    }
+    .fb-range-input {
+      position: absolute; left: 0; width: 100%; top: 50%; transform: translateY(-50%);
+      margin: 0; height: 28px; background: transparent; pointer-events: none;
+      -webkit-appearance: none; appearance: none;
+    }
+    .fb-range-input::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--surface); border: 2px solid var(--blue);
+      box-shadow: 0 2px 6px rgba(37,99,235,0.25); cursor: pointer; pointer-events: auto;
+    }
+    .fb-range-input::-moz-range-thumb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--surface); border: 2px solid var(--blue);
+      box-shadow: 0 2px 6px rgba(37,99,235,0.25); cursor: pointer; pointer-events: auto;
+    }
+    .fb-range-input::-webkit-slider-runnable-track { height: 6px; background: transparent; }
+    .fb-range-input::-moz-range-track { height: 6px; background: transparent; border: none; }
+    .fb-range-input--max { z-index: 2; }
+    .fb-range-input--min { z-index: 3; }
+    .fb-range-hint { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 4px; }
     .fb-filter-modal-foot { display: flex; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--border); }
     .fb-btn { flex: 1; height: 38px; border-radius: 9px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-secondary); }
     .fb-btn:hover { color: var(--text-primary); }
@@ -766,7 +798,6 @@
   })();
 </script>
 <script src="Assets/profile-stats.js"></script>
-<script src="Assets/capmuse-auth.js"></script>
 <script>
   (function () {
     if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
