@@ -440,17 +440,56 @@ app.post("/convoso/call-log", async (req, res) => {
   }
 });
 
+async function fetchConvosoGet(endpoint, params = {}) {
+  const searchParams = new URLSearchParams({ auth_token: CONVOSO_AUTH_TOKEN, ...params });
+  const url = `${CONVOSO_BASE_URL}${endpoint}?${searchParams}`;
+  console.log("Convoso GET:", url);
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  const text = await res.text();
+  try { return { ok: true, status: res.status, data: JSON.parse(text) }; }
+  catch { return { ok: false, status: res.status, error: text.slice(0, 300) }; }
+}
+
+async function fetchCampaignList() {
+  const paths = [
+    "/v1/campaign",
+    "/v1/campaigns",
+    "/v1/campaign/list",
+    "/v1/campaigns/list",
+    "/v1/campaign/search",
+  ];
+
+  for (const path of paths) {
+    // Try GET first, then POST
+    for (const method of ["GET", "POST"]) {
+      try {
+        let data;
+        if (method === "GET") {
+          const r = await fetchConvosoGet(path, {});
+          if (!r.ok || !r.data) continue;
+          data = r.data;
+        } else {
+          data = await fetchConvosoData(path, {});
+        }
+        const records = extractRecords(data);
+        const campaigns = records
+          .map(c => ({ id: String(c.id || c.campaign_id || ""), name: c.name || c.campaign_name || c.title || "" }))
+          .filter(c => c.id && c.name);
+        if (campaigns.length > 0) {
+          console.log(`[campaigns] found ${campaigns.length} via ${method} ${path}`);
+          return { campaigns, path, method };
+        }
+      } catch (e) {
+        console.log(`[campaigns] ${method} ${path} error: ${e.message}`);
+      }
+    }
+  }
+  return { campaigns: [], path: null, method: null };
+}
+
 app.get("/convoso/campaigns", async (req, res) => {
   try {
-    const data = await fetchConvosoData("/v1/campaigns", {});
-    const records = extractRecords(data);
-    const campaigns = records
-      .map(c => ({
-        id:   String(c.id || c.campaign_id || ""),
-        name: c.name || c.campaign_name || c.title || "",
-      }))
-      .filter(c => c.id && c.name);
-    console.log(`[campaigns] extracted ${campaigns.length} from keys: ${Object.keys(data).join(", ")}`);
+    const { campaigns } = await fetchCampaignList();
     res.json({ campaigns });
   } catch (err) {
     console.error("[campaigns]", err.message);
@@ -460,12 +499,28 @@ app.get("/convoso/campaigns", async (req, res) => {
 
 app.get("/convoso/debug-campaigns", async (req, res) => {
   try {
-    const data = await fetchConvosoData("/v1/campaigns", {});
-    const records = extractRecords(data);
-    const campaigns = records
-      .map(c => ({ id: String(c.id || c.campaign_id || ""), name: c.name || c.campaign_name || c.title || "" }))
-      .filter(c => c.id && c.name);
-    res.json({ raw_keys: Object.keys(data), parsed_count: campaigns.length, campaigns, raw: data });
+    const paths = ["/v1/campaign", "/v1/campaigns", "/v1/campaign/list", "/v1/campaigns/list", "/v1/campaign/search"];
+    const results = {};
+    for (const path of paths) {
+      for (const method of ["GET", "POST"]) {
+        const key = `${method} ${path}`;
+        try {
+          let data;
+          if (method === "GET") {
+            const r = await fetchConvosoGet(path, {});
+            results[key] = { status: r.status, ok: r.ok, keys: r.data ? Object.keys(r.data) : null, records_count: r.data ? extractRecords(r.data).length : 0, sample: r.data ? extractRecords(r.data).slice(0,2) : null, error: r.error };
+            continue;
+          } else {
+            data = await fetchConvosoData(path, {});
+          }
+          const records = extractRecords(data);
+          results[key] = { keys: Object.keys(data), records_count: records.length, sample: records.slice(0, 2) };
+        } catch (e) {
+          results[key] = { error: e.message };
+        }
+      }
+    }
+    res.json({ note: "Probing all known Convoso campaign paths", results });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
