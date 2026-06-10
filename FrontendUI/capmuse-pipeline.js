@@ -153,8 +153,14 @@
 
       if (!isRenewal) byRep[rep].apps++;
 
-      if ((r['Date Applied'] || amt > 0) && !isRenewal) {
+      if (stage.indexOf('funded') > -1 || stage === 'future funding' || stage === 'dd - default') {
         byRep[rep].approvals++;
+        // Credit Re-Puller too
+        let rePuller = (r['Re-Puller'] || '').trim();
+        if (rePuller && rePuller !== rep && rePuller !== 'House .' && rePuller !== 'House') {
+          if (!byRep[rePuller]) byRep[rePuller] = { name: rePuller, apps: 0, approvals: 0, funded: 0, fundedAmt: 0, points: [], amounts: [], revenue: 0, appsToApprovals: '—', approvalToFunding: '—', avgPoints: '—', avgAmount: '—', avgPointsNum: 0, avgAmountNum: 0 };
+          byRep[rePuller].approvals++;
+        }
       }
 
       if (stage.indexOf('fund') > -1 && stage.indexOf('decline') === -1) {
