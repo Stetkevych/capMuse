@@ -104,9 +104,8 @@ function setCached(key, data) { summaryCache.set(key, { ts: Date.now(), data });
 /* 5 users × 2 RC calls = 10 concurrent calls per batch.
    RC heavy-group limit is 10 calls / 10 s, so we enforce an 11-second
    minimum window per batch so the limit always resets before the next batch. */
-const BATCH_SIZE       = 4;     // 4 users × 2 calls = 8 concurrent — safely under the 10/10s limit
-const BATCH_POST_MS    = 11000; // wait 11s AFTER batch completes (not from start) — ensures all
-                                // calls from this batch are >10s old before the next batch fires
+const BATCH_SIZE       = 1;     // one user at a time — eliminates any possibility of concurrent-call bursts
+const BATCH_POST_MS    = 3000;  // 3s gap between users
 
 /* If the same cache key is already being fetched, queue this request to wait for it */
 const inFlightPromises = new Map();
@@ -310,8 +309,10 @@ function zeroRow(user) {
 async function processExt(user, start_date, end_date, days) {
   const name = getDisplayName(user);
   try {
-    const calls    = await fetchOutboundCalls(user.id, start_date, end_date);
-    const messages = await fetchOutboundMessages(user.id, start_date, end_date);
+    const [calls, messages] = await Promise.all([
+      fetchOutboundCalls(user.id, start_date, end_date),
+      fetchOutboundMessages(user.id, start_date, end_date),
+    ]);
 
     const outboundCalls    = calls.length;
     const outboundMessages = messages.length;
@@ -435,13 +436,19 @@ app.listen(PORT, () => {
   /* Pre-fetch all 4 standard periods on startup — browser requests coalesce onto these */
   (async () => {
     await sleep(2000);
-    for (const [start, end] of getStandardPeriods()) {
+    const periods = getStandardPeriods();
+    for (let p = 0; p < periods.length; p++) {
+      const [start, end] = periods[p];
       try {
         console.log(`[RC] startup: pre-fetching ${start} → ${end}`);
         await fetchAndCachePeriod(start, end);
         console.log(`[RC] startup: cached ${start} → ${end}`);
       } catch (err) {
         console.error(`[RC] startup error (${start} → ${end}):`, err.message);
+      }
+      if (p < periods.length - 1) {
+        console.log('[RC] startup: 30s cooldown between periods...');
+        await sleep(30000);
       }
     }
     console.log('[RC] All standard periods ready');

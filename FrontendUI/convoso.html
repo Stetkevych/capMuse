@@ -827,7 +827,7 @@
 <script>
 /* ── Convoso Integration ── */
 (function () {
-  var CONVOSO = 'http://localhost:8001';
+  var CONVOSO = 'http://localhost:8000';
 
   function pad2(n) { return String(n).padStart(2, '0'); }
   function isoDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
@@ -1104,7 +1104,7 @@
       renderRepStats();
       if (statusEl) statusEl.textContent = '';
     } catch(e) {
-      if (statusEl) statusEl.textContent = 'Cannot reach Convoso server (port 8001)';
+      if (statusEl) statusEl.textContent = 'Cannot reach Convoso server (port 8000)';
       console.error('Convoso error:', e);
     } finally {
       if (refreshBtn) refreshBtn.disabled = false;

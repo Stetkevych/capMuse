@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/convoso/:path*", "destination": "/api/convoso/:path*" }
+  ]
+}
