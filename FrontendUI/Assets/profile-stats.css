@@ -6,6 +6,7 @@
 /* ── CSS custom properties (dark default) ── */
 :root,
 html[data-theme="dark"] {
+  --font-num:           'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --pmc-overlay-bg:     rgba(4,8,18,0.76);
   --pmc-back-bg:        linear-gradient(150deg,#080D1A 0%,#0C1525 55%,#07110A 100%);
   --pmc-back-border:    rgba(255,255,255,0.07);
@@ -40,6 +41,7 @@ html[data-theme="dark"] {
 }
 
 html[data-theme="light"] {
+  --font-num:           'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --pmc-overlay-bg:     rgba(15,23,42,0.52);
   --pmc-back-bg:        linear-gradient(150deg,#FFFFFF 0%,#F6F9FF 55%,#F8FFF9 100%);
   --pmc-back-border:    #D8E3F0;
@@ -285,7 +287,8 @@ html[data-theme="dark"] .pmc-flip.pmc-flipped .pmc-face-back {
   100% { background-position: -100% 0; }
 }
 .pmc-stat-val {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
   font-size: 26px; font-weight: 800; color: var(--pmc-stat-val);
   line-height: 1; letter-spacing: -0.02em;
 }
@@ -563,7 +566,8 @@ html[data-theme="dark"] .pmc-compare-perf-icon.pi-crimson { color: #FCA5A5; }
 html[data-theme="dark"] .pmc-compare-perf-icon.pi-teal    { color: #5EEAD4; }
 .pmc-compare-perf-details { flex: 1; min-width: 0; }
 .pmc-compare-perf-val {
-  font-family: 'Orbitron', sans-serif;
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
   font-size: 15px;
   font-weight: 800;
   color: var(--pmc-stat-val);
@@ -601,4 +605,24 @@ html[data-theme="dark"] .pmc-compare-perf-icon.pi-teal    { color: #5EEAD4; }
   .pmc-compare-select { flex: 1; min-width: 0; }
   .pmc-compare-stats .pmc-kpis { grid-template-columns: 1fr 1fr; }
   .pmc-compare-today-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Numeric KPIs/stats: Inter tabular (not Orbitron) ── */
+.card-big-single,
+.card-big-num,
+.rep-hero-amount,
+.analytics-kpi-value,
+.hero-qs-val,
+.perf-val,
+.kpi-val,
+.cv-hero-number,
+.cv-hero-alltime-num,
+.cv-rank-val,
+.cv-stat-val,
+.rc-table .at-num,
+.cv-tt,
+.match-pct,
+.pmc-kpi-val {
+  font-family: var(--font-num) !important;
+  font-variant-numeric: tabular-nums;
 }

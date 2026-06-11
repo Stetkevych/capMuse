@@ -149,7 +149,11 @@
       '<a class="nav-item' + (page === 'convoso.html' ? ' active' : '') + '" href="convoso.html"' +
         (page === 'convoso.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('convoso.html') +
-        'Convoso</a>';
+        'Convoso</a>' +
+      '<a class="nav-item' + (page === 'coaching.html' ? ' active' : '') + '" href="coaching.html"' +
+        (page === 'coaching.html' ? ' aria-current="page"' : '') + '>' +
+        linkIconHtml('coaching.html') +
+        'Coaching</a>';
 
     let hiddenItems = DEMO_HIDDEN_NAV.map(function (item) {
       return '<a class="nav-sub-item nav-disabled" href="' + item.href + '" aria-disabled="true" title="Unavailable for demo">' +

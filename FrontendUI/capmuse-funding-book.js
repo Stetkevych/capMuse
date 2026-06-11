@@ -23,6 +23,8 @@
     avgRev: 'Avg. Rev'
   };
 
+  let GROUP_BY = 'packageOwner';
+
   let FILTERS = {
     leadSource: [],
     marketingAssist: [],
@@ -37,7 +39,13 @@
     fundingMax: null
   };
 
+  let GROUP_BY_OPTIONS = [
+    { id: 'packageOwner', label: 'Package Owner' },
+    { id: 'puller', label: 'Puller' }
+  ];
+
   let FILTER_DEFS = [
+    { key: 'groupBy', label: 'Group by', type: 'groupBy' },
     { key: 'leadSource', label: 'Lead Source', field: 'leadSource', searchable: true, grouped: true },
     { key: 'marketingAssist', label: 'Marketing Assist', field: 'marketingAssist', searchable: true },
     { key: 'state', label: 'State', field: 'state', searchable: true },
@@ -239,13 +247,60 @@
     return flat;
   }
 
+  function pullerFromRecord(r) {
+    return (r.puller || r.Puller || r['Puller.name'] || r.re_puller || '').trim();
+  }
+
+  function normalizeGroupBy(value) {
+    let id = String(value || '').trim();
+    let i;
+    for (i = 0; i < GROUP_BY_OPTIONS.length; i++) {
+      if (GROUP_BY_OPTIONS[i].id === id) return id;
+    }
+    return 'packageOwner';
+  }
+
+  function setGroupBy(value) {
+    GROUP_BY = normalizeGroupBy(value);
+  }
+
+  function repNameFromDeal(d) {
+    return GROUP_BY === 'puller' ? d.puller : d.packageOwner;
+  }
+
+  function groupByLabel() {
+    let opt = GROUP_BY_OPTIONS.filter(function (o) { return o.id === GROUP_BY; })[0];
+    return opt ? opt.label : 'Package Owner';
+  }
+
+  function resolveGroupByDraft() {
+    let draft = normalizeGroupBy(popupDraft);
+    if (draft !== 'packageOwner' || popupDraft === 'packageOwner') return draft;
+    let selected = document.querySelector('#fbFilterOptions [data-group-by].selected');
+    if (selected) return normalizeGroupBy(selected.getAttribute('data-group-by'));
+    return GROUP_BY;
+  }
+
+  function csvHeaderIndex(headers, names) {
+    let i;
+    for (i = 0; i < names.length; i++) {
+      let idx = headers.indexOf(names[i]);
+      if (idx >= 0) return idx;
+    }
+    return -1;
+  }
+
   function csvEnrich(r) {
     let id = String(r.record_id || r.id || '');
     let row = CSV_LOOKUP[id];
-    if (!row) return { productType: '', marketingAssist: '' };
+    if (!row) {
+      return { productType: '', marketingAssist: '', packageOwner: '', puller: '' };
+    }
     return {
       productType: (row.productType || '').trim(),
-      marketingAssist: (row.marketingAssist || '').trim()
+      marketingAssist: (row.marketingAssist || '').trim(),
+      packageOwner: (row.packageOwner || '').trim(),
+      puller: (row.puller || '').trim()
     };
   }
 
@@ -267,7 +322,8 @@
       leadSource: leadSource,
       state: (r.state || r.State || '').trim(),
       lender: normalizeLender(r.lender || r.Lender || ''),
-      packageOwner: packageOwnerFromRecord(r),
+      packageOwner: extra.packageOwner || packageOwnerFromRecord(r),
+      puller: extra.puller || pullerFromRecord(r),
       dealType: normalizeDealType(r.deal_type || r.Deal_Type || ''),
       productType: normalizeProductType(
         extra.productType || (r.product_type || r.Product_Type || ''),
@@ -313,9 +369,11 @@
     let lines = text.split(/\r?\n/);
     if (!lines.length) return;
     let headers = parseCsvLine(lines[0]);
-    let idIdx = headers.indexOf('id');
-    let ptIdx = headers.indexOf('Product_Type');
-    let mmIdx = headers.indexOf('Marketing_Master');
+    let idIdx = csvHeaderIndex(headers, ['Record Id', 'record_id', 'id']);
+    let ptIdx = csvHeaderIndex(headers, ['Product Type', 'Product_Type']);
+    let mmIdx = csvHeaderIndex(headers, ['Marketing Master %', 'Marketing Master', 'Marketing_Master']);
+    let poIdx = csvHeaderIndex(headers, ['Package Owner', 'Package_Owner.name']);
+    let puIdx = csvHeaderIndex(headers, ['Puller', 'Puller.name']);
     if (idIdx < 0) return;
     for (let i = 1; i < lines.length; i++) {
       if (!lines[i]) continue;
@@ -326,7 +384,9 @@
       if (mm === '-' || mm === '0.0%') mm = '';
       CSV_LOOKUP[id] = {
         productType: ptIdx >= 0 ? (cols[ptIdx] || '').trim() : '',
-        marketingAssist: mm
+        marketingAssist: mm,
+        packageOwner: poIdx >= 0 ? (cols[poIdx] || '').trim() : '',
+        puller: puIdx >= 0 ? (cols[puIdx] || '').trim() : ''
       };
     }
   }
@@ -459,7 +519,7 @@
   function aggregateByRep(deals) {
     let by = {};
     deals.forEach(function (d) {
-      let name = d.packageOwner;
+      let name = repNameFromDeal(d);
       if (!name) return;
       if (!by[name]) {
         by[name] = { name: name, volume: 0, revenue: 0, pointsSum: 0, count: 0 };
@@ -539,6 +599,9 @@
   }
 
   function filterDisplayValue(key) {
+    if (key === 'groupBy') {
+      return groupByLabel();
+    }
     if (key === 'dateRange') {
       let preset = DATE_PRESETS.filter(function (p) { return p.id === FILTERS.dateRange; })[0];
       if (FILTERS.dateRange === 'custom' && (FILTERS.customFrom || FILTERS.customTo)) {
@@ -639,7 +702,9 @@
     if (!grid) return;
     grid.innerHTML = FILTER_DEFS.map(function (def) {
       let active;
-      if (def.type === 'date') {
+      if (def.type === 'groupBy') {
+        active = GROUP_BY !== 'packageOwner';
+      } else if (def.type === 'date') {
         active = FILTERS.dateRange !== 'ytd' || FILTERS.customFrom || FILTERS.customTo;
         if (def.key === 'dateRange' && FILTERS.dateRange === 'ytd') active = false;
       } else if (def.type === 'range') {
@@ -668,6 +733,12 @@
     let tags = [];
 
     FILTER_DEFS.forEach(function (def) {
+      if (def.key === 'groupBy') {
+        if (GROUP_BY !== 'packageOwner') {
+          tags.push({ key: def.key, label: def.label + ': ' + filterDisplayValue(def.key) });
+        }
+        return;
+      }
       if (def.key === 'dateRange') {
         if (FILTERS.dateRange !== 'ytd' || FILTERS.customFrom || FILTERS.customTo) {
           tags.push({ key: def.key, label: def.label + ': ' + filterDisplayValue(def.key) });
@@ -704,7 +775,9 @@
   }
 
   function clearFilterKey(key) {
-    if (key === 'dateRange') {
+    if (key === 'groupBy') {
+      setGroupBy('packageOwner');
+    } else if (key === 'dateRange') {
       FILTERS.dateRange = 'ytd';
       FILTERS.customFrom = '';
       FILTERS.customTo = '';
@@ -726,7 +799,7 @@
     let repPart = rows.length
       ? rows.length + ' rep' + (rows.length === 1 ? '' : 's')
       : 'No reps';
-    el.textContent = dateRangeMetaLabel() + ' · ' + repPart + ' · Sorted by ' + sortLabel();
+    el.textContent = dateRangeMetaLabel() + ' · ' + repPart + ' · By ' + groupByLabel() + ' · Sorted by ' + sortLabel();
   }
 
   function renderHeroKpis(filtered) {
@@ -845,7 +918,7 @@
     let empty = document.getElementById('fbEmptyState');
     let table = document.getElementById('fbRepTable');
     let meta = document.getElementById('fbTableMeta');
-    if (meta) meta.textContent = dateRangeMetaLabel() + ' · ' + rows.length + ' rep' + (rows.length === 1 ? '' : 's');
+    if (meta) meta.textContent = dateRangeMetaLabel() + ' · ' + groupByLabel() + ' · ' + rows.length + ' rep' + (rows.length === 1 ? '' : 's');
 
     if (!tbody) return;
     if (!rows.length) {
@@ -1016,7 +1089,9 @@
     if (!def) return;
 
     popupKey = key;
-    if (key === 'dateRange') {
+    if (key === 'groupBy') {
+      popupDraft = GROUP_BY;
+    } else if (key === 'dateRange') {
       popupDraft = FILTERS.dateRange;
     } else if (def.type === 'range') {
       let bounds = fundingDataBounds('fundingRange');
@@ -1035,10 +1110,12 @@
     let options = document.getElementById('fbFilterOptions');
 
     if (title) title.textContent = def.label;
-    if (searchWrap) searchWrap.hidden = def.type === 'date' || def.type === 'range' ? true : !def.searchable;
+    if (searchWrap) searchWrap.hidden = def.type === 'date' || def.type === 'range' || def.type === 'groupBy' ? true : !def.searchable;
     if (searchInput) searchInput.value = '';
 
-    if (def.type === 'date') {
+    if (def.type === 'groupBy') {
+      renderGroupByOptions(options);
+    } else if (def.type === 'date') {
       renderDateOptions(options);
     } else if (def.type === 'range') {
       renderFundingRangeOptions(options);
@@ -1134,6 +1211,30 @@
     updateFundingRangeFill(minInp, maxInp, fill, bounds);
   }
 
+  function renderGroupByOptions(container) {
+    if (!container) return;
+    let current = normalizeGroupBy(typeof popupDraft === 'string' ? popupDraft : GROUP_BY);
+    let html = '<div class="fb-date-presets">';
+    GROUP_BY_OPTIONS.forEach(function (o) {
+      let sel = current === o.id ? ' selected' : '';
+      html += '<button type="button" class="fb-filter-option' + sel + '" data-group-by="' + o.id + '">' + esc(o.label) + '</button>';
+    });
+    html += '</div>';
+    container.innerHTML = html;
+
+    container.querySelectorAll('[data-group-by]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        let next = normalizeGroupBy(btn.getAttribute('data-group-by'));
+        popupDraft = next;
+        setGroupBy(next);
+        container.querySelectorAll('[data-group-by]').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+        closeFilterPopup();
+        render();
+      });
+    });
+  }
+
   function renderDateOptions(container) {
     if (!container) return;
     let html = '<div class="fb-date-presets">';
@@ -1170,7 +1271,9 @@
 
   function applyFilterPopup() {
     if (!popupKey) return;
-    if (popupKey === 'dateRange') {
+    if (popupKey === 'groupBy') {
+      setGroupBy(resolveGroupByDraft());
+    } else if (popupKey === 'dateRange') {
       FILTERS.dateRange = popupDraft || 'ytd';
       let fromEl = document.getElementById('fbCustomFrom');
       let toEl = document.getElementById('fbCustomTo');
@@ -1190,7 +1293,7 @@
         FILTERS.fundingMin = minVal > bounds.min ? minVal : null;
         FILTERS.fundingMax = maxVal < bounds.max ? maxVal : null;
       }
-    } else {
+    } else if (Array.isArray(popupDraft)) {
       FILTERS[popupKey] = popupDraft.slice();
     }
     closeFilterPopup();
@@ -1199,7 +1302,11 @@
 
   function clearFilterPopup() {
     if (!popupKey) return;
-    if (popupKey === 'dateRange') {
+    if (popupKey === 'groupBy') {
+      popupDraft = 'packageOwner';
+      setGroupBy('packageOwner');
+      renderGroupByOptions(document.getElementById('fbFilterOptions'));
+    } else if (popupKey === 'dateRange') {
       popupDraft = 'ytd';
       FILTERS.dateRange = 'ytd';
       FILTERS.customFrom = '';
