@@ -151,7 +151,11 @@
       '<a class="nav-item' + (page === 'ringcentral.html' ? ' active' : '') + '" href="ringcentral.html"' +
         (page === 'ringcentral.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('ringcentral.html') +
-        'RingCentral</a>';
+        'RingCentral</a>' +
+      '<a class="nav-item' + (page === 'coaching.html' ? ' active' : '') + '" href="coaching.html"' +
+        (page === 'coaching.html' ? ' aria-current="page"' : '') + '>' +
+        linkIconHtml('coaching.html') +
+        'Coaching</a>';
 
     let hiddenItems = DEMO_HIDDEN_NAV.map(function (item) {
       return '<a class="nav-sub-item nav-disabled" href="' + item.href + '" aria-disabled="true" title="Unavailable for demo">' +
