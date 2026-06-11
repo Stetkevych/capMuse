@@ -847,7 +847,7 @@
               wait_per_con:  con>0  ? Math.round(wt/con)  : 0,
               wrap_per_con:  con>0  ? Math.round(wr/con)  : 0,
               wait_per_inst: inst>0 ? Math.round(wt/inst) : 0};
-    }).filter(function(r){ return r.inst>0; }).sort(function(a,b){
+    }).filter(function(r){ return r.con>0||r.total_calls>0; }).sort(function(a,b){
       var av=a[sortColumn]||0, bv=b[sortColumn]||0;
       if(sortColumn==='calls_per_int'){
         /* 0 means no INTs — always sink to bottom regardless of direction */
