@@ -1,0 +1,266 @@
+/* capmuse-nav.css — Sidebar hide/collapse + bottom toggle + expand rail */
+
+
+
+@media (min-width: 769px) {
+
+  html.capmuse-nav-hidden .sidebar {
+
+    transform: translateX(calc(-1 * (var(--sidebar-w, 215px) + var(--sidebar-gap, 16px) + 16px)));
+
+    pointer-events: none;
+
+    visibility: hidden;
+
+  }
+
+
+
+  html.capmuse-nav-hidden .main-wrapper {
+
+    margin-left: 0 !important;
+
+  }
+
+}
+
+
+
+/* Collapse control — bottom left inside sidebar */
+
+.nav-sidebar-collapse-wrap {
+  flex-shrink: 0;
+  padding: 8px 10px 12px;
+  border-top: 1px solid var(--sidebar-border, #1A2435);
+  transition: opacity 0.12s ease;
+}
+
+
+
+.nav-sidebar-toggle {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  width: 100%;
+
+  padding: 8px 10px;
+
+  border: 1px solid transparent;
+
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: var(--text-secondary, #7A8FA8);
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+
+}
+
+
+
+.nav-sidebar-toggle:hover {
+
+  background: var(--nav-hover-bg, rgba(255, 255, 255, 0.04));
+
+  color: var(--text-primary, #F1F5F9);
+
+  border-color: var(--sidebar-border, #1A2435);
+
+}
+
+
+
+.nav-sidebar-toggle-icon {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-shrink: 0;
+
+}
+
+
+
+.nav-sidebar-toggle-icon svg {
+  width: 16px;
+  height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  display: block;
+}
+
+
+
+.nav-sidebar-toggle-label {
+
+  line-height: 1.2;
+
+  text-align: left;
+
+}
+
+
+
+/* Expand rail — left edge when sidebar is collapsed only */
+.nav-expand-rail {
+  display: none;
+  position: fixed;
+  left: 0;
+  bottom: 24px;
+  z-index: 350;
+  width: 22px;
+  height: 52px;
+  padding: 0;
+  border: 1px solid var(--sidebar-border, #1A2435);
+  border-left: none;
+  border-radius: 0 12px 12px 0;
+  background: var(--sidebar-bg, #111720);
+  color: var(--text-secondary, #7A8FA8);
+  box-shadow: 4px 0 16px rgba(15, 23, 42, 0.14);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.18s ease, color 0.15s ease, background 0.15s ease, box-shadow 0.18s ease;
+}
+
+html.capmuse-nav-hidden .nav-expand-rail {
+  display: flex;
+}
+
+
+
+.nav-expand-rail:hover {
+
+  width: 28px;
+
+  color: var(--nav-active, #2563EB);
+
+  background: var(--surface, #141C28);
+
+  box-shadow: 6px 0 20px rgba(37, 99, 235, 0.18);
+
+}
+
+
+
+.nav-expand-rail svg {
+
+  width: 14px;
+
+  height: 14px;
+
+}
+
+
+
+html[data-theme="light"] .nav-expand-rail {
+
+  box-shadow: 4px 0 16px rgba(15, 23, 42, 0.08);
+
+}
+
+
+
+/* Hide desktop collapse controls on mobile — burger handles nav */
+
+@media (max-width: 768px) {
+
+  .nav-sidebar-collapse-wrap,
+
+  .nav-expand-rail {
+
+    display: none !important;
+
+  }
+
+}
+
+
+
+/* Legacy topbar toggle (removed by JS) — keep hidden if cached */
+
+.topbar .nav-toggle-btn {
+
+  display: none !important;
+
+}
+
+
+
+/* Pages without a topbar (e.g. coaching) — FAB fallback */
+
+.nav-toggle-fab {
+
+  position: fixed;
+
+  bottom: 24px;
+
+  left: 16px;
+
+  z-index: 400;
+
+  width: 36px;
+
+  height: 36px;
+
+  padding: 0;
+
+  border-radius: 8px;
+
+  border: 1px solid var(--sidebar-border, #1A2435);
+
+  background: var(--surface, #141C28);
+
+  color: var(--text-secondary, #7A8FA8);
+
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  transition: background 0.13s ease, color 0.13s ease;
+
+}
+
+
+
+.nav-toggle-fab:hover {
+
+  background: var(--nav-hover-bg, rgba(255, 255, 255, 0.04));
+
+  color: var(--text-primary, #F1F5F9);
+
+}
+
+
+
+.nav-toggle-fab svg {
+
+  width: 18px;
+
+  height: 18px;
+
+}
+
+

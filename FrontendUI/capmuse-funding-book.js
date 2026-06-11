@@ -12,6 +12,7 @@
   ];
   let SORT_KEY = 'volume';
   let SORT_DIR = 'desc';
+  let CACHED_ROWS = [];
 
   let SORT_LABELS = {
     name: 'Name',
@@ -71,7 +72,8 @@
   ];
 
   let popupKey = null;
-  let popupDraft = [];
+  let popupDraft = null;
+  let DATA_STATUS = 'loading'; // loading | ready | error
 
   let PACKAGE_OWNER_RECORD_FIXES = {
     '3793076000601237337': 'House .',
@@ -155,8 +157,22 @@
 
   function parseDate(s) {
     if (!s) return null;
-    let d = new Date(String(s).length === 10 ? String(s) + 'T12:00:00' : s);
+    let str = String(s).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+      let d = new Date(str + 'T12:00:00');
+      return isNaN(d.getTime()) ? null : d;
+    }
+    let d = new Date(str);
     return isNaN(d.getTime()) ? null : d;
+  }
+
+  function normalizeDateRangeId(value) {
+    let id = typeof value === 'string' ? value.trim() : '';
+    let i;
+    for (i = 0; i < DATE_PRESETS.length; i++) {
+      if (DATE_PRESETS[i].id === id) return id;
+    }
+    return 'ytd';
   }
 
   function normState(s) { return String(s || '').trim().toUpperCase(); }
@@ -490,9 +506,9 @@
   }
 
   function inDateRange(d) {
-    if (!d.date) return false;
     let bounds = dateRangeBounds();
     if (!bounds) return true;
+    if (!d.date) return false;
     if (bounds.start && d.date < bounds.start) return false;
     if (bounds.end && d.date > bounds.end) return false;
     return true;
@@ -556,25 +572,31 @@
     });
   }
 
+  function repInitials(name) {
+    return (name || '').split(/\s+/).filter(Boolean).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+  }
+
+  function fbRepClickAttrs(pid, name) {
+    if (!pid || !name) return '';
+    return ' data-person-id="' + esc(pid) + '" data-fb-rep-name="' + esc(name) + '"' +
+      ' role="button" tabindex="0" aria-label="View ' + esc(name) + ' stats"';
+  }
+
+  function repAvatarHtml(pid, name) {
+    let rep = pid && window.REPS ? window.REPS[pid] : null;
+    let photo = rep && rep.photo ? rep.photo : '';
+    let init = repInitials(name);
+    let pidAttr = pid ? fbRepClickAttrs(pid, name) : '';
+    if (photo) {
+      return '<img class="fb-rep-avatar"' + pidAttr + ' src="' + esc(photo) + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+        '<div class="fb-rep-initials" style="display:none"' + pidAttr + '>' + esc(init) + '</div>';
+    }
+    return '<div class="fb-rep-initials"' + pidAttr + '>' + esc(init) + '</div>';
+  }
+
   function repPersonId(name) {
+    if (window.resolveRepPersonId) return window.resolveRepPersonId(name);
     if (!window.REPS || !name) return null;
-    let n = normStr(name);
-    let keys = Object.keys(window.REPS);
-    let i;
-    for (i = 0; i < keys.length; i++) {
-      let rep = window.REPS[keys[i]];
-      if (!rep || !rep.bookName) continue;
-      if (n === normStr(rep.bookName)) return keys[i];
-    }
-    for (i = 0; i < keys.length; i++) {
-      let rep = window.REPS[keys[i]];
-      if (!rep) continue;
-      let book = normStr(rep.bookName || rep.name || '');
-      if (book && n.indexOf(book) > -1) return keys[i];
-      if (n.indexOf(keys[i]) > -1) return keys[i];
-      let first = (rep.name || '').split(' ')[0].toLowerCase();
-      if (first && first.length > 2 && n.indexOf(first) > -1) return keys[i];
-    }
     return null;
   }
 
@@ -802,6 +824,21 @@
     el.textContent = dateRangeMetaLabel() + ' · ' + repPart + ' · By ' + groupByLabel() + ' · Sorted by ' + sortLabel();
   }
 
+  function kpiScopeLabel() {
+    let parts = [dateRangeMetaLabel()];
+    if (GROUP_BY !== 'packageOwner') {
+      parts.push('By ' + groupByLabel());
+    }
+    let hasFacetFilters = FILTER_DEFS.some(function (def) {
+      if (def.type === 'groupBy' || def.type === 'date' || def.type === 'range') return false;
+      return FILTERS[def.key] && FILTERS[def.key].length > 0;
+    });
+    if (hasFacetFilters || isFundingFilterActive()) {
+      parts.push('Filtered');
+    }
+    return parts.join(' · ');
+  }
+
   function renderHeroKpis(filtered) {
     let vol = filtered.reduce(function (s, d) { return s + d.funding; }, 0);
     let reps = aggregateByRep(filtered);
@@ -809,10 +846,12 @@
     let elDeals = document.getElementById('fbKpiDeals');
     let elAvg = document.getElementById('fbKpiAvg');
     let elReps = document.getElementById('fbKpiReps');
+    let elScope = document.getElementById('fbKpiScope');
     if (elVol) elVol.textContent = fmtFull(vol);
     if (elDeals) elDeals.textContent = filtered.length.toLocaleString();
     if (elAvg) elAvg.textContent = filtered.length ? fmtFull(vol / filtered.length) : fmtFull(0);
     if (elReps) elReps.textContent = reps.length.toLocaleString();
+    if (elScope) elScope.textContent = kpiScopeLabel();
   }
 
   let SPOT_STAT_LABELS = {
@@ -860,18 +899,22 @@
     let rep = pid && window.REPS ? window.REPS[pid] : null;
     let ringAttrs = ' class="fb-spot-photo-ring" id="fbSpotPhotoRing"';
     if (pid) {
-      ringAttrs += ' data-person-id="' + esc(pid) + '" role="button" tabindex="0"' +
-        ' aria-label="View ' + esc(top.name) + ' stats card" title="View stats card"';
+      ringAttrs += fbRepClickAttrs(pid, top.name) +
+        ' title="View stats card" aria-label="View ' + esc(top.name) + ' stats card"';
     }
     let photoHtml = '<div' + ringAttrs + '>' +
       '<img id="fbSpotPhoto" alt="" hidden />' +
       '<div class="hero-photo-placeholder" aria-hidden="true">?</div></div>';
 
+    let nameHtml = pid
+      ? '<span class="fb-spot-name"' + fbRepClickAttrs(pid, top.name) + '>' + esc(top.name) + '</span>'
+      : '<div class="fb-spot-name">' + esc(top.name) + '</div>';
+
     el.innerHTML =
       photoHtml +
       '<div class="fb-spot-info">' +
         '<div class="fb-spot-lead">Leading rep</div>' +
-        '<div class="fb-spot-name">' + esc(top.name) + '</div>' +
+        nameHtml +
         '<div class="fb-spot-stat">' + formatSpotlightValue(top) + '</div>' +
         '<div class="fb-spot-stat-lbl">' + esc(SPOT_STAT_LABELS[SORT_KEY] || sortLabel()) + '</div>' +
         '<div class="fb-spot-meta">' + top.count + ' deal' + (top.count === 1 ? '' : 's') + '</div>' +
@@ -915,7 +958,6 @@
 
   function renderTable(rows) {
     let tbody = document.getElementById('fbRepTableBody');
-    let empty = document.getElementById('fbEmptyState');
     let table = document.getElementById('fbRepTable');
     let meta = document.getElementById('fbTableMeta');
     if (meta) meta.textContent = dateRangeMetaLabel() + ' · ' + groupByLabel() + ' · ' + rows.length + ' rep' + (rows.length === 1 ? '' : 's');
@@ -924,22 +966,20 @@
     if (!rows.length) {
       tbody.innerHTML = '';
       if (table) table.hidden = true;
-      if (empty) empty.hidden = false;
       renderHeroSpotlight([]);
       return;
     }
     if (table) table.hidden = false;
-    if (empty) empty.hidden = true;
 
     tbody.innerHTML = rows.map(function (r, i) {
       let pid = repPersonId(r.name);
       let nameCell = pid
-        ? '<span class="fb-rep-name" data-person-id="' + pid + '" role="button" tabindex="0">' + esc(r.name) + '</span>'
+        ? '<span class="fb-rep-name"' + fbRepClickAttrs(pid, r.name) + '>' + esc(r.name) + '</span>'
         : '<span class="fb-rep-name">' + esc(r.name) + '</span>';
       let rowCls = i === 0 ? ' class="fb-row-top"' : '';
       return '<tr' + rowCls + '>' +
         '<td>' + (i + 1) + '</td>' +
-        '<td>' + nameCell + '</td>' +
+        '<td class="fb-col-name"><div class="fb-rep-cell">' + repAvatarHtml(pid, r.name) + nameCell + '</div></td>' +
         '<td><span class="fb-money-total">' + fmtFull(r.volume) + '</span></td>' +
         '<td><span class="fb-money">' + fmtFull(r.revenue) + '</span></td>' +
         '<td><span class="fb-pts">' + fmtPts(r.points) + '</span></td>' +
@@ -954,18 +994,188 @@
     renderHeroSpotlight(rows);
   }
 
+  function personMatchTargets(personId) {
+    if (!personId || !window.REPS) return [];
+    let rep = window.REPS[personId];
+    if (!rep) return [];
+    return [normStr(rep.bookName), normStr(rep.name)].filter(Boolean);
+  }
+
+  function nameMatchesTargets(name, targets) {
+    if (window.CapMuseRepMatch && window.CapMuseRepMatch.namesMatch) {
+      let t;
+      for (t = 0; t < targets.length; t++) {
+        if (window.CapMuseRepMatch.namesMatch(name, targets[t])) return true;
+      }
+      return false;
+    }
+    let rn = normStr(name);
+    if (!rn || !targets.length) return false;
+    let t;
+    for (t = 0; t < targets.length; t++) {
+      if (rn === targets[t]) return true;
+    }
+    return false;
+  }
+
+  function dealMatchesPerson(d, personId) {
+    return nameMatchesTargets(repNameFromDeal(d), personMatchTargets(personId));
+  }
+
+  function dealsForPerson(personId) {
+    return DEALS.filter(function (d) { return dealMatchesPerson(d, personId); });
+  }
+
+  function aggregateYearlyRows(deals) {
+    let byYear = {};
+    let currentYear = new Date().getFullYear();
+    deals.forEach(function (d) {
+      let year = d.date ? d.date.getFullYear() : currentYear;
+      if (!byYear[year]) {
+        byYear[year] = { year: year, volume: 0, revenue: 0, pointsSum: 0, count: 0 };
+      }
+      byYear[year].volume += d.funding;
+      byYear[year].revenue += d.revenue;
+      byYear[year].pointsSum += d.points;
+      byYear[year].count += 1;
+    });
+    return Object.values(byYear).map(function (r) {
+      r.avg = r.count ? r.volume / r.count : 0;
+      r.avgRev = r.count ? r.revenue / r.count : 0;
+      r.points = r.volume > 0 ? (r.revenue / r.volume) * 100 : 0;
+      delete r.pointsSum;
+      return r;
+    }).sort(function (a, b) { return b.year - a.year; });
+  }
+
+  let RANK_ONE_METRICS = [
+    { key: 'volume', label: 'Total Funding' },
+    { key: 'revenue', label: 'Total Revenue' },
+    { key: 'count', label: 'Funded Deals' },
+    { key: 'points', label: 'Points' },
+    { key: 'avg', label: 'Avg. Funding' },
+    { key: 'avgRev', label: 'Avg. Revenue' }
+  ];
+
+  function leadersForMetric(rows, key) {
+    if (!rows || !rows.length) return [];
+    let max = -Infinity;
+    let i;
+    for (i = 0; i < rows.length; i++) {
+      let v = rows[i][key] || 0;
+      if (v > max) max = v;
+    }
+    if (!isFinite(max) || max <= 0) return [];
+    let leaders = [];
+    for (i = 0; i < rows.length; i++) {
+      if ((rows[i][key] || 0) === max) leaders.push(rows[i]);
+    }
+    return leaders;
+  }
+
+  function repAmongLeaderRows(personId, leaderRows) {
+    let targets = personMatchTargets(personId);
+    if (!targets.length || !leaderRows.length) return null;
+    let i;
+    for (i = 0; i < leaderRows.length; i++) {
+      if (nameMatchesTargets(leaderRows[i].name, targets)) return leaderRows[i];
+    }
+    return null;
+  }
+
+  function passesNonDateFilters(d) {
+    if (!matchesMulti('leadSource', d.leadSource, FILTERS.leadSource)) return false;
+    if (!matchesMulti('marketingAssist', d.marketingAssist, FILTERS.marketingAssist)) return false;
+    if (!matchesMulti('state', d.state, FILTERS.state)) return false;
+    if (!matchesMulti('lender', d.lender, FILTERS.lender)) return false;
+    if (!matchesMulti('productType', d.productType, FILTERS.productType)) return false;
+    if (!matchesMulti('dealType', d.dealType, FILTERS.dealType)) return false;
+    if (!inFundingRange(d)) return false;
+    return true;
+  }
+
+  function dealsThisMonth() {
+    let now = new Date();
+    let start = new Date(now.getFullYear(), now.getMonth(), 1);
+    let end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    return DEALS.filter(function (d) {
+      if (!d.date || d.date < start || d.date > end) return false;
+      return passesNonDateFilters(d);
+    });
+  }
+
+  function formatRankValue(key, v) {
+    if (key === 'points') return fmtPts(v);
+    if (key === 'count' || key === 'monthCount') return String(v);
+    return fmtFull(v);
+  }
+
+  function getRepNumberOnes(personId) {
+    let ones = [];
+    let i;
+    let m;
+    let leaders;
+    let leader;
+    for (i = 0; i < RANK_ONE_METRICS.length; i++) {
+      m = RANK_ONE_METRICS[i];
+      leaders = leadersForMetric(CACHED_ROWS, m.key);
+      leader = repAmongLeaderRows(personId, leaders);
+      if (leader) {
+        ones.push({
+          key: m.key,
+          label: m.label,
+          badge: '#1 ' + m.label,
+          value: formatRankValue(m.key, leader[m.key]),
+          scope: 'filter'
+        });
+      }
+    }
+    leaders = leadersForMetric(aggregateByRep(dealsThisMonth()), 'count');
+    leader = repAmongLeaderRows(personId, leaders);
+    if (leader) {
+      ones.push({
+        key: 'monthCount',
+        label: 'Deals This Month',
+        badge: '#1 Deals This Month',
+        value: formatRankValue('monthCount', leader.count),
+        scope: 'month'
+      });
+    }
+    return {
+      filterMeta: dateRangeMetaLabel() + ' · By ' + groupByLabel(),
+      ones: ones
+    };
+  }
+
+  function findRowForPerson(personId) {
+    let targets = personMatchTargets(personId);
+    if (!targets.length) return null;
+    let i;
+    let r;
+    let t;
+    for (i = 0; i < CACHED_ROWS.length; i++) {
+      r = CACHED_ROWS[i];
+      if (nameMatchesTargets(r.name, targets)) {
+        return { row: r, rank: i + 1 };
+      }
+    }
+    return null;
+  }
+
   function render() {
     let filtered = applyFilters(DEALS);
     let rows = sortRows(aggregateByRep(filtered));
+    CACHED_ROWS = rows;
     renderFilterChips();
     renderActiveTags();
     renderHeroContext(rows);
     renderHeroKpis(filtered);
     renderTable(rows);
+    window.dispatchEvent(new CustomEvent('capmuse:funding-book-rendered'));
   }
 
   function draftHas(val) {
-    return popupDraft.indexOf(val) > -1;
+    return Array.isArray(popupDraft) && popupDraft.indexOf(val) > -1;
   }
 
   function findOptInput(container, val) {
@@ -1026,7 +1236,7 @@
       });
     }
 
-    let allChecked = !popupDraft.length;
+    let allChecked = !Array.isArray(popupDraft) || !popupDraft.length;
     let html = '<label class="fb-filter-check fb-filter-check-all">' +
       '<input type="checkbox" data-opt-all="1"' + (allChecked ? ' checked' : '') + ' />' +
       '<span>Select all</span></label>';
@@ -1251,9 +1461,17 @@
 
     container.querySelectorAll('[data-date-preset]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        popupDraft = btn.getAttribute('data-date-preset');
+        let preset = normalizeDateRangeId(btn.getAttribute('data-date-preset'));
+        popupDraft = preset;
+        FILTERS.dateRange = preset;
+        if (preset !== 'custom') {
+          FILTERS.customFrom = '';
+          FILTERS.customTo = '';
+        }
         container.querySelectorAll('[data-date-preset]').forEach(function (b) { b.classList.remove('selected'); });
         btn.classList.add('selected');
+        closeFilterPopup();
+        render();
       });
     });
   }
@@ -1266,7 +1484,7 @@
       setTimeout(function () { overlay.hidden = true; }, 200);
     }
     popupKey = null;
-    popupDraft = [];
+    popupDraft = null;
   }
 
   function applyFilterPopup() {
@@ -1274,7 +1492,7 @@
     if (popupKey === 'groupBy') {
       setGroupBy(resolveGroupByDraft());
     } else if (popupKey === 'dateRange') {
-      FILTERS.dateRange = popupDraft || 'ytd';
+      FILTERS.dateRange = normalizeDateRangeId(popupDraft);
       let fromEl = document.getElementById('fbCustomFrom');
       let toEl = document.getElementById('fbCustomTo');
       if (fromEl) FILTERS.customFrom = fromEl.value;
@@ -1363,8 +1581,12 @@
   }
 
   function applyMappedDeals() {
-    if (!RAW_DEALS.length) return;
-    DEALS = RAW_DEALS.filter(function (r) { return r.company || r.Deal_Name; }).map(mapRecord);
+    if (RAW_DEALS.length) {
+      DEALS = RAW_DEALS.filter(function (r) { return r.company || r.Deal_Name; }).map(mapRecord);
+      DATA_STATUS = 'ready';
+    } else {
+      DEALS = [];
+    }
     render();
   }
 
@@ -1375,9 +1597,11 @@
   }
 
   function init() {
+    FILTERS.dateRange = normalizeDateRangeId(FILTERS.dateRange);
     wireModal();
     wireSortHeaders();
     renderFilterChips();
+    render();
     let csvReady = loadCsvLookup();
     let dealsReady = window.CapMuseData
       ? window.CapMuseData.getRawDeals().then(function (raw) {
@@ -1385,12 +1609,59 @@
         })
       : Promise.resolve();
     Promise.all([csvReady, dealsReady]).then(function () {
+      if (!RAW_DEALS.length) DATA_STATUS = 'error';
       applyMappedDeals();
     });
     window.addEventListener('capmuse:deals-updated', function (e) {
       if (e.detail && e.detail.length) load(e.detail);
     });
   }
+
+  window.CapMuseFundingBook = {
+    getRepRowForPerson: function (personId) {
+      let found = findRowForPerson(personId);
+      if (!found) return null;
+      let r = found.row;
+      return {
+        rank: found.rank,
+        name: r.name,
+        volume: fmtFull(r.volume),
+        revenue: fmtFull(r.revenue),
+        points: fmtPts(r.points),
+        team: repTeam(r.name),
+        count: String(r.count),
+        avgFunding: fmtFull(r.avg),
+        avgRev: fmtFull(r.avgRev),
+        filterMeta: dateRangeMetaLabel() + ' · By ' + groupByLabel()
+      };
+    },
+    getRepYearlyStatsForPerson: function (personId) {
+      let rep = window.REPS && window.REPS[personId];
+      if (!rep) return null;
+      let repDeals = dealsForPerson(personId);
+      if (!repDeals.length) return null;
+      let repName = rep.bookName || rep.name || personId;
+      let years = aggregateYearlyRows(repDeals);
+      return {
+        name: repName,
+        team: repTeam(repName),
+        groupBy: groupByLabel(),
+        years: years.map(function (y) {
+          return {
+            year: y.year,
+            volume: fmtFull(y.volume),
+            revenue: fmtFull(y.revenue),
+            points: fmtPts(y.points),
+            team: repTeam(repName),
+            count: String(y.count),
+            avgFunding: fmtFull(y.avg),
+            avgRev: fmtFull(y.avgRev)
+          };
+        })
+      };
+    },
+    getRepNumberOnes: getRepNumberOnes
+  };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

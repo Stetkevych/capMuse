@@ -6,6 +6,7 @@
   'use strict';
 
   let USER_KEY = 'capmuse-user';
+  let NAV_HIDDEN_KEY = 'capmuse-nav-hidden';
   let SHARED_PASSWORD = 'Inc5000DataAnalytics!';
 
   // Demo mode — set false after exec demo to restore full sidebar.
@@ -23,6 +24,35 @@
   ];
 
   let demoStylesInjected = false;
+
+  function injectNavCriticalGuard() {
+    try {
+      if (localStorage.getItem(NAV_HIDDEN_KEY) === '1') {
+        document.documentElement.classList.add('capmuse-nav-hidden');
+      }
+    } catch (e) { /* ignore */ }
+    if (document.getElementById('capmuse-nav-critical')) return;
+    let style = document.createElement('style');
+    style.id = 'capmuse-nav-critical';
+    style.textContent =
+      '@media(min-width:769px){' +
+      'html.capmuse-nav-hidden .sidebar{transform:translateX(calc(-1*(var(--sidebar-w,215px) + var(--sidebar-gap,16px) + 16px)));pointer-events:none;visibility:hidden}' +
+      'html.capmuse-nav-hidden .main-wrapper{margin-left:0!important}' +
+      '}' +
+      '.nav-sidebar-collapse-wrap{opacity:0;visibility:hidden;pointer-events:none}' +
+      'html.capmuse-nav-controls-ready .nav-sidebar-collapse-wrap{opacity:1;visibility:visible;pointer-events:auto}' +
+      '.nav-sidebar-toggle{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;font:inherit;font-size:12px;font-weight:600;cursor:pointer;color:inherit;box-sizing:border-box}' +
+      '.nav-sidebar-toggle-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:16px;height:16px}' +
+      '.nav-sidebar-toggle-icon svg,.nav-expand-rail svg{width:16px;height:16px;display:block;max-width:16px;max-height:16px}' +
+      '.nav-expand-rail{display:none!important}' +
+      'html.capmuse-nav-hidden .nav-expand-rail{display:flex!important;position:fixed;left:0;bottom:24px;z-index:350;width:22px;height:52px;padding:0;align-items:center;justify-content:center;border:1px solid var(--sidebar-border,#1A2435);border-left:none;border-radius:0 12px 12px 0;background:var(--sidebar-bg,#111720);cursor:pointer;box-sizing:border-box}' +
+      '.cm-notif-panel{position:absolute;top:calc(100% + 10px);right:0;z-index:1200;opacity:0!important;visibility:hidden!important;pointer-events:none!important}' +
+      '.cm-notif-panel.open{opacity:1!important;visibility:visible!important;pointer-events:auto!important}' +
+      '.cm-present-overlay{opacity:0!important;visibility:hidden!important;pointer-events:none!important}' +
+      '.cm-present-overlay.open{opacity:1!important;visibility:visible!important;pointer-events:auto!important}' +
+      '.cm-present-overlay[hidden]{display:none!important}';
+    (document.head || document.documentElement).appendChild(style);
+  }
 
   function injectDemoCriticalGuard() {
     if (!DEMO_MODE) return;
@@ -199,6 +229,55 @@
     restructureDemoNav();
   }
 
+  function authScriptBase() {
+    let scripts = document.getElementsByTagName('script');
+    let i;
+    for (i = scripts.length - 1; i >= 0; i--) {
+      let src = scripts[i].src || '';
+      if (src.indexOf('capmuse-auth.js') > -1) {
+        return src.replace(/capmuse-auth\.js.*$/, '');
+      }
+    }
+    return 'Assets/';
+  }
+
+  function loadAuthScriptOnce(url) {
+    return new Promise(function (resolve) {
+      let existing = document.querySelector('script[src="' + url + '"]');
+      if (existing) {
+        if (existing.getAttribute('data-loaded') === '1') resolve();
+        else existing.addEventListener('load', function () { resolve(); });
+        return;
+      }
+      let el = document.createElement('script');
+      el.src = url;
+      el.onload = function () {
+        el.setAttribute('data-loaded', '1');
+        resolve();
+      };
+      el.onerror = function () { resolve(); };
+      document.body.appendChild(el);
+    });
+  }
+
+  function initAchievements() {
+    if (!localStorage.getItem(USER_KEY)) return;
+    let base = authScriptBase();
+    loadAuthScriptOnce(base + 'capmuse-achievements.js').then(function () {
+      return loadAuthScriptOnce(base + 'capmuse-notifications.js');
+    }).then(function () {
+      if (window.CapMuseNotifications) window.CapMuseNotifications.init();
+    });
+  }
+
+  function initNav() {
+    if (!document.getElementById('sidebar')) return;
+    let base = authScriptBase();
+    loadAuthScriptOnce(base + 'capmuse-nav.js').then(function () {
+      if (window.CapMuseNav) window.CapMuseNav.init();
+    });
+  }
+
   function guardDemoPage() {
     if (!DEMO_MODE) return;
     if (DEMO_DISABLED_PAGES.indexOf(currentPage()) !== -1) {
@@ -208,6 +287,36 @@
 
   function initials(name) {
     return name.split(' ').map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+  }
+
+  let REP_ID_ALIASES = {
+    jimmy: 'gimmy',
+    matt: 'matthew',
+    schweri: 'mschweri',
+    scheweri: 'mschweri'
+  };
+  let SESSION_PRESENT_PREFIX = 'capmuse-ach-present-session:';
+  let SESSION_SCAN_PREFIX = 'capmuse-ach-scan-session:';
+
+  function clearSessionPresentKeys(repId) {
+    if (!repId) return;
+    let keys = [repId];
+    Object.keys(REP_ID_ALIASES).forEach(function (alias) {
+      if (REP_ID_ALIASES[alias] === repId) keys.push(alias);
+    });
+    keys.forEach(function (key) {
+      try {
+        sessionStorage.removeItem(SESSION_PRESENT_PREFIX + key);
+        sessionStorage.removeItem(SESSION_SCAN_PREFIX + key);
+      } catch (e) { /* ignore */ }
+    });
+  }
+
+  function canonicalRepId(repId) {
+    if (!repId) return repId;
+    if (window.ensureRepProfile) return window.ensureRepProfile(repId);
+    let key = String(repId).toLowerCase();
+    return REP_ID_ALIASES[key] || key;
   }
 
   function buildRepUsers() {
@@ -229,6 +338,13 @@
       }
     });
     map.jimmy = 'gimmy';
+    map.matt = 'matthew';
+    map.matthew = 'matthew';
+    map.mschweri = 'mschweri';
+    map.schweri = 'mschweri';
+    map.scheweri = 'mschweri';
+    map.matthewschweri = 'mschweri';
+    map.matthewscheweri = 'mschweri';
     map['thecapmuse123'] = 'anderson';
     return map;
   }
@@ -240,7 +356,9 @@
     DEMO_DISABLED_PAGES: DEMO_DISABLED_PAGES,
 
     getUserId: function () {
-      return localStorage.getItem(USER_KEY);
+      let id = localStorage.getItem(USER_KEY);
+      if (!id) return null;
+      return canonicalRepId(id);
     },
 
     getCurrentRep: function () {
@@ -258,7 +376,9 @@
     login: function (username, password) {
       let repId = this.resolveRepId(username);
       if (repId && password === SHARED_PASSWORD) {
+        repId = canonicalRepId(repId);
         localStorage.setItem(USER_KEY, repId);
+        clearSessionPresentKeys(repId);
         return repId;
       }
       return null;
@@ -318,6 +438,8 @@
 
     applyDemoNav: applyDemoNav,
     guardDemoPage: guardDemoPage,
+    initAchievements: initAchievements,
+    initNav: initNav,
 
     initPage: function (options) {
       options = options || {};
@@ -326,6 +448,8 @@
       this.populateSidebar();
       this.wireLogoutLinks();
       applyDemoNav();
+      initAchievements();
+      initNav();
     }
   };
 
@@ -333,7 +457,28 @@
     return window.CapMuseAuth.getCurrentRep();
   };
 
+  function injectLayoutStyles() {
+    if (document.getElementById('capmuse-layout-css')) return;
+    let link = document.createElement('link');
+    link.id = 'capmuse-layout-css';
+    link.rel = 'stylesheet';
+    link.href = authScriptBase() + 'capmuse-layout.css';
+    document.head.appendChild(link);
+  }
+
+  injectNavCriticalGuard();
   injectDemoCriticalGuard();
+
+  function bootPageChrome() {
+    injectLayoutStyles();
+    initNav();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootPageChrome);
+  } else {
+    bootPageChrome();
+  }
+
   if (DEMO_MODE) {
     function runDemoNavEarly() {
       applyDemoNav();

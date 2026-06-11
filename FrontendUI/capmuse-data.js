@@ -12,13 +12,13 @@
     return raw.filter(function (r) { return r.company || r.Deal_Name; });
   }
 
-  function readCache() {
+  function readCache(allowStale) {
     try {
       let cached = sessionStorage.getItem(CACHE_KEY);
       if (!cached) return null;
       let parsed = JSON.parse(cached);
       if (!parsed || !parsed.data || !parsed.ts) return null;
-      if (Date.now() - parsed.ts > CACHE_TTL) return null;
+      if (!allowStale && Date.now() - parsed.ts > CACHE_TTL) return null;
       return parsed.data;
     } catch (e) {
       return null;
@@ -57,7 +57,9 @@
     }
 
     inflight = fetchFresh().then(function (data) {
-      return data || [];
+      if (data && data.length) return data;
+      let stale = readCache(true);
+      return stale || [];
     });
     return inflight;
   }

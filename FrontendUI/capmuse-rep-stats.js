@@ -212,15 +212,32 @@
     return (r['Puller'] || r['Packages in Process Owner'] || '').trim();
   }
 
+  function pipelineMatchTargets(rep, userId) {
+    let targets = [];
+    if (rep && rep.bookName) targets.push(rep.bookName);
+    if (rep && rep.name) targets.push(rep.name);
+    if (rep && rep.csvName) targets.push(rep.csvName);
+    if (window.CapMuseHrData && window.CapMuseHrData.resolveCsvName) {
+      let csv = window.CapMuseHrData.resolveCsvName(rep, userId);
+      if (csv && targets.indexOf(csv) === -1) targets.push(csv);
+    }
+    return targets;
+  }
+
   function pipelineRowMatchesRep(r, rep, userId) {
     let assigned = pipelineRepName(r);
     if (!assigned || isHousePipelineName(assigned)) return false;
-    let target = (rep && (rep.bookName || rep.name)) || userId || '';
-    if (!target) return false;
+    let targets = pipelineMatchTargets(rep, userId);
+    if (!targets.length) return false;
     if (window.CapMuseRepMatch) {
-      return window.CapMuseRepMatch.namesMatch(assigned, target);
+      return targets.some(function (target) {
+        return window.CapMuseRepMatch.namesMatch(assigned, target);
+      });
     }
-    return normStr(assigned) === normStr(target);
+    let an = normStr(assigned);
+    return targets.some(function (target) {
+      return an === normStr(target);
+    });
   }
 
   function countPipelineForRep(userId, rows) {

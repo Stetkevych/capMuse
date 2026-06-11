@@ -425,23 +425,8 @@
   }
 
   function repPersonId(name) {
+    if (window.resolveRepPersonId) return window.resolveRepPersonId(name);
     if (!window.REPS || !name) return null;
-    let n = normStr(name);
-    let keys = Object.keys(window.REPS);
-    let i;
-    for (i = 0; i < keys.length; i++) {
-      let rep = window.REPS[keys[i]];
-      if (!rep || !rep.bookName) continue;
-      if (n === normStr(rep.bookName)) return keys[i];
-    }
-    for (i = 0; i < keys.length; i++) {
-      let rep = window.REPS[keys[i]];
-      if (!rep) continue;
-      let book = normStr(rep.bookName || rep.name || '');
-      if (book && n.indexOf(book) > -1) return keys[i];
-      let first = (rep.name || '').split(' ')[0].toLowerCase();
-      if (first && first.length > 2 && n.indexOf(first) > -1) return keys[i];
-    }
     return null;
   }
 
@@ -1293,7 +1278,6 @@
         return;
       }
       console.log('[Pipeline] Loaded', rows.length, 'pipeline records');
-      window._pipelineRows = rows;
       loadRows(rows);
     }
 

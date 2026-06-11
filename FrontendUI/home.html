@@ -493,6 +493,8 @@
 </div>
 
 <script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-achievements.js"></script>
+<script src="Assets/capmuse-notifications.js"></script>
 <script>
 /* ── Theme toggle ── */
 (function () {
@@ -593,6 +595,8 @@ document.querySelectorAll('.nav-section-toggle').forEach(function (toggle) {
   window.CapMuseAuth.populateSidebar(rep);
   window.CapMuseAuth.wireLogoutLinks();
   window.CapMuseAuth.applyDemoNav();
+  if (window.CapMuseAuth.initAchievements) window.CapMuseAuth.initAchievements();
+  if (window.CapMuseAuth.initNav) window.CapMuseAuth.initNav();
 
   if (window.renderTodayPerfPanel) {
     window.renderTodayPerfPanel(document.getElementById('perfGrid'), userId, { animate: true });
