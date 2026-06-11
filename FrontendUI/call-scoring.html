@@ -49,11 +49,12 @@
 
     .scoring-section{margin-top:14px}
     .scoring-section-title{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
-    .scoring-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.03)}
+    .scoring-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.03)}
     .scoring-item:last-child{border-bottom:none}
     .scoring-label{flex:1;font-size:12px;color:var(--text-secondary);line-height:1.4}
-    .scoring-weight{font-size:10px;font-weight:700;color:var(--text-muted);min-width:28px;text-align:center}
-    .scoring-input{display:flex;gap:3px}
+    .scoring-weight{font-size:10px;font-weight:700;color:var(--text-muted);min-width:36px;text-align:center;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:3px 4px}
+    .scoring-weighted{font-size:10px;font-weight:700;color:var(--blue);min-width:40px;text-align:center}
+    .scoring-input{display:flex;gap:3px;margin-left:8px}
     .score-btn{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
     .score-btn:hover{border-color:var(--blue);color:var(--blue)}
     .score-btn.selected{background:var(--blue);border-color:var(--blue);color:#fff}
@@ -125,6 +126,7 @@
         <button class="tab" data-tab="trends">Trends</button>
         <button class="tab" data-tab="ai">AI Insights</button>
         <button class="tab" data-tab="history">History</button>
+        <button class="tab" data-tab="admin">Super Admin</button>
       </div>
 
       <!-- Score a Call -->
@@ -195,6 +197,26 @@
       <!-- History -->
       <div class="section" id="sec-history"><div id="historyContent">Loading...</div></div>
 
+      <!-- Super Admin -->
+      <div class="section" id="sec-admin">
+        <div class="card">
+          <div class="card-title">Section Weight Configuration</div>
+          <div class="card-subtitle">Adjust how much each section contributes to the total score (must total 100%)</div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr">
+            <label>Opening<input type="number" id="adminWtOpening" value="20" min="0" max="100" style="font-weight:700" />%</label>
+            <label>Discovery<input type="number" id="adminWtDiscovery" value="20" min="0" max="100" style="font-weight:700" />%</label>
+            <label>Alignment<input type="number" id="adminWtAlignment" value="20" min="0" max="100" style="font-weight:700" />%</label>
+            <label>Close<input type="number" id="adminWtClose" value="20" min="0" max="100" style="font-weight:700" />%</label>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--text-muted)">Total: <strong id="adminWtTotal">80%</strong> (remaining 20% unallocated)</div>
+          <button class="submit-btn" id="adminSaveWeights" style="margin-top:12px;max-width:200px">Save Weights</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Current Scoring Schema</div>
+          <div class="table-card"><table><thead><tr><th>#</th><th>Behavior</th><th>Section</th><th>Item Weight</th><th>Section %</th></tr></thead><tbody id="adminSchemaTable"></tbody></table></div>
+        </div>
+      </div>
+
     </main>
   </div>
 </div>
@@ -261,7 +283,7 @@
     sectionItems[sec].forEach(function(item){
       var btns='';
       for(var i=1;i<=5;i++)btns+='<button class="score-btn" data-item="'+item.id+'" data-val="'+i+'">'+i+'</button>';
-      scoringDiv.innerHTML+='<div class="scoring-item"><span class="scoring-label">'+item.label+' <span style="color:var(--red);font-size:10px">*</span></span><span class="scoring-weight">w'+item.weight+'</span><div class="scoring-input">'+btns+'</div></div>';
+      scoringDiv.innerHTML+='<div class="scoring-item"><span class="scoring-label">'+item.label+' <span style="color:var(--red);font-size:10px">*</span></span><div class="scoring-input">'+btns+'</div><span class="scoring-weight">20%</span><span class="scoring-weighted" id="ws_'+item.id+'">—</span></div>';
     });
     scoringDiv.innerHTML+='<div class="section-score-bar" id="bar_'+sec+'"><span class="bar-label">'+sec+' Score:</span><span class="bar-value">—</span><div class="bar-fill-wrap"><div class="bar-fill" id="fill_'+sec+'"></div></div></div>';
   });
@@ -270,22 +292,32 @@
   scoringDiv.innerHTML+='<div class="total-score-bar" id="bar_total"><span class="bar-label">Total Call Score:</span><span class="bar-value" id="totalScoreVal">—</span><span class="bar-tier" id="totalTierVal"></span><div class="bar-fill-wrap"><div class="bar-fill bar-fill-total" id="fill_total"></div></div></div>';
 
   function updateScoreBars(){
-    var totalWeighted=0,totalMaxWeighted=0;
+    var sectionWeight=20; // 20% per section
+    var totalWeighted=0,totalMax=0;
     sections.forEach(function(sec){
-      var secWeighted=0,secMax=0,allScored=true;
+      var secTotal=0,secMax=0;
       sectionItems[sec].forEach(function(item){
-        secMax+=item.weight;
-        if(scoreValues[item.id])secWeighted+=(scoreValues[item.id]/5)*item.weight;
-        else allScored=false;
+        var ws=document.getElementById('ws_'+item.id);
+        if(scoreValues[item.id]){
+          var itemWeighted=(scoreValues[item.id]/5)*sectionWeight;
+          secTotal+=scoreValues[item.id];
+          secMax+=5;
+          if(ws)ws.textContent=itemWeighted.toFixed(1);
+        } else {
+          secMax+=5;
+          if(ws)ws.textContent='\u2014';
+        }
       });
-      var pct=secMax>0?Math.round((secWeighted/secMax)*100):0;
+      var pct=secMax>0?Math.round((secTotal/secMax)*100):0;
       var barVal=document.querySelector('#bar_'+sec+' .bar-value');
       var barFill=document.getElementById('fill_'+sec);
       if(barVal)barVal.textContent=pct+'/100';
       if(barFill){barFill.style.width=pct+'%';barFill.style.background=pct>=90?'var(--green)':pct>=75?'var(--blue)':pct>=60?'var(--amber)':'var(--red)'}
-      totalWeighted+=secWeighted;totalMaxWeighted+=secMax;
+      var secWeightedScore=(secMax>0?(secTotal/secMax):0)*sectionWeight;
+      totalWeighted+=secWeightedScore;
+      totalMax+=sectionWeight;
     });
-    var totalPct=totalMaxWeighted>0?Math.round((totalWeighted/totalMaxWeighted)*100):0;
+    var totalPct=totalMax>0?Math.round((totalWeighted/totalMax)*100):0;
     var tierLabel=totalPct>=90?'Exceptional':totalPct>=75?'Proficient':totalPct>=60?'Developing':'Coaching Plan Required';
     var el=document.getElementById('totalScoreVal');if(el)el.textContent=totalPct+'/100';
     var tierEl=document.getElementById('totalTierVal');if(tierEl){tierEl.textContent=tierLabel;tierEl.className='bar-tier '+(totalPct>=90?'tier-exceptional':totalPct>=75?'tier-proficient':totalPct>=60?'tier-developing':'tier-coaching')}
@@ -360,6 +392,7 @@
     if(tab==='outcomes')renderOutcomes();
     if(tab==='trends')renderTrends();
     if(tab==='history')renderHistory();
+    if(tab==='admin')renderAdmin();
   }
 
   function renderDashboard(){
@@ -485,6 +518,30 @@
     }
     return 'Try: "Which reps are strongest at discovery?", "Which behaviors correlate with funded deals?", "Compare top reps against bottom reps", "Show scores by lead source", "Which reps need a coaching plan?"';
   }
+  function renderAdmin(){
+    var tbody=document.getElementById('adminSchemaTable');
+    if(!tbody)return;
+    var h='';
+    ITEMS.forEach(function(item,i){
+      h+='<tr><td>'+(i+1)+'</td><td>'+item.label+'</td><td>'+item.section+'</td><td>w'+item.weight+'</td><td>20%</td></tr>';
+    });
+    tbody.innerHTML=h;
+    // Weight total
+    var inputs=['adminWtOpening','adminWtDiscovery','adminWtAlignment','adminWtClose'];
+    function updateTotal(){
+      var total=inputs.reduce(function(s,id){return s+(parseInt(document.getElementById(id).value)||0)},0);
+      document.getElementById('adminWtTotal').textContent=total+'%';
+      document.getElementById('adminWtTotal').style.color=total===100?'var(--green)':'var(--red)';
+    }
+    inputs.forEach(function(id){document.getElementById(id).addEventListener('input',updateTotal)});
+    updateTotal();
+    document.getElementById('adminSaveWeights').addEventListener('click',function(){
+      var total=inputs.reduce(function(s,id){return s+(parseInt(document.getElementById(id).value)||0)},0);
+      if(total!==100){showToast('Weights must total 100% (currently '+total+'%)');return;}
+      showToast('Weights saved: Opening '+document.getElementById('adminWtOpening').value+'%, Discovery '+document.getElementById('adminWtDiscovery').value+'%, Alignment '+document.getElementById('adminWtAlignment').value+'%, Close '+document.getElementById('adminWtClose').value+'%');
+    });
+  }
+
 })();
 </script>
 <script src="Assets/capmuse-search.js"></script>
