@@ -14,6 +14,8 @@
   let MAPPED_ROWS = [];
   let FILTERED_ROW_COUNT = 0;
   let STATS = [];
+  let _fbDeals = [];
+  let _fbRevenueMap = {};
   let SORT_KEY = 'fundedAmt';
   let SORT_DIR = 'desc';
 
@@ -274,7 +276,7 @@
     let amt = nn(r['Amount']);
     return {
       raw: r,
-      dateApplied: parseDate(r['Date Applied'] || r['Created Time'] || ''),
+      dateApplied: parseDate(r['Created Time'] || r['Date Applied'] || ''),
       leadSource: (r['Lead Source'] || '').trim(),
       state: (r['State'] || '').trim(),
       marketingAssist: mm,
@@ -477,25 +479,20 @@
 
       byRep[rep].apps++;
 
-      if (stage.indexOf('funded') > -1 || stage === 'future funding' || stage === 'dd - default') {
+      // Approval = Deal Type "New" AND Stage not in excluded list AND Amount > 0
+      let dealType = (r['Deal Type'] || '').toLowerCase().trim();
+      let isNewDeal = dealType === 'new';
+      let excludedStages = ['dd - default', 'deal declined', 'fraud'];
+      let isApproval = isNewDeal && excludedStages.indexOf(stage) === -1 && amt > 0;
+
+      if (isApproval) {
         byRep[rep].approvals++;
-        // Credit Re-Puller too
-        let rePuller = (r['Re-Puller'] || '').trim();
-        if (rePuller && rePuller !== rep && rePuller !== 'House .' && rePuller !== 'House') {
-          if (!byRep[rePuller]) byRep[rePuller] = { name: rePuller, apps: 0, approvals: 0, funded: 0, fundedAmt: 0, points: [], amounts: [], revenue: 0, appsToApprovals: '—', approvalToFunding: '—', avgPoints: '—', avgAmount: '—', avgPointsNum: 0, avgAmountNum: 0 };
-          byRep[rePuller].approvals++;
-        }
       }
 
       if (stage.indexOf('fund') > -1 && stage.indexOf('decline') === -1) {
         byRep[rep].funded++;
         byRep[rep].fundedAmt += amt;
         byRep[rep].amounts.push(amt);
-        let pts = parseFloat(r['Paid in Percentage'] || '0') || 0;
-        if (pts > 0) {
-          byRep[rep].points.push(pts);
-          byRep[rep].revenue += amt * (pts / 100);
-        }
       }
     });
 
@@ -503,8 +500,19 @@
       let row = byRep[k];
       row.appsToApprovals = pct(row.approvals, row.apps);
       row.approvalToFunding = pct(row.funded, row.approvals);
-      row.avgPointsNum = row.fundedAmt > 0 ? (row.revenue / row.fundedAmt) * 100 : 0;
-      row.avgPoints = row.fundedAmt > 0 ? row.avgPointsNum.toFixed(2) + '%' : '—';
+
+      // Revenue and avg pts come from the funding book (buildFbRevenueMap), not from pipeline CSV
+      let fbData = _fbRevenueMap[normStr(row.name)];
+      if (fbData && fbData.fundedAmt > 0) {
+        row.revenue = fbData.revenue;
+        row.avgPointsNum = (fbData.revenue / fbData.fundedAmt) * 100;
+        row.avgPoints = row.avgPointsNum.toFixed(2) + '%';
+      } else {
+        row.revenue = 0;
+        row.avgPointsNum = 0;
+        row.avgPoints = '—';
+      }
+
       row.avgAmountNum = row.amounts.length
         ? row.amounts.reduce(function (s, v) { return s + v; }, 0) / row.amounts.length
         : 0;
@@ -513,6 +521,87 @@
     }).filter(function (row) {
       return row.apps > 0 || row.approvals > 0 || row.funded > 0;
     });
+  }
+
+  function buildFbRevenueMap() {
+    if (!_fbDeals.length) return {};
+    let bounds = dateRangeBounds();
+    let map = {};
+
+    _fbDeals.forEach(function (r) {
+      let dateStr = (r.date_funded || r.Date_Funded || '').trim();
+      if (!dateStr) return;
+      let dt = new Date(dateStr.length === 10 ? dateStr + 'T12:00:00' : dateStr);
+      if (isNaN(dt.getTime())) return;
+
+      if (bounds) {
+        if (bounds.start && dt < bounds.start) return;
+        if (bounds.end && dt > bounds.end) return;
+      }
+
+      let rev = nn(r.revenue || r.Total_rev || '0');
+      let fa = nn(r.Funded_Amount || r.funding || '0');
+      if (fa <= 0) return;
+
+      let rep = (r['Package_Owner.name'] ||
+        (r.Package_Owner && typeof r.Package_Owner === 'string' ? r.Package_Owner : '') ||
+        r.package_owner || '').trim();
+      if (!rep) return;
+
+      // State filter
+      if (FILTERS.state && FILTERS.state.length) {
+        let s = normState(r.State || r.state || '');
+        if (!FILTERS.state.some(function (f) { return normState(f) === s; })) return;
+      }
+
+      // Deal type filter — funding book uses "New Deal", pipeline uses "New"; normalize both to a common key
+      if (FILTERS.dealType && FILTERS.dealType.length) {
+        let fbDt = normStr(r.deal_type || '');
+        let fbKey = (fbDt === 'new deal' || fbDt === 'new') ? 'new' : (fbDt.indexOf('renewal') === 0 ? 'renewal' : fbDt);
+        let match = FILTERS.dealType.some(function (f) {
+          let fk = normStr(f);
+          fk = (fk === 'new deal' || fk === 'new') ? 'new' : (fk.indexOf('renewal') === 0 ? 'renewal' : fk);
+          return fk === fbKey;
+        });
+        if (!match) return;
+      }
+
+      // Lead source filter
+      if (FILTERS.leadSource && FILTERS.leadSource.length) {
+        let ls = (r.Lead_Source2 || r.Lead_Source || r.lead_source || '').trim();
+        let lsMatch = FILTERS.leadSource.some(function (f) {
+          if (f === LEAD_SOURCE_GROUP_FACEBOOK) return looksLikeFacebook(ls) && !isFacebookSpo(ls);
+          if (f === LEAD_SOURCE_GROUP_FB_SPO) return isFacebookSpo(ls);
+          if (f.indexOf('__parent:') === 0) {
+            let parent = f.slice(9);
+            return normStr(ls) === normStr(parent) ||
+              normStr(ls).indexOf(normStr(parent) + ' -') === 0 ||
+              normStr(ls).indexOf(normStr(parent) + '-') === 0;
+          }
+          return normStr(ls) === normStr(f);
+        });
+        if (!lsMatch) return;
+      }
+
+      // Lender filter
+      if (FILTERS.lender && FILTERS.lender.length) {
+        let lender = normalizeLender(r.Lender || r.lender || '');
+        if (!FILTERS.lender.some(function (f) { return normStr(normalizeLender(f)) === normStr(lender); })) return;
+      }
+
+      // Marketing assist filter
+      if (FILTERS.marketingAssist && FILTERS.marketingAssist.length) {
+        let ma = (r.Marketing_Master || r.marketing_assist || '').trim();
+        if (!FILTERS.marketingAssist.some(function (f) { return normStr(f) === normStr(ma); })) return;
+      }
+
+      let key = normStr(rep);
+      if (!map[key]) map[key] = { revenue: 0, fundedAmt: 0 };
+      map[key].revenue += rev;
+      map[key].fundedAmt += fa;
+    });
+
+    return map;
   }
 
   function sortRows(rows) {
@@ -1242,6 +1331,7 @@
     if (!RAW_ROWS.length) return;
     MAPPED_ROWS = RAW_ROWS.map(mapPipelineRow);
     let filtered = applyFilters(MAPPED_ROWS);
+    try { _fbRevenueMap = buildFbRevenueMap(); } catch (e) { console.error('[Pipeline] buildFbRevenueMap:', e); _fbRevenueMap = {}; }
     STATS = computeStats(filtered).filter(repInFundingRange);
     if (isFundingFilterActive()) {
       let keep = {};
@@ -1301,6 +1391,10 @@
       window.CapMuseData.getPipelineRows().then(onRows);
       window.addEventListener('capmuse:pipeline-updated', function (e) {
         if (e.detail && e.detail.length) loadRows(e.detail);
+      });
+      window.CapMuseData.getRawDeals().then(function (deals) {
+        _fbDeals = deals || [];
+        if (RAW_ROWS.length) applyFilteredStats();
       });
     } else {
       fetchCsv(0).then(function (text) {
