@@ -117,11 +117,13 @@
 
   function mapSearchPipelineRow(r) {
     let stageLc = (r['Stage of Package'] || '').toLowerCase();
-    let isFunded    = stageLc.indexOf('fund') > -1 && stageLc.indexOf('decline') === -1;
-    let isApproval  = isFunded || stageLc === 'future funding' || stageLc === 'dd - default';
+    let isFunded    = stageLc === 'funded' || stageLc === 'funded-other';
+    let dealTypeLc  = (r['Deal Type'] || '').toLowerCase().trim();
+    let excludedStages = ['dd - default', 'deal declined', 'fraud'];
+    let isApproval  = dealTypeLc === 'new' && excludedStages.indexOf(stageLc) === -1 && nn(r['Amount']) > 0;
     let pos         = (r['Position'] || '').trim();
     let isApp       = !pos || pos === '0' || pos === '1';
-    let dateStr     = (r['Date Applied'] || r['Created Time'] || '').trim();
+    let dateStr     = (r['Created Time'] || r['Date Applied'] || '').trim();
     let dateObj     = dateStr ? new Date(dateStr.length === 10 ? dateStr + 'T12:00:00' : dateStr) : null;
     if (dateObj && isNaN(dateObj.getTime())) dateObj = null;
     return {

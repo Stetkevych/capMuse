@@ -37,13 +37,39 @@
 
   let FILTER_DEFS = [
     { key: 'leadSource', label: 'Lead Source', field: 'leadSource', searchable: true, grouped: true },
-    { key: 'marketingAssist', label: 'Marketing Assist', field: 'marketingAssist', searchable: true },
+    { key: 'marketingAssist', label: 'Marketing Assist', type: 'marketing', searchable: true },
     { key: 'state', label: 'State', field: 'state', searchable: true },
     { key: 'dateRange', label: 'Date Range', type: 'date' },
     { key: 'fundingRange', label: 'Funded Amount', type: 'range' },
     { key: 'lender', label: 'Lender', field: 'lender', searchable: true },
     { key: 'productType', label: 'Product Type', field: 'productType', searchable: true, extraOptions: ['Reverse'] },
     { key: 'dealType', label: 'Deal Type', field: 'dealType', searchable: true, grouped: true }
+  ];
+
+  let MARKETING_FIELD_DEFS = [
+    { label: 'Marketing Assist.', cols: ['Marketing  Assist.', 'Marketing Assist.'] },
+    { label: 'Marketing Master', cols: ['Marketing Master'] },
+    { label: 'Marketing Interest Shown', cols: ['Marketing Interest Shown'] },
+    { label: 'Lead Master', cols: ['Lead Master'] },
+    { label: 'Texticals', cols: ['Texticals'] },
+    { label: 'SMS Magic', cols: ['SMS Magic'] },
+    { label: 'SMS Magic Interested', cols: ['SMS Magic Interested'] },
+    { label: 'SMS Email', cols: ['SMS Email'] },
+    { label: 'Website Applied', cols: ['Website Applied'] },
+    { label: 'VoiceText', cols: ['VoiceText'] },
+    { label: 'VoiceText Number', cols: ['VoiceText Number'] },
+    { label: 'Text Reply', cols: ['Text Reply'] },
+    { label: 'Text Campaign', cols: ['Text Campaign'] },
+    { label: 'Mailer', cols: ['Mailer'] },
+    { label: 'HubSpot Company', cols: ['HubSpot  Company', 'HubSpot Company'] },
+    { label: 'Hubspot', cols: ['Hubspot'] },
+    { label: '12th Man', cols: ['12th Man'] },
+    { label: 'Marketing Company', cols: ['Marketing Company'] },
+    { label: 'Call-In Number', cols: ['Call-In Number'] },
+    { label: 'Zoho Email', cols: ['Zoho Email'] },
+    { label: 'Loanbud SBA', cols: ['Loanbud SBA'] },
+    { label: 'SmartBiz SBA', cols: ['SmartBiz SBA'] },
+    { label: 'Equipment Interested', cols: ['Equipment Interested'] }
   ];
 
   let FUNDING_RANGE_STEP = 5000;
@@ -272,9 +298,22 @@
     return looksLikeFacebook(leadSource) && !isFacebookSpo(leadSource);
   }
 
+  function hasMarketingValue(v) {
+    let s = String(v || '').trim();
+    let lc = s.toLowerCase();
+    return s && s !== '-' && s !== '0.0%' && lc !== 'false' && lc !== '0' && lc !== 'no';
+  }
+
+  function getMarketingFields(r) {
+    return MARKETING_FIELD_DEFS.filter(function (def) {
+      return def.cols.some(function (col) { return hasMarketingValue(r[col]); });
+    }).map(function (def) { return def.label; });
+  }
+
   function mapPipelineRow(r) {
     let mm = (r['Marketing Assist.'] || r['Marketing  Assist.'] || r['Marketing Master'] || '').trim();
     if (mm === '-' || mm === '0.0%') mm = '';
+    let mktFields = getMarketingFields(r);
     let dealTypeRaw = r['Deal Type'] || '';
     let stageLc = (r['Stage of Package'] || '').toLowerCase();
     let isFunded = stageLc === 'funded' || stageLc === 'funded-other';
@@ -285,6 +324,7 @@
       leadSource: (r['Lead Source'] || '').trim(),
       state: (r['State'] || '').trim(),
       marketingAssist: mm,
+      marketingFields: mktFields,
       lender: normalizeLender(r['Funder'] || r['Funder 2'] || ''),
       productType: normalizeProductType(r['Product Type'] || '', dealTypeRaw),
       dealType: normalizeDealType(dealTypeRaw),
@@ -396,11 +436,18 @@
     return true;
   }
 
+  function matchesMarketingFields(d, selected) {
+    if (!selected || !selected.length) return true;
+    return selected.some(function (f) {
+      return d.marketingFields && d.marketingFields.indexOf(f) > -1;
+    });
+  }
+
   function applyFilters(rows, exceptKey) {
     return rows.filter(function (d) {
       if (!inDateRange(d)) return false;
       if (exceptKey !== 'leadSource' && !matchesMulti('leadSource', d.leadSource, FILTERS.leadSource)) return false;
-      if (exceptKey !== 'marketingAssist' && !matchesMulti('marketingAssist', d.marketingAssist, FILTERS.marketingAssist)) return false;
+      if (exceptKey !== 'marketingAssist' && !matchesMarketingFields(d, FILTERS.marketingAssist)) return false;
       if (exceptKey !== 'state' && !matchesMulti('state', d.state, FILTERS.state)) return false;
       if (exceptKey !== 'lender' && !matchesMulti('lender', d.lender, FILTERS.lender)) return false;
       if (exceptKey !== 'productType' && !matchesMulti('productType', d.productType, FILTERS.productType)) return false;
@@ -579,11 +626,7 @@
         if (!FILTERS.lender.some(function (f) { return normStr(normalizeLender(f)) === normStr(lender); })) return;
       }
 
-      // Marketing assist filter
-      if (FILTERS.marketingAssist && FILTERS.marketingAssist.length) {
-        let ma = (r.Marketing_Master || r.marketing_assist || '').trim();
-        if (!FILTERS.marketingAssist.some(function (f) { return normStr(f) === normStr(ma); })) return;
-      }
+      // Marketing assist filter applies to pipeline CSV rows only (funding book has no per-channel marketing fields)
 
       let key = normStr(rep);
       if (!map[key]) map[key] = { revenue: 0, fundedAmt: 0 };
@@ -933,6 +976,50 @@
     fill.style.width = (hi - lo) + '%';
   }
 
+  function renderMarketingFieldOptions(container, query) {
+    if (!container) return;
+    let q = normStr(query);
+    let defs = MARKETING_FIELD_DEFS.filter(function (def) {
+      return !q || normStr(def.label).indexOf(q) > -1;
+    });
+
+    let allChecked = !popupDraft.length;
+    let html = '<label class="fb-filter-check fb-filter-check-all">' +
+      '<input type="checkbox" data-opt-all="1"' + (allChecked ? ' checked' : '') + ' />' +
+      '<span>Select all</span></label>';
+
+    defs.forEach(function (def) {
+      let checked = draftHas(def.label);
+      html += '<label class="fb-filter-check">' +
+        '<input type="checkbox" data-opt="' + esc(def.label) + '"' + (checked ? ' checked' : '') + ' />' +
+        '<span>' + esc(def.label) + '</span></label>';
+    });
+
+    container.innerHTML = html;
+
+    container.querySelectorAll('input[data-opt-all]').forEach(function (inp) {
+      inp.addEventListener('change', function () {
+        popupDraft = [];
+        container.querySelectorAll('input[data-opt]').forEach(function (c) { c.checked = false; });
+        inp.checked = true;
+      });
+    });
+
+    container.querySelectorAll('input[data-opt]').forEach(function (inp) {
+      inp.addEventListener('change', function () {
+        let val = inp.getAttribute('data-opt');
+        if (inp.checked) {
+          if (popupDraft.indexOf(val) === -1) popupDraft.push(val);
+        } else {
+          let idx = popupDraft.indexOf(val);
+          if (idx > -1) popupDraft.splice(idx, 1);
+        }
+        let allInp = container.querySelector('input[data-opt-all]');
+        if (allInp) allInp.checked = !popupDraft.length;
+      });
+    });
+  }
+
   function renderFundingRangeOptions(container) {
     if (!container) return;
     let bounds = fundingDataBounds('fundingRange');
@@ -949,9 +1036,18 @@
 
     container.innerHTML =
       '<div class="fb-range-slider">' +
-        '<div class="fb-range-values">' +
-          '<span class="fb-range-val" id="plFundingMinLbl">' + fmtFundingShort(draftMin) + '</span>' +
-          '<span class="fb-range-val" id="plFundingMaxLbl">' + fmtFundingShort(draftMax) + '</span>' +
+        '<div class="fb-range-text-row">' +
+          '<div class="fb-range-text-field">' +
+            '<label class="fb-range-text-label">Min</label>' +
+            '<input type="number" class="fb-range-text-input" id="plFundingMinText"' +
+              ' min="0" step="1000" value="' + draftMin + '" />' +
+          '</div>' +
+          '<span class="fb-range-text-sep">–</span>' +
+          '<div class="fb-range-text-field">' +
+            '<label class="fb-range-text-label">Max</label>' +
+            '<input type="number" class="fb-range-text-input" id="plFundingMaxText"' +
+              ' min="0" step="1000" value="' + draftMax + '" />' +
+          '</div>' +
         '</div>' +
         '<div class="fb-range-track-wrap">' +
           '<div class="fb-range-track"></div>' +
@@ -966,36 +1062,37 @@
 
     let minInp = document.getElementById('plFundingMinInp');
     let maxInp = document.getElementById('plFundingMaxInp');
-    let minLbl = document.getElementById('plFundingMinLbl');
-    let maxLbl = document.getElementById('plFundingMaxLbl');
+    let minText = document.getElementById('plFundingMinText');
+    let maxText = document.getElementById('plFundingMaxText');
     let fill = document.getElementById('plFundingFill');
 
-    function syncFromMin() {
-      let minVal = parseInt(minInp.value, 10);
-      let maxVal = parseInt(maxInp.value, 10);
-      if (minVal > maxVal) {
-        minVal = maxVal;
-        minInp.value = String(minVal);
-      }
+    function syncAll(minVal, maxVal) {
+      if (minVal > maxVal) minVal = maxVal;
+      if (maxVal < minVal) maxVal = minVal;
+      minVal = Math.max(bounds.min, Math.min(minVal, bounds.max));
+      maxVal = Math.max(bounds.min, Math.min(maxVal, bounds.max));
       popupDraft = { min: minVal, max: maxVal };
-      if (minLbl) minLbl.textContent = fmtFundingShort(minVal);
+      if (minInp) minInp.value = String(minVal);
+      if (maxInp) maxInp.value = String(maxVal);
+      if (minText) minText.value = String(minVal);
+      if (maxText) maxText.value = String(maxVal);
       updateFundingRangeFill(minInp, maxInp, fill, bounds);
     }
 
-    function syncFromMax() {
-      let minVal = parseInt(minInp.value, 10);
-      let maxVal = parseInt(maxInp.value, 10);
-      if (maxVal < minVal) {
-        maxVal = minVal;
-        maxInp.value = String(maxVal);
-      }
-      popupDraft = { min: minVal, max: maxVal };
-      if (maxLbl) maxLbl.textContent = fmtFundingShort(maxVal);
-      updateFundingRangeFill(minInp, maxInp, fill, bounds);
-    }
-
-    if (minInp) minInp.addEventListener('input', syncFromMin);
-    if (maxInp) maxInp.addEventListener('input', syncFromMax);
+    if (minInp) minInp.addEventListener('input', function () {
+      syncAll(parseInt(minInp.value, 10), parseInt(maxInp.value, 10));
+    });
+    if (maxInp) maxInp.addEventListener('input', function () {
+      syncAll(parseInt(minInp.value, 10), parseInt(maxInp.value, 10));
+    });
+    if (minText) minText.addEventListener('change', function () {
+      let v = parseInt(minText.value, 10) || 0;
+      syncAll(v, parseInt(maxText.value, 10) || bounds.max);
+    });
+    if (maxText) maxText.addEventListener('change', function () {
+      let v = parseInt(maxText.value, 10) || 0;
+      syncAll(parseInt(minText.value, 10) || 0, v);
+    });
     updateFundingRangeFill(minInp, maxInp, fill, bounds);
   }
 
@@ -1053,13 +1150,19 @@
       renderDateOptions(options);
     } else if (def.type === 'range') {
       renderFundingRangeOptions(options);
+    } else if (def.type === 'marketing') {
+      renderMarketingFieldOptions(options, '');
     } else {
       renderCheckboxOptions(options, def, '');
     }
 
     if (searchInput && def.searchable) {
       searchInput.oninput = function () {
-        renderCheckboxOptions(options, def, searchInput.value);
+        if (def.type === 'marketing') {
+          renderMarketingFieldOptions(options, searchInput.value);
+        } else {
+          renderCheckboxOptions(options, def, searchInput.value);
+        }
       };
     }
 
@@ -1317,12 +1420,62 @@
     renderActiveTags();
   }
 
+  function mergeMarketingStats(stats) {
+    let merged = null;
+    let result = [];
+    stats.forEach(function (s) {
+      let n = normStr(s.name);
+      if (n === 'capital infusion' || n === 'marketing') {
+        if (!merged) {
+          merged = {
+            name: 'Capital Infusion',
+            apps: s.apps, approvals: s.approvals, funded: s.funded,
+            fundedAmt: s.fundedAmt, amounts: (s.amounts || []).slice(),
+            revenue: s.revenue, avgPointsNum: s.avgPointsNum || 0,
+            appsToApprovals: '—', approvalToFunding: '—',
+            avgPoints: s.avgPoints, avgAmount: s.avgAmount, avgAmountNum: s.avgAmountNum || 0
+          };
+        } else {
+          merged.apps += s.apps;
+          merged.approvals += s.approvals;
+          merged.funded += s.funded;
+          merged.fundedAmt += s.fundedAmt;
+          merged.revenue += s.revenue;
+          merged.amounts = merged.amounts.concat(s.amounts || []);
+        }
+      } else {
+        result.push(s);
+      }
+    });
+    if (merged) {
+      merged.appsToApprovals = pct(merged.approvals, merged.apps);
+      merged.approvalToFunding = pct(merged.funded, merged.approvals);
+      merged.avgAmountNum = merged.amounts.length
+        ? merged.amounts.reduce(function (a, v) { return a + v; }, 0) / merged.amounts.length
+        : 0;
+      merged.avgAmount = merged.amounts.length ? fmt(merged.avgAmountNum) : '—';
+      let totalRev = 0, totalAmt = 0;
+      ['capital infusion', 'marketing'].forEach(function (key) {
+        let fb = _fbRevenueMap[key];
+        if (fb) { totalRev += fb.revenue; totalAmt += fb.fundedAmt; }
+      });
+      if (totalAmt > 0) {
+        merged.revenue = totalRev;
+        merged.avgPointsNum = (totalRev / totalAmt) * 100;
+        merged.avgPoints = merged.avgPointsNum.toFixed(2) + '%';
+      }
+      result.push(merged);
+    }
+    return result;
+  }
+
   function applyFilteredStats() {
     if (!RAW_ROWS.length) return;
     MAPPED_ROWS = RAW_ROWS.map(mapPipelineRow);
     let filtered = applyFilters(MAPPED_ROWS);
     try { _fbRevenueMap = buildFbRevenueMap(); } catch (e) { console.error('[Pipeline] buildFbRevenueMap:', e); _fbRevenueMap = {}; }
     STATS = computeStats(filtered).filter(repInFundingRange);
+    if (currentView === 'marketing') STATS = mergeMarketingStats(STATS);
     if (isFundingFilterActive()) {
       let keep = {};
       STATS.forEach(function (s) { keep[s.name] = true; });
