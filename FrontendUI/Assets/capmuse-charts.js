@@ -105,12 +105,15 @@
           if (selectedRep !== '__ALL__' && rep !== selectedRep) return;
           if (!rep || rep === 'House .' || rep === 'House') return;
 
-          var dateStr = r[dateField] || '';
+          var metricDateField = metricDef.dateField || dateField;
+          var dateStr = r[metricDateField] || r[dateField] || '';
           var key = groupBy === 'week' ? weekKey(dateStr) : monthKey(dateStr);
           if (!key) return;
 
+          var val = metricDef.calc(r);
+          if (val === 0) return;
           if (!buckets[key]) buckets[key] = 0;
-          buckets[key] += metricDef.calc(r);
+          buckets[key] += val;
         });
 
         var labels = Object.keys(buckets).sort();
