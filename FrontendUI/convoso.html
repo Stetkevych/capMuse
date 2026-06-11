@@ -239,7 +239,10 @@
     .cv-rmod-chip-val { font-size:11.5px; font-weight:600; color:var(--text-primary); white-space:nowrap; max-width:140px; overflow:hidden; text-overflow:ellipsis; }
     /* body top: kpis left | table right */
     .cv-rmod-body-top { display:flex; border-bottom:1px solid var(--border); overflow-y:auto; }
-    .cv-rmod-kpis { display:flex; flex-direction:column; border-right:1px solid var(--border); flex-shrink:0; width:160px; }
+    .cv-rmod-kpis { display:flex; flex-direction:column; border-right:1px solid var(--border); flex-shrink:0; width:180px; }
+    .cv-rmod-donut-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 12px 10px; border-bottom:1px solid var(--border); }
+    .cv-rmod-donut-lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
+    .cv-rmod-donut-canvas-wrap { position:relative; width:130px; height:130px; }
     .cv-rmod-kpi { padding:14px 16px; border-bottom:1px solid var(--border); flex:1; }
     .cv-rmod-kpi:last-child { border-bottom:none; }
     .cv-rmod-kpi-val { font-size:21px; font-weight:800; color:var(--text-primary); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; line-height:1; }
@@ -256,8 +259,10 @@
     .cv-rmod-dsp-badge.ni   { background:rgba(245,158,11,0.12);  color:#F59E0B; }
     .cv-rmod-dsp-badge.nc   { background:rgba(148,163,184,0.12); color:#94A3B8; }
     /* chart */
-    .cv-rmod-chart-section { padding:14px 20px 18px; flex-shrink:0; overflow:hidden; }
-    .cv-rmod-chart-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .cv-rmod-chart-grid { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid var(--border); flex-shrink:0; min-height:0; }
+    .cv-rmod-chart-section { padding:10px 14px 12px; overflow:hidden; border-right:1px solid var(--border); }
+    .cv-rmod-chart-section:last-child { border-right:none; }
+    .cv-rmod-chart-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
     .cv-rmod-chart-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
     .cv-rmod-chart-legend { display:flex; gap:14px; }
     .cv-rmod-leg { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--text-muted); }
@@ -265,7 +270,7 @@
     .cv-rmod-leg--inst::before { background:#10B981; }
     .cv-rmod-leg--ni::before   { background:#F59E0B; }
     .cv-rmod-leg--nc::before   { background:#94A3B8; }
-    .cv-rmod-chart-wrap { position:relative; height:150px; }
+    .cv-rmod-chart-wrap { position:relative; height:120px; }
     .cv-rmod-loading { text-align:center; padding:32px 16px; color:var(--text-muted); font-size:13px; }
 
     @keyframes cvFadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
@@ -549,6 +554,12 @@
     <!-- KPIs | TABLE -->
     <div class="cv-rmod-body-top">
       <div class="cv-rmod-kpis">
+        <div class="cv-rmod-donut-wrap">
+          <span class="cv-rmod-donut-lbl">Disposition Mix</span>
+          <div class="cv-rmod-donut-canvas-wrap">
+            <canvas id="cvRmodDonutCanvas"></canvas>
+          </div>
+        </div>
         <div class="cv-rmod-kpi">
           <div class="cv-rmod-kpi-val" id="cvRmodTotalTime">—</div>
           <div class="cv-rmod-kpi-lbl">Total Time</div>
@@ -588,18 +599,38 @@
         </table>
       </div>
     </div>
-    <!-- CHART -->
-    <div class="cv-rmod-chart-section">
-      <div class="cv-rmod-chart-head">
-        <span class="cv-rmod-chart-title">Performance Over Time</span>
-        <div class="cv-rmod-chart-legend">
-          <span class="cv-rmod-leg cv-rmod-leg--inst">Interested</span>
-          <span class="cv-rmod-leg cv-rmod-leg--ni">NI</span>
-          <span class="cv-rmod-leg cv-rmod-leg--nc">NC</span>
+    <div class="cv-rmod-chart-grid">
+      <!-- CALLS / INT TREND -->
+      <div class="cv-rmod-chart-section">
+        <div class="cv-rmod-chart-head">
+          <span class="cv-rmod-chart-title">Calls / INT Trend</span>
+        </div>
+        <div class="cv-rmod-chart-wrap">
+          <canvas id="cvRmodSparkCanvas"></canvas>
         </div>
       </div>
-      <div class="cv-rmod-chart-wrap">
-        <canvas id="cvRmodChart"></canvas>
+      <!-- AVG TALK TIME PER INT -->
+      <div class="cv-rmod-chart-section">
+        <div class="cv-rmod-chart-head">
+          <span class="cv-rmod-chart-title">Avg Talk Time per INT</span>
+        </div>
+        <div class="cv-rmod-chart-wrap">
+          <canvas id="cvRmodTimePerIntCanvas"></canvas>
+        </div>
+      </div>
+      <!-- PERFORMANCE OVER TIME -->
+      <div class="cv-rmod-chart-section">
+        <div class="cv-rmod-chart-head">
+          <span class="cv-rmod-chart-title">Performance Over Time</span>
+          <div class="cv-rmod-chart-legend">
+            <span class="cv-rmod-leg cv-rmod-leg--inst">INT</span>
+            <span class="cv-rmod-leg cv-rmod-leg--ni">NI</span>
+            <span class="cv-rmod-leg cv-rmod-leg--nc">NC</span>
+          </div>
+        </div>
+        <div class="cv-rmod-chart-wrap">
+          <canvas id="cvRmodChart"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -707,10 +738,18 @@
     return mm+':'+pad2(s);
   }
 
+  function bizDaysAgo(n) {
+    var d=new Date();
+    while(d.getDay()===0||d.getDay()===6) d.setDate(d.getDate()-1); // land on last weekday
+    var counted=1;
+    while(counted<n){ d.setDate(d.getDate()-1); if(d.getDay()!==0&&d.getDay()!==6) counted++; }
+    return d;
+  }
+
   function getDateRange(period) {
     var now=new Date(), y=now.getFullYear(), m=now.getMonth(), d=now.getDate(), dow=now.getDay(), today=isoDate(now);
     switch(period){
-      case 'last7days':{ var s7=new Date(now); s7.setDate(d-6); return {start:isoDate(s7),end:today}; }
+      case 'last7days': return {start:isoDate(bizDaysAgo(7)),end:today};
       case 'today': return {start:today,end:today};
       case 'yesterday':{ var yy=new Date(now); yy.setDate(d-1); var ys=isoDate(yy); return {start:ys,end:ys}; }
       case 'thisweek':{ var ws=new Date(now); ws.setDate(d-(dow===0?6:dow-1)); return {start:isoDate(ws),end:today}; }
@@ -762,8 +801,11 @@
     }
   }
 
-  var sortColumn = 'inst';
-  var sortDir    = 'desc';
+  var sortColumn   = 'inst';
+  var sortDir      = 'desc';
+  var repDonutChart      = null;
+  var repSparkChart      = null;
+  var repTimePerIntChart = null;
 
   function sortedUsers(users) {
     return users.map(function(u){
@@ -778,6 +820,13 @@
               calls_per_int:(u.inst>0 ? totalCalls/u.inst : 0)};
     }).filter(function(r){ return r.inst>0||r.ni>0||r.nc>0; }).sort(function(a,b){
       var av=a[sortColumn]||0, bv=b[sortColumn]||0;
+      if(sortColumn==='calls_per_int'){
+        /* 0 means no INTs — always sink to bottom regardless of direction */
+        if(!av && !bv) return 0;
+        if(!av) return 1;
+        if(!bv) return -1;
+        return sortDir==='asc' ? av-bv : bv-av;
+      }
       return sortDir==='desc' ? bv-av : av-bv;
     });
   }
@@ -1077,6 +1126,40 @@
     setText('cvRmodInst',        u.inst   || '—');
     setText('cvRmodCallsPerInt', u.inst>0 ? (totalCalls/u.inst).toFixed(1) : '—');
 
+    /* Donut — disposition mix (Chart.js interactive doughnut) */
+    var donutCanvas=document.getElementById('cvRmodDonutCanvas');
+    if(donutCanvas && typeof Chart!=='undefined') {
+      if(repDonutChart){ repDonutChart.destroy(); repDonutChart=null; }
+      var isDark=document.documentElement.getAttribute('data-theme')==='dark';
+      repDonutChart=new Chart(donutCanvas,{
+        type:'doughnut',
+        data:{
+          labels:['Interested','Not Interested','No Contact'],
+          datasets:[{
+            data:[u.inst||0, u.ni||0, u.nc||0],
+            backgroundColor:['rgba(16,185,129,0.85)','rgba(245,158,11,0.8)','rgba(148,163,184,0.5)'],
+            hoverBackgroundColor:['rgba(16,185,129,1)','rgba(245,158,11,1)','rgba(148,163,184,0.8)'],
+            borderWidth:0, hoverBorderWidth:0
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false, cutout:'62%',
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              callbacks:{
+                label:function(ctx){
+                  var tot=ctx.dataset.data.reduce(function(a,b){return a+b;},0);
+                  var pct=tot>0?Math.round(ctx.raw/tot*100):0;
+                  return ' '+ctx.label+': '+ctx.raw+' ('+pct+'%)';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
     var tbody=document.getElementById('cvRmodTableBody');
     if(!tbody) return;
     var rows=[
@@ -1099,6 +1182,95 @@
   }
 
   function renderRepChart(periods) {
+    var isDarkR=document.documentElement.getAttribute('data-theme')==='dark';
+    var gridCR=isDarkR?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+    var tickCR=isDarkR?'#7A8FA8':'#999';
+    var labels=periods.map(function(p){ return p.label; });
+
+    /* Calls / INT Trend */
+    var sparkCanvas=document.getElementById('cvRmodSparkCanvas');
+    if(sparkCanvas && typeof Chart!=='undefined' && periods.length) {
+      if(repSparkChart){ repSparkChart.destroy(); repSparkChart=null; }
+      var callsPerInt=periods.map(function(p){
+        var tc=p.total_calls!=null ? p.total_calls : (p.inst+p.ni+p.nc);
+        return p.inst>0 ? parseFloat((tc/p.inst).toFixed(2)) : null;
+      });
+      repSparkChart=new Chart(sparkCanvas,{
+        type:'line',
+        data:{
+          labels:labels,
+          datasets:[{
+            label:'Calls / INT',
+            data:callsPerInt,
+            borderColor:'rgba(245,158,11,1)',
+            backgroundColor:'rgba(245,158,11,0.1)',
+            fill:true, tension:0.35, spanGaps:true,
+            pointRadius:4, pointHoverRadius:6, borderWidth:2
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{mode:'index', intersect:false,
+              callbacks:{label:function(ctx){ return ctx.raw!==null?' '+ctx.raw+' calls per INT':''; }}
+            }
+          },
+          scales:{
+            x:{grid:{display:false}, ticks:{color:tickCR, font:{size:9}, maxRotation:0}},
+            y:{beginAtZero:false, grid:{color:gridCR}, ticks:{color:tickCR, font:{size:9}}}
+          }
+        }
+      });
+    }
+
+    /* Avg Talk Time per INT */
+    var tpiCanvas=document.getElementById('cvRmodTimePerIntCanvas');
+    if(tpiCanvas && typeof Chart!=='undefined' && periods.length) {
+      if(repTimePerIntChart){ repTimePerIntChart.destroy(); repTimePerIntChart=null; }
+      var timePerInt=periods.map(function(p){
+        var itt=p.inst_talk_time!=null ? p.inst_talk_time : p.talk_time;
+        return p.inst>0 && itt>0 ? Math.round(itt/p.inst) : null;
+      });
+      repTimePerIntChart=new Chart(tpiCanvas,{
+        type:'line',
+        data:{
+          labels:labels,
+          datasets:[{
+            label:'Avg Talk / INT',
+            data:timePerInt,
+            borderColor:'rgba(99,102,241,1)',
+            backgroundColor:'rgba(99,102,241,0.1)',
+            fill:true, tension:0.35, spanGaps:true,
+            pointRadius:4, pointHoverRadius:6, borderWidth:2
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{mode:'index', intersect:false,
+              callbacks:{
+                label:function(ctx){
+                  if(ctx.raw===null) return '';
+                  var m=Math.floor(ctx.raw/60), s=ctx.raw%60;
+                  return ' '+m+':'+(s<10?'0':'')+s+' avg talk per INT';
+                }
+              }
+            }
+          },
+          scales:{
+            x:{grid:{display:false}, ticks:{color:tickCR, font:{size:9}, maxRotation:0}},
+            y:{beginAtZero:true, grid:{color:gridCR},
+              ticks:{color:tickCR, font:{size:9},
+                callback:function(v){ var m=Math.floor(v/60),s=v%60; return m+':'+(s<10?'0':'')+s; }
+              }
+            }
+          }
+        }
+      });
+    }
+
     var canvas=document.getElementById('cvRmodChart');
     if(!canvas||typeof Chart==='undefined') return;
     if(repChart){ repChart.destroy(); repChart=null; }
@@ -1131,6 +1303,9 @@
     var tbody=document.getElementById('cvRmodTableBody');
     if(tbody) tbody.innerHTML='<tr><td colspan="6" class="cv-rmod-loading">Loading…</td></tr>';
     ['cvRmodTotalTime','cvRmodTalkTime','cvRmodContacts','cvRmodInst','cvRmodCallsPerInt'].forEach(function(id){ setText(id,'—'); });
+    if(repDonutChart){      repDonutChart.destroy();      repDonutChart=null; }
+    if(repSparkChart){      repSparkChart.destroy();      repSparkChart=null; }
+    if(repTimePerIntChart){ repTimePerIntChart.destroy(); repTimePerIntChart=null; }
 
     var range=repActivePeriod==='custom'
       ? {start:repCustomStart||isoDate(new Date()), end:repCustomEnd||isoDate(new Date())}
@@ -1232,7 +1407,7 @@
       if(!th) return;
       var col=th.getAttribute('data-sort');
       if(sortColumn===col) { sortDir=sortDir==='desc'?'asc':'desc'; }
-      else { sortColumn=col; sortDir='desc'; }
+      else { sortColumn=col; sortDir=col==='calls_per_int'?'asc':'desc'; }
       renderAll(currentUsers);
     });
 
