@@ -238,16 +238,20 @@
     .cv-rmod-chip-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); }
     .cv-rmod-chip-val { font-size:11.5px; font-weight:600; color:var(--text-primary); white-space:nowrap; max-width:140px; overflow:hidden; text-overflow:ellipsis; }
     /* body top: kpis left | table right */
-    .cv-rmod-body-top { display:flex; border-bottom:1px solid var(--border); overflow-y:auto; }
-    .cv-rmod-kpis { display:flex; flex-direction:column; border-right:1px solid var(--border); flex-shrink:0; width:180px; }
-    .cv-rmod-donut-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 12px 10px; border-bottom:1px solid var(--border); }
-    .cv-rmod-donut-lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
-    .cv-rmod-donut-canvas-wrap { position:relative; width:130px; height:130px; }
-    .cv-rmod-kpi { padding:14px 16px; border-bottom:1px solid var(--border); flex:1; }
-    .cv-rmod-kpi:last-child { border-bottom:none; }
-    .cv-rmod-kpi-val { font-size:21px; font-weight:800; color:var(--text-primary); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; line-height:1; }
-    .cv-rmod-kpi--inst .cv-rmod-kpi-val { color:#10B981; }
-    .cv-rmod-kpi-lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); margin-top:4px; }
+    .cv-rmod-body-top { display:flex; flex-direction:column; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .cv-rmod-kpis { display:flex; flex-direction:row; width:100%; border-bottom:1px solid var(--border); overflow-x:auto; flex-shrink:0; }
+    .cv-rmod-donut-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; padding:10px 14px; border-right:1px solid var(--border); flex-shrink:0; }
+    .cv-rmod-donut-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
+    .cv-rmod-donut-canvas-wrap { position:relative; width:120px; height:120px; }
+    .cv-rmod-donut-legend { display:flex; gap:10px; margin-top:4px; }
+    .cv-rmod-kpi { padding:10px 14px; border-right:1px solid var(--border); flex:1; min-width:90px; }
+    .cv-rmod-kpi:last-child { border-right:none; }
+    .cv-rmod-kpi-val { font-size:17px; font-weight:800; color:var(--text-primary); letter-spacing:-0.03em; font-variant-numeric:tabular-nums; line-height:1; }
+    .cv-rmod-kpi--inst    .cv-rmod-kpi-val { color:#10B981; }
+    .cv-rmod-kpi--contact .cv-rmod-kpi-val { color:#3b82f6; }
+    .cv-rmod-kpi--intrate .cv-rmod-kpi-val { color:#8b5cf6; }
+    .cv-rmod-kpi--wrap    .cv-rmod-kpi-val { color:#f59e0b; }
+    .cv-rmod-kpi-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; color:var(--text-muted); margin-top:3px; }
     .cv-rmod-table-wrap { flex:1; overflow:auto; }
     .cv-rmod-breakdown { width:100%; border-collapse:collapse; }
     .cv-rmod-breakdown th { padding:10px 14px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); text-align:left; border-bottom:1px solid var(--border); background:var(--table-head); white-space:nowrap; }
@@ -259,19 +263,31 @@
     .cv-rmod-dsp-badge.ni   { background:rgba(245,158,11,0.12);  color:#F59E0B; }
     .cv-rmod-dsp-badge.nc   { background:rgba(148,163,184,0.12); color:#94A3B8; }
     /* chart */
-    .cv-rmod-chart-grid { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid var(--border); flex-shrink:0; min-height:0; }
-    .cv-rmod-chart-section { padding:10px 14px 12px; overflow:hidden; border-right:1px solid var(--border); }
-    .cv-rmod-chart-section:last-child { border-right:none; }
-    .cv-rmod-chart-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .cv-rmod-chart-grid { display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:minmax(160px,1fr); border-top:1px solid var(--border); overflow-y:auto; flex-shrink:0; }
+    .cv-rmod-chart-section { padding:12px 16px 14px; overflow:hidden; border-right:1px solid var(--border); display:flex; flex-direction:column; }
+    .cv-rmod-chart-section:nth-child(3n) { border-right:none; }
+    .cv-rmod-chart-section:nth-child(-n+3) { border-bottom:1px solid var(--border); }
+    .cv-rmod-chart-head { display:flex; align-items:center; justify-content:space-between; min-height:26px; margin-bottom:10px; flex-shrink:0; }
     .cv-rmod-chart-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-muted); }
     .cv-rmod-chart-legend { display:flex; gap:14px; }
-    .cv-rmod-leg { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; color:var(--text-muted); }
+    .cv-rmod-leg { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:var(--text-secondary); }
     .cv-rmod-leg::before { content:''; width:9px; height:9px; border-radius:2px; flex-shrink:0; }
     .cv-rmod-leg--inst::before { background:#10B981; }
     .cv-rmod-leg--ni::before   { background:#F59E0B; }
     .cv-rmod-leg--nc::before   { background:#94A3B8; }
-    .cv-rmod-chart-wrap { position:relative; height:120px; }
+    .cv-rmod-chart-wrap { position:relative; flex:1; min-height:110px; }
     .cv-rmod-loading { text-align:center; padding:32px 16px; color:var(--text-muted); font-size:13px; }
+    .cv-chart-fs-btn { flex-shrink:0; width:20px; height:20px; border:none; background:transparent; color:var(--text-muted); cursor:pointer; border-radius:4px; display:flex; align-items:center; justify-content:center; padding:0; transition:color 0.15s,background 0.15s; }
+    .cv-chart-fs-btn:hover { color:var(--text-primary); background:var(--surface-2); }
+    .cv-chart-fs-btn svg { width:11px; height:11px; }
+    .cv-chart-fullscreen { position:fixed; inset:0; background:var(--surface); z-index:1200; display:flex; flex-direction:column; opacity:0; pointer-events:none; transition:opacity 0.18s; }
+    .cv-chart-fullscreen.open { opacity:1; pointer-events:auto; }
+    .cv-chart-fs-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .cv-chart-fs-ttl { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); }
+    .cv-chart-fs-x { width:32px; height:32px; border:none; background:var(--surface-2); border-radius:8px; cursor:pointer; color:var(--text-secondary); display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background 0.15s; }
+    .cv-chart-fs-x:hover { background:var(--border); color:var(--text-primary); }
+    .cv-chart-fs-x svg { width:14px; height:14px; }
+    .cv-chart-fs-body { flex:1; padding:32px; min-height:0; position:relative; }
 
     @keyframes cvFadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
 
@@ -300,12 +316,8 @@
       .burger { display:flex; }
       .page-content { padding:8px 14px 36px; }
       .fb-filter-grid { grid-template-columns:repeat(2,1fr); }
-      .cv-rmod-body-top { flex-direction:column; }
-      .cv-rmod-kpis { flex-direction:row; width:100%; border-right:none; border-bottom:1px solid var(--border); overflow-x:auto; }
-      .cv-rmod-kpi { border-bottom:none; border-right:1px solid var(--border); min-width:120px; }
-      .cv-rmod-kpi:last-child { border-right:none; }
     }
-    @media (max-width:560px) { .cv-rmod-kpi { min-width:100px; } }
+    @media (max-width:560px) { .cv-rmod-kpi { min-width:80px; } }
   </style>
   <link rel="stylesheet" href="Assets/profile-stats.css" />
 </head>
@@ -568,6 +580,11 @@
           <div class="cv-rmod-donut-canvas-wrap">
             <canvas id="cvRmodDonutCanvas"></canvas>
           </div>
+          <div class="cv-rmod-donut-legend">
+            <span class="cv-rmod-leg cv-rmod-leg--inst">INT</span>
+            <span class="cv-rmod-leg cv-rmod-leg--ni">NI</span>
+            <span class="cv-rmod-leg cv-rmod-leg--nc">NC</span>
+          </div>
         </div>
         <div class="cv-rmod-kpi">
           <div class="cv-rmod-kpi-val" id="cvRmodTotalTime">—</div>
@@ -588,6 +605,18 @@
         <div class="cv-rmod-kpi">
           <div class="cv-rmod-kpi-val" id="cvRmodCallsPerInt">—</div>
           <div class="cv-rmod-kpi-lbl">Calls / INT</div>
+        </div>
+        <div class="cv-rmod-kpi cv-rmod-kpi--contact">
+          <div class="cv-rmod-kpi-val" id="cvRmodContactRate">—</div>
+          <div class="cv-rmod-kpi-lbl">Contact Rate</div>
+        </div>
+        <div class="cv-rmod-kpi cv-rmod-kpi--intrate">
+          <div class="cv-rmod-kpi-val" id="cvRmodIntRate">—</div>
+          <div class="cv-rmod-kpi-lbl">INT Rate</div>
+        </div>
+        <div class="cv-rmod-kpi cv-rmod-kpi--wrap">
+          <div class="cv-rmod-kpi-val" id="cvRmodWrapPerInt">—</div>
+          <div class="cv-rmod-kpi-lbl">Avg Wrap / INT</div>
         </div>
       </div>
       <div class="cv-rmod-table-wrap">
@@ -641,7 +670,47 @@
           <canvas id="cvRmodChart"></canvas>
         </div>
       </div>
+      <!-- CONTACT RATE TREND -->
+      <div class="cv-rmod-chart-section">
+        <div class="cv-rmod-chart-head">
+          <span class="cv-rmod-chart-title">Contact Rate Trend</span>
+        </div>
+        <div class="cv-rmod-chart-wrap">
+          <canvas id="cvRmodContactRateCanvas"></canvas>
+        </div>
+      </div>
+      <!-- INT RATE TREND -->
+      <div class="cv-rmod-chart-section">
+        <div class="cv-rmod-chart-head">
+          <span class="cv-rmod-chart-title">INT Rate Trend</span>
+        </div>
+        <div class="cv-rmod-chart-wrap">
+          <canvas id="cvRmodIntRateCanvas"></canvas>
+        </div>
+      </div>
+      <!-- CALL VOLUME TREND -->
+      <div class="cv-rmod-chart-section">
+        <div class="cv-rmod-chart-head">
+          <span class="cv-rmod-chart-title">Call Volume</span>
+        </div>
+        <div class="cv-rmod-chart-wrap">
+          <canvas id="cvRmodCallVolumeCanvas"></canvas>
+        </div>
+      </div>
     </div>
+  </div>
+</div>
+
+<!-- Chart fullscreen overlay -->
+<div class="cv-chart-fullscreen" id="cvChartFullscreen">
+  <div class="cv-chart-fs-hdr">
+    <span class="cv-chart-fs-ttl" id="cvChartFsTitle"></span>
+    <button class="cv-chart-fs-x" id="cvChartFsClose" aria-label="Close">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l10 10M15 5L5 15" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="cv-chart-fs-body">
+    <canvas id="cvChartFsCanvas"></canvas>
   </div>
 </div>
 
@@ -812,9 +881,13 @@
 
   var sortColumn   = 'inst';
   var sortDir      = 'desc';
-  var repDonutChart      = null;
-  var repSparkChart      = null;
-  var repTimePerIntChart = null;
+  var repDonutChart        = null;
+  var repSparkChart        = null;
+  var repTimePerIntChart   = null;
+  var repContactRateChart  = null;
+  var repIntRateChart      = null;
+  var repCallVolumeChart   = null;
+  var fullscreenChart      = null;
 
   function sortedUsers(users) {
     return users.map(function(u){
@@ -1150,7 +1223,7 @@
     if(photoFile&&photoEl){
       photoEl.onload=function(){ photoEl.hidden=false; if(initEl) initEl.hidden=true; };
       photoEl.onerror=function(){ photoEl.hidden=true; if(initEl){ initEl.textContent=getInitials(name); initEl.hidden=false; } };
-      photoEl.hidden=true; photoEl.src='Assets/reps/'+photoFile;
+      photoEl.hidden=true; if(initEl) initEl.hidden=true; photoEl.src='Assets/reps/'+photoFile;
     } else {
       if(photoEl) photoEl.hidden=true;
       if(initEl){ initEl.textContent=getInitials(name); initEl.hidden=false; }
@@ -1164,11 +1237,19 @@
     var totalTT=(u.inst_tt||0)+(u.ni_tt||0)+(u.nc_tt||0);
     var totalPT=(u.inst_pt||0)+(u.ni_pt||0)+(u.nc_pt||0);
 
+    var outboundCon = u.outbound_con || 0;
+    var contactRate = totalCalls>0 ? Math.round(outboundCon/totalCalls*100) : 0;
+    var intRate     = outboundCon>0 ? Math.round((u.inst||0)/outboundCon*100) : 0;
+    var wrapPerInt  = (u.inst||0)>0 ? Math.round((u.inst_wr||0)/(u.inst||0)) : 0;
+
     setText('cvRmodTotalTime',   u.total_time ? formatTT(u.total_time) : (totalTT ? formatTT(totalTT) : '—'));
     setText('cvRmodTalkTime',    totalTT ? formatTT(totalTT) : '—');
-    setText('cvRmodContacts',    totalCon || '—');
+    setText('cvRmodContacts',    outboundCon || '—');
     setText('cvRmodInst',        u.inst   || '—');
     setText('cvRmodCallsPerInt', u.inst>0 ? (totalCalls/u.inst).toFixed(1) : '—');
+    setText('cvRmodContactRate', contactRate>0 ? contactRate+'%' : '—');
+    setText('cvRmodIntRate',     intRate>0     ? intRate+'%'     : '—');
+    setText('cvRmodWrapPerInt',  wrapPerInt>0  ? formatTT(wrapPerInt) : '—');
 
     /* Donut — disposition mix (Chart.js interactive doughnut) */
     var donutCanvas=document.getElementById('cvRmodDonutCanvas');
@@ -1191,11 +1272,22 @@
           plugins:{
             legend:{display:false},
             tooltip:{
+              backgroundColor:'rgba(10,20,40,0.97)',
+              titleColor:'#f1f5f9',
+              bodyColor:'#f1f5f9',
+              bodyFont:{size:14,weight:'700'},
+              padding:14,
+              cornerRadius:8,
+              displayColors:true,
+              boxWidth:12,
+              boxHeight:12,
+              borderColor:'rgba(255,255,255,0.15)',
+              borderWidth:1,
               callbacks:{
                 label:function(ctx){
                   var tot=ctx.dataset.data.reduce(function(a,b){return a+b;},0);
                   var pct=tot>0?Math.round(ctx.raw/tot*100):0;
-                  return ' '+ctx.label+': '+ctx.raw+' ('+pct+'%)';
+                  return '  '+ctx.label+': '+ctx.raw+' ('+pct+'%)';
                 }
               }
             }
@@ -1340,16 +1432,109 @@
         }
       }
     });
+
+    /* Contact Rate Trend */
+    var crCanvas=document.getElementById('cvRmodContactRateCanvas');
+    if(crCanvas && typeof Chart!=='undefined' && periods.length) {
+      if(repContactRateChart){ repContactRateChart.destroy(); repContactRateChart=null; }
+      var crData=periods.map(function(p){
+        var tc=p.total_calls!=null ? p.total_calls : (p.inst+p.ni+p.nc);
+        var con=p.contacts!=null ? p.contacts : (p.inst+p.ni);
+        return tc>0 ? Math.round(con/tc*100) : null;
+      });
+      repContactRateChart=new Chart(crCanvas,{
+        type:'line',
+        data:{ labels:labels, datasets:[{
+          label:'Contact Rate', data:crData,
+          borderColor:'rgba(59,130,246,1)', backgroundColor:'rgba(59,130,246,0.1)',
+          fill:true, tension:0.35, spanGaps:true, pointRadius:4, pointHoverRadius:6, borderWidth:2
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{mode:'index',intersect:false,
+            callbacks:{label:function(ctx){ return ctx.raw!==null?' '+ctx.raw+'% contact rate':''; }}
+          }},
+          scales:{
+            x:{grid:{display:false}, ticks:{color:tickCR, font:{size:9}, maxRotation:0}},
+            y:{beginAtZero:true, min:0, max:100, grid:{color:gridCR},
+              ticks:{color:tickCR, font:{size:9}, callback:function(v){ return v+'%'; }}
+            }
+          }
+        }
+      });
+    }
+
+    /* INT Rate Trend */
+    var irCanvas=document.getElementById('cvRmodIntRateCanvas');
+    if(irCanvas && typeof Chart!=='undefined' && periods.length) {
+      if(repIntRateChart){ repIntRateChart.destroy(); repIntRateChart=null; }
+      var irData=periods.map(function(p){
+        var con=p.contacts!=null ? p.contacts : (p.inst+p.ni);
+        return con>0 ? Math.round(p.inst/con*100) : null;
+      });
+      repIntRateChart=new Chart(irCanvas,{
+        type:'line',
+        data:{ labels:labels, datasets:[{
+          label:'INT Rate', data:irData,
+          borderColor:'rgba(139,92,246,1)', backgroundColor:'rgba(139,92,246,0.1)',
+          fill:true, tension:0.35, spanGaps:true, pointRadius:4, pointHoverRadius:6, borderWidth:2
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{mode:'index',intersect:false,
+            callbacks:{label:function(ctx){ return ctx.raw!==null?' '+ctx.raw+'% INT rate':''; }}
+          }},
+          scales:{
+            x:{grid:{display:false}, ticks:{color:tickCR, font:{size:9}, maxRotation:0}},
+            y:{beginAtZero:true, min:0, grid:{color:gridCR},
+              ticks:{color:tickCR, font:{size:9}, callback:function(v){ return v+'%'; }}
+            }
+          }
+        }
+      });
+    }
+
+    /* Call Volume Trend */
+    var cvCanvas=document.getElementById('cvRmodCallVolumeCanvas');
+    if(cvCanvas && typeof Chart!=='undefined' && periods.length) {
+      if(repCallVolumeChart){ repCallVolumeChart.destroy(); repCallVolumeChart=null; }
+      var volData=periods.map(function(p){
+        return p.total_calls!=null ? p.total_calls : (p.inst+p.ni+p.nc);
+      });
+      repCallVolumeChart=new Chart(cvCanvas,{
+        type:'line',
+        data:{ labels:labels, datasets:[{
+          label:'Calls', data:volData,
+          borderColor:'rgba(16,185,129,1)', backgroundColor:'rgba(16,185,129,0.1)',
+          fill:true, tension:0.35, pointRadius:4, pointHoverRadius:6, borderWidth:2
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{mode:'index',intersect:false,
+            callbacks:{label:function(ctx){ return ' '+ctx.raw+' calls'; }}
+          }},
+          scales:{
+            x:{grid:{display:false}, ticks:{color:tickCR, font:{size:9}, maxRotation:0}},
+            y:{beginAtZero:true, grid:{color:gridCR},
+              ticks:{color:tickCR, font:{size:9}, precision:0}
+            }
+          }
+        }
+      });
+    }
   }
 
   /* ── REP MODAL: load & open ── */
   async function loadRepModalData() {
     var tbody=document.getElementById('cvRmodTableBody');
     if(tbody) tbody.innerHTML='<tr><td colspan="6" class="cv-rmod-loading">Loading…</td></tr>';
-    ['cvRmodTotalTime','cvRmodTalkTime','cvRmodContacts','cvRmodInst','cvRmodCallsPerInt'].forEach(function(id){ setText(id,'—'); });
-    if(repDonutChart){      repDonutChart.destroy();      repDonutChart=null; }
-    if(repSparkChart){      repSparkChart.destroy();      repSparkChart=null; }
-    if(repTimePerIntChart){ repTimePerIntChart.destroy(); repTimePerIntChart=null; }
+    ['cvRmodTotalTime','cvRmodTalkTime','cvRmodContacts','cvRmodInst','cvRmodCallsPerInt','cvRmodContactRate','cvRmodIntRate','cvRmodWrapPerInt'].forEach(function(id){ setText(id,'—'); });
+    if(repDonutChart){       repDonutChart.destroy();       repDonutChart=null; }
+    if(repSparkChart){       repSparkChart.destroy();       repSparkChart=null; }
+    if(repTimePerIntChart){  repTimePerIntChart.destroy();  repTimePerIntChart=null; }
+    if(repContactRateChart){ repContactRateChart.destroy(); repContactRateChart=null; }
+    if(repIntRateChart){     repIntRateChart.destroy();     repIntRateChart=null; }
+    if(repCallVolumeChart){  repCallVolumeChart.destroy();  repCallVolumeChart=null; }
 
     var range=repActivePeriod==='custom'
       ? {start:repCustomStart||isoDate(new Date()), end:repCustomEnd||isoDate(new Date())}
@@ -1494,10 +1679,114 @@
     var repModal=document.getElementById('cvRepModal'), repClose=document.getElementById('cvRepModalClose');
     function closeRepModal(){
       if(repModal){ repModal.classList.remove('open'); document.body.style.overflow=''; }
-      if(repChart){ repChart.destroy(); repChart=null; }
+      if(repChart){          repChart.destroy();          repChart=null; }
+      if(repContactRateChart){ repContactRateChart.destroy(); repContactRateChart=null; }
+      if(repIntRateChart){     repIntRateChart.destroy();     repIntRateChart=null; }
+      if(repCallVolumeChart){  repCallVolumeChart.destroy();  repCallVolumeChart=null; }
     }
     if(repClose) repClose.addEventListener('click', closeRepModal);
     if(repModal) repModal.addEventListener('click',function(e){ if(e.target===repModal) closeRepModal(); });
+
+    /* ── CHART FULLSCREEN ── */
+    var fsOverlay  = document.getElementById('cvChartFullscreen');
+    var fsTitleEl  = document.getElementById('cvChartFsTitle');
+    var fsCloseBtn = document.getElementById('cvChartFsClose');
+
+    var chartRegistry = {
+      'cvRmodSparkCanvas':       { get:function(){ return repSparkChart; },       key:'spark' },
+      'cvRmodTimePerIntCanvas':  { get:function(){ return repTimePerIntChart; },  key:'tpi'   },
+      'cvRmodChart':             { get:function(){ return repChart; },            key:'perf'  },
+      'cvRmodContactRateCanvas': { get:function(){ return repContactRateChart; }, key:'cr'    },
+      'cvRmodIntRateCanvas':     { get:function(){ return repIntRateChart; },     key:'ir'    },
+      'cvRmodCallVolumeCanvas':  { get:function(){ return repCallVolumeChart; },  key:'vol'   },
+    };
+
+    function buildFsOptions(key, isDark) {
+      var gridC = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+      var tickC = isDark ? '#7A8FA8' : '#888';
+      var base = {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{mode:'index',intersect:false} },
+        scales:{
+          x:{ grid:{display:false}, ticks:{color:tickC, font:{size:12}, maxRotation:0} },
+          y:{ beginAtZero:true, grid:{color:gridC}, ticks:{color:tickC, font:{size:12}} }
+        }
+      };
+      if(key==='spark'){
+        base.scales.y.beginAtZero=false;
+        base.plugins.tooltip.callbacks={ label:function(ctx){ return ctx.raw!==null?' '+ctx.raw+' calls per INT':''; }};
+      } else if(key==='tpi'){
+        base.scales.y.ticks.callback=function(v){ var m=Math.floor(v/60),s=v%60; return m+':'+(s<10?'0':'')+s; };
+        base.plugins.tooltip.callbacks={ label:function(ctx){ if(ctx.raw===null) return ''; var m=Math.floor(ctx.raw/60),s=ctx.raw%60; return ' '+m+':'+(s<10?'0':'')+s+' avg talk/INT'; }};
+      } else if(key==='cr'||key==='ir'){
+        base.scales.y.max=100;
+        base.scales.y.ticks.callback=function(v){ return v+'%'; };
+        base.plugins.tooltip.callbacks={ label:function(ctx){ return ctx.raw!==null?' '+ctx.raw+'%':''; }};
+      } else if(key==='vol'){
+        base.scales.y.ticks.precision=0;
+        base.plugins.tooltip.callbacks={ label:function(ctx){ return ' '+ctx.raw+' calls'; }};
+      } else if(key==='perf'){
+        base.plugins.legend={ display:true, position:'top', labels:{color:tickC, font:{size:12}, usePointStyle:true, boxWidth:10} };
+      }
+      return base;
+    }
+
+    function openChartFullscreen(title, canvasId) {
+      var reg = chartRegistry[canvasId];
+      if(!reg) return;
+      var src = reg.get();
+      if(!src) return;
+      var fsCanvas = document.getElementById('cvChartFsCanvas');
+      if(!fsCanvas || !fsOverlay) return;
+
+      if(fullscreenChart){ fullscreenChart.destroy(); fullscreenChart=null; }
+
+      fsTitleEl.textContent = title;
+      fsOverlay.classList.add('open');
+      document.body.style.overflow='hidden';
+
+      var isDark = document.documentElement.getAttribute('data-theme')==='dark';
+      var clonedData = {
+        labels: src.data.labels.slice(),
+        datasets: src.data.datasets.map(function(ds){
+          return Object.assign({}, ds, {
+            data: ds.data.slice(),
+            pointRadius:6, pointHoverRadius:9, borderWidth:2.5
+          });
+        })
+      };
+      fullscreenChart = new Chart(fsCanvas, {
+        type: src.config.type,
+        data: clonedData,
+        options: buildFsOptions(reg.key, isDark)
+      });
+    }
+
+    function closeChartFullscreen() {
+      if(fsOverlay) fsOverlay.classList.remove('open');
+      document.body.style.overflow='';
+      if(fullscreenChart){ fullscreenChart.destroy(); fullscreenChart=null; }
+    }
+    if(fsCloseBtn) fsCloseBtn.addEventListener('click', closeChartFullscreen);
+    if(fsOverlay)  fsOverlay.addEventListener('click', function(e){ if(e.target===fsOverlay) closeChartFullscreen(); });
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape' && fsOverlay && fsOverlay.classList.contains('open')) closeChartFullscreen(); });
+
+    /* Inject expand buttons into every chart section */
+    document.querySelectorAll('.cv-rmod-chart-section').forEach(function(section) {
+      var head    = section.querySelector('.cv-rmod-chart-head');
+      var canvas  = section.querySelector('canvas');
+      var titleEl = section.querySelector('.cv-rmod-chart-title');
+      if(!head || !canvas || !titleEl) return;
+      var btn = document.createElement('button');
+      btn.className = 'cv-chart-fs-btn';
+      btn.title = 'Full screen';
+      btn.innerHTML = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 5V1h4M9 1h4v4M13 9v4H9M5 13H1V9"/></svg>';
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        openChartFullscreen(titleEl.textContent.trim(), canvas.id);
+      });
+      head.appendChild(btn);
+    });
 
     /* Rep modal filter chips */
     ['cvRepChipPeriod','cvRepChipCampaign'].forEach(function(id){
