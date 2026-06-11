@@ -502,6 +502,8 @@
                 <th class="cv-sort-th sorted" data-sort="inst">Interested <span class="cv-sort-ind">↓</span></th>
                 <th class="cv-sort-th" data-sort="ni">Not Interested <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="nc">No Contact <span class="cv-sort-ind">↕</span></th>
+                <th class="cv-sort-th" data-sort="inbound_calls">Inbound <span class="cv-sort-ind">↕</span></th>
+                <th class="cv-sort-th" data-sort="manual_calls">Outbound Manual <span class="cv-sort-ind">↕</span></th>
               </tr>
             </thead>
             <tbody id="cvTableBody">
@@ -835,7 +837,9 @@
               total_calls:totalCalls, total_time:tot,
               calls_per_int:(u.inst>0?totalCalls/u.inst:0),
               talk_pct:pct(tt), wait_pct:pct(wt), pause_pct:pct(pt),
-              wrap_pct:pct(wr), handle_pct:pct(handle)};
+              wrap_pct:pct(wr), handle_pct:pct(handle),
+              inbound_calls:u.inbound_calls||0, inbound_tt:u.inbound_tt||0,
+              manual_calls:u.manual_calls||0,   manual_tt:u.manual_tt||0};
     }).filter(function(r){ return r.inst>0||r.ni>0||r.nc>0; }).sort(function(a,b){
       var av=a[sortColumn]||0, bv=b[sortColumn]||0;
       if(sortColumn==='calls_per_int'){
@@ -951,7 +955,7 @@
   function renderTable(users) {
     var sorted=sortedUsers(users), tbody=document.getElementById('cvTableBody');
     if(!tbody) return;
-    if(!sorted.length){ tbody.innerHTML='<tr><td colspan="19" class="fb-empty">No data for this period</td></tr>'; return; }
+    if(!sorted.length){ tbody.innerHTML='<tr><td colspan="21" class="fb-empty">No data for this period</td></tr>'; return; }
     function ftt(v){ return v>0?formatTT(v):'—'; }
     function fpct(v){ return v>0?v.toFixed(1)+'%':'—'; }
     tbody.innerHTML=sorted.map(function(r,i){
@@ -982,6 +986,8 @@
         +'<td class="cv-inst">'+r.inst+'</td>'
         +'<td class="cv-ni">'+r.ni+'</td>'
         +'<td class="cv-nc">'+r.nc+'</td>'
+        +'<td>'+(r.inbound_calls||'—')+'</td>'
+        +'<td>'+(r.manual_calls||'—')+'</td>'
         +'</tr>';
     }).join('');
     /* Update sort header indicators */

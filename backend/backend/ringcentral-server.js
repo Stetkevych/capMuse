@@ -89,6 +89,21 @@ function isRateLimited(err) {
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+/* ── Global RC API serial queue ─────────────────────────────────────
+   ALL calls to platform.get() go through here — one at a time, 2.5s apart.
+   This means concurrent date-range fetches share one lane and never pile up. */
+let _rcQueue = Promise.resolve();
+function rcGet(path, params) {
+  let resolve, reject;
+  const result = new Promise((res, rej) => { resolve = res; reject = rej; });
+  _rcQueue = _rcQueue.then(async () => {
+    try   { resolve(await platform.get(path, params)); }
+    catch (e) { reject(e); }
+    await sleep(2500);
+  });
+  return result;
+}
+
 /* ── Server-side cache (5-min TTL) ─────────────────────────────── */
 const summaryCache = new Map();
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -100,12 +115,9 @@ function getCached(key) {
 }
 function setCached(key, data) { summaryCache.set(key, { ts: Date.now(), data }); }
 
-/* ── Parallel batch processing ──────────────────────────────────── */
-/* 5 users × 2 RC calls = 10 concurrent calls per batch.
-   RC heavy-group limit is 10 calls / 10 s, so we enforce an 11-second
-   minimum window per batch so the limit always resets before the next batch. */
-const BATCH_SIZE       = 1;     // one user at a time — eliminates any possibility of concurrent-call bursts
-const BATCH_POST_MS    = 7000;  // 7s gap between users (RC heavy-group limit: 10 calls/10s)
+/* ── Batch processing ────────────────────────────────────────────── */
+const BATCH_SIZE    = 1;  // one user at a time
+const BATCH_POST_MS = 0;  // no extra gap — rcGet's 2.5s covers rate limiting globally
 
 /* If the same cache key is already being fetched, queue this request to wait for it */
 const inFlightPromises = new Map();
@@ -163,7 +175,7 @@ async function fetchOutboundCalls(extensionId, start_date, end_date) {
   let page = 1;
 
   while (true) {
-    const response = await platform.get(
+    const response = await rcGet(
       `/restapi/v1.0/account/~/extension/${extensionId}/call-log`,
       {
         dateFrom: rcDateStart(start_date),
@@ -189,7 +201,7 @@ async function fetchOutboundMessages(extensionId, start_date, end_date) {
   let page = 1;
 
   while (true) {
-    const response = await platform.get(
+    const response = await rcGet(
       `/restapi/v1.0/account/~/extension/${extensionId}/message-store`,
       {
         dateFrom: rcDateStart(start_date),
@@ -342,7 +354,6 @@ async function processExt(user, start_date, end_date, days) {
   const name = getDisplayName(user);
   try {
     const calls        = await fetchOutboundCalls(user.id, start_date, end_date);
-    await sleep(1500);
     const outboundMsgs = await fetchOutboundMessages(user.id, start_date, end_date);
 
     const outboundCalls    = calls.length;

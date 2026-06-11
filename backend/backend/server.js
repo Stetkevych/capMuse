@@ -164,7 +164,7 @@ async function fetchAllRepPages(dateStart, dateEnd, statusId, extraParams = {}) 
     const data = await fetchConvosoData("/v1/agent-performance/search", {
       date_start: dateStart,
       date_end: dateEnd,
-      status_ids: statusId,
+      ...(statusId ? { status_ids: statusId } : {}),
       call_type: "OUTBOUND",
       ...extraParams,
       page,
@@ -221,24 +221,30 @@ app.post("/convoso/all-users-summary", async (req, res) => {
     const extraParams = {};
     if (campaign_id) extraParams.campaign_id = campaign_id;
 
-    const [instMap, niMap, ncMap] = await Promise.all([
-      fetchAllRepPages(dateStart, dateEnd, "inst", extraParams),
-      fetchAllRepPages(dateStart, dateEnd, "NI",   extraParams),
-      fetchAllRepPages(dateStart, dateEnd, "NC",   extraParams),
+    const [instMap, niMap, ncMap, inboundMap, manualMap] = await Promise.all([
+      fetchAllRepPages(dateStart, dateEnd, "inst",  extraParams),
+      fetchAllRepPages(dateStart, dateEnd, "NI",    extraParams),
+      fetchAllRepPages(dateStart, dateEnd, "NC",    extraParams),
+      fetchAllRepPages(dateStart, dateEnd, null,    { ...extraParams, call_type: "INBOUND" }),
+      fetchAllRepPages(dateStart, dateEnd, null,    { ...extraParams, call_type: "MANUAL"  }),
     ]);
 
     const allIds = new Set([
       ...Object.keys(instMap),
       ...Object.keys(niMap),
       ...Object.keys(ncMap),
+      ...Object.keys(inboundMap),
+      ...Object.keys(manualMap),
     ]);
 
     const users = {};
     for (const uid of allIds) {
-      const instRow  = instMap[uid] || {};
-      const niRow    = niMap[uid]   || {};
-      const ncRow    = ncMap[uid]   || {};
-      const userName = instRow.user || niRow.user || ncRow.user || "";
+      const instRow    = instMap[uid]    || {};
+      const niRow      = niMap[uid]      || {};
+      const ncRow      = ncMap[uid]      || {};
+      const inboundRow = inboundMap[uid] || {};
+      const manualRow  = manualMap[uid]  || {};
+      const userName = instRow.user || niRow.user || ncRow.user || inboundRow.user || manualRow.user || "";
       if (!userName) continue;
 
       users[uid] = {
@@ -262,7 +268,11 @@ app.post("/convoso/all-users-summary", async (req, res) => {
         nc_pt:      ncRow.pause_time   || 0,
         nc_wt:      ncRow.wait_time    || 0,
         nc_wr:      ncRow.wrap_time    || 0,
-        total_time: (instRow.total_time || 0) + (niRow.total_time || 0) + (ncRow.total_time || 0),
+        total_time:     (instRow.total_time || 0) + (niRow.total_time || 0) + (ncRow.total_time || 0),
+        inbound_calls:  inboundRow.calls     || 0,
+        inbound_tt:     inboundRow.talk_time || 0,
+        manual_calls:   manualRow.calls      || 0,
+        manual_tt:      manualRow.talk_time  || 0,
       };
     }
 
