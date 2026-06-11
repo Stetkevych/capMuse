@@ -272,7 +272,7 @@
     if (mm === '-' || mm === '0.0%') mm = '';
     let dealTypeRaw = r['Deal Type'] || '';
     let stageLc = (r['Stage of Package'] || '').toLowerCase();
-    let isFunded = stageLc.indexOf('fund') > -1 && stageLc.indexOf('decline') === -1;
+    let isFunded = stageLc === 'funded' || stageLc === 'funded-other';
     let amt = nn(r['Amount']);
     return {
       raw: r,
@@ -489,7 +489,7 @@
         byRep[rep].approvals++;
       }
 
-      if (stage.indexOf('fund') > -1 && stage.indexOf('decline') === -1) {
+      if (stage === 'funded' || stage === 'funded-other') {
         byRep[rep].funded++;
         byRep[rep].fundedAmt += amt;
         byRep[rep].amounts.push(amt);
