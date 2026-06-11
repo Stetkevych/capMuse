@@ -449,7 +449,7 @@
     let byRep = {};
     rows.forEach(function (m) {
       let r = rowData(m);
-      let rep = r['Puller'] || r['Packages in Process Owner'] || '';
+      let rep = r['Packages in Process Owner'] || r['Puller'] || '';
       if (!rep || rep === 'House .' || rep === 'House') return;
 
       if (!byRep[rep]) {
