@@ -184,16 +184,18 @@ async function fetchAllRepPages(dateStart, dateEnd, statusId, extraParams = {}) 
       const userName = String(row.name || row.user || "").trim();
       if (!userId || !userName) continue;
       if (/^deleted user/i.test(userName)) continue;
-      if (!users[userId]) users[userId] = { user: userName, user_id: userId, calls: 0, connects: 0, talk_time: 0, pause_time: 0, total_time: 0 };
+      if (!users[userId]) users[userId] = { user: userName, user_id: userId, calls: 0, connects: 0, talk_time: 0, pause_time: 0, wait_time: 0, wrap_time: 0, total_time: 0 };
       const t_talk  = parseHMMSS(row.talk_sec)  || Number(row.talk_time  || row.talktime || row.total_talk_time || 0);
       const t_pause = parseHMMSS(row.pause_sec) || Number(row.pause_time || row.agent_pause_time || row.on_pause_sec || row.total_pause || 0);
-      const t_wait  = parseHMMSS(row.wait_sec)  || 0;
-      const t_wrap  = parseHMMSS(row.wrap_sec)  || 0;
+      const t_wait  = parseHMMSS(row.wait_sec)  || Number(row.wait_time  || row.hold_time   || row.on_hold_sec  || 0);
+      const t_wrap  = parseHMMSS(row.wrap_sec)  || Number(row.wrap_time  || row.wrapup_time || row.acw_time     || row.after_call_work || row.disposition_sec || 0);
       const t_total = parseHMMSS(row.total_time) || (t_talk + t_wait + t_pause + t_wrap);
       users[userId].calls      += Number(row.calls || 0);
       users[userId].connects   += Number(row.human_answered || row.connects || row.connect || row.num_connects || 0);
       users[userId].talk_time  += t_talk;
       users[userId].pause_time += t_pause;
+      users[userId].wait_time  += t_wait;
+      users[userId].wrap_time  += t_wrap;
       users[userId].total_time += t_total;
     }
 
@@ -246,14 +248,20 @@ app.post("/convoso/all-users-summary", async (req, res) => {
         inst_con:   instRow.connects   || 0,
         inst_tt:    instRow.talk_time  || 0,
         inst_pt:    instRow.pause_time || 0,
+        inst_wt:    instRow.wait_time  || 0,
+        inst_wr:    instRow.wrap_time  || 0,
         ni:         niRow.calls        || 0,
         ni_con:     niRow.connects     || 0,
         ni_tt:      niRow.talk_time    || 0,
         ni_pt:      niRow.pause_time   || 0,
+        ni_wt:      niRow.wait_time    || 0,
+        ni_wr:      niRow.wrap_time    || 0,
         nc:         ncRow.calls        || 0,
         nc_con:     ncRow.connects     || 0,
         nc_tt:      ncRow.talk_time    || 0,
         nc_pt:      ncRow.pause_time   || 0,
+        nc_wt:      ncRow.wait_time    || 0,
+        nc_wr:      ncRow.wrap_time    || 0,
         total_time: (instRow.total_time || 0) + (niRow.total_time || 0) + (ncRow.total_time || 0),
       };
     }
@@ -285,6 +293,32 @@ app.get("/convoso/debug-ni", async (req, res) => {
     });
     res.json({ note: "Raw Convoso response for NI query today", raw });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/convoso/debug-time-fields", async (req, res) => {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const sevenDaysAgo = new Date(Date.now() - 7*86400000).toISOString().slice(0, 10);
+    const raw = await fetchConvosoData("/v1/agent-performance/search", {
+      date_start: `${sevenDaysAgo} 00:00:00`,
+      date_end:   `${today} 23:59:59`,
+      call_type:  "OUTBOUND",
+      page: 1, per_page: 5,
+    });
+    const records = extractRecords(raw);
+    const timeKeys = ['talk_sec','pause_sec','wait_sec','wrap_sec','hold_sec',
+                      'talk_time','pause_time','wait_time','wrap_time','hold_time',
+                      'total_time','acw_time','after_call_work','wrapup_time',
+                      'disposition_sec','on_hold_sec','agent_pause_time'];
+    const sample = records.slice(0,5).map(function(r){
+      var out = { user: r.user_name||r.username||r.user };
+      timeKeys.forEach(function(k){ if(r[k] !== undefined) out[k] = r[k]; });
+      return out;
+    });
+    res.json({ note:"Time fields actually returned by Convoso — use this to verify wait/wrap field names", sample });
+  } catch(err) {
     res.status(500).json({ error: err.message });
   }
 });
