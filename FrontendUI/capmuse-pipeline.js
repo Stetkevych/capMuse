@@ -475,7 +475,7 @@
       let amt = parseFloat(String(r['Amount'] || '0').replace(/[$,]/g, '')) || 0;
       let isRenewal = r['Position'] && r['Position'] !== '0' && r['Position'] !== '1';
 
-      if (!isRenewal) byRep[rep].apps++;
+      byRep[rep].apps++;
 
       if (stage.indexOf('funded') > -1 || stage === 'future funding' || stage === 'dd - default') {
         byRep[rep].approvals++;
