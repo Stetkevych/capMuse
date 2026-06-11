@@ -5,10 +5,12 @@
 
   let BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
   let CSV_URLS = [
-    BUCKET + '/pipeline.csv',
+    BUCKET + '/pipeline_reps.csv',
     '../pipeline.csv',
     'pipeline.csv'
   ];
+  let CSV_MARKETING = BUCKET + '/pipeline_marketing.csv';
+  let currentView = 'reps';
 
   let RAW_ROWS = [];
   let MAPPED_ROWS = [];
@@ -1387,6 +1389,33 @@
       loadRows(rows);
     }
 
+    function loadCurrentView() {
+      var url = currentView === 'marketing' ? CSV_MARKETING : CSV_URLS[0];
+      fetch(url).then(function(r){return r.ok?r.text():''}).then(function(text){
+        if(!text){console.warn('[Pipeline] No data');return;}
+        console.log('[Pipeline] Loaded '+currentView+' view');
+        load(text);
+      }).catch(function(err){console.error('[Pipeline]',err)});
+    }
+
+    // Toggle handlers
+    var btnReps=document.getElementById('plToggleReps');
+    var btnMkt=document.getElementById('plToggleMarketing');
+    if(btnReps&&btnMkt){
+      btnReps.addEventListener('click',function(){
+        currentView='reps';
+        btnReps.style.background='var(--blue,#2563EB)';btnReps.style.color='#fff';
+        btnMkt.style.background='transparent';btnMkt.style.color='var(--text-muted)';
+        loadCurrentView();
+      });
+      btnMkt.addEventListener('click',function(){
+        currentView='marketing';
+        btnMkt.style.background='var(--blue,#2563EB)';btnMkt.style.color='#fff';
+        btnReps.style.background='transparent';btnReps.style.color='var(--text-muted)';
+        loadCurrentView();
+      });
+    }
+
     if (window.CapMuseData) {
       window.CapMuseData.getPipelineRows().then(onRows);
       window.addEventListener('capmuse:pipeline-updated', function (e) {
@@ -1397,16 +1426,7 @@
         if (RAW_ROWS.length) applyFilteredStats();
       });
     } else {
-      fetchCsv(0).then(function (text) {
-        if (!text) {
-          console.warn('[Pipeline] No data loaded');
-          return;
-        }
-        console.log('[Pipeline] Loaded pipeline.csv');
-        load(text);
-      }).catch(function (err) {
-        console.error('[Pipeline]', err);
-      });
+      loadCurrentView();
     }
   }
 
