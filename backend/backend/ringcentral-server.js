@@ -341,10 +341,9 @@ function zeroRow(user) {
 async function processExt(user, start_date, end_date, days) {
   const name = getDisplayName(user);
   try {
-    const [calls, outboundMsgs] = await Promise.all([
-      fetchOutboundCalls(user.id, start_date, end_date),
-      fetchOutboundMessages(user.id, start_date, end_date),
-    ]);
+    const calls        = await fetchOutboundCalls(user.id, start_date, end_date);
+    await sleep(1500);
+    const outboundMsgs = await fetchOutboundMessages(user.id, start_date, end_date);
 
     const outboundCalls    = calls.length;
     const connects         = calls.filter(c => (c.duration || 0) > 0).length;
