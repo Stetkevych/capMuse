@@ -276,7 +276,7 @@
     let amt = nn(r['Amount']);
     return {
       raw: r,
-      dateApplied: parseDate(r['Date Applied'] || r['Created Time'] || ''),
+      dateApplied: parseDate(r['Created Time'] || r['Date Applied'] || ''),
       leadSource: (r['Lead Source'] || '').trim(),
       state: (r['State'] || '').trim(),
       marketingAssist: mm,
@@ -554,10 +554,16 @@
         if (!FILTERS.state.some(function (f) { return normState(f) === s; })) return;
       }
 
-      // Deal type filter
+      // Deal type filter — funding book uses "New Deal", pipeline uses "New"; normalize both to a common key
       if (FILTERS.dealType && FILTERS.dealType.length) {
-        let dt2 = normStr(normalizeDealType(r.Deal_Type || r.deal_type || ''));
-        if (!FILTERS.dealType.some(function (f) { return normStr(normalizeDealType(f)) === dt2; })) return;
+        let fbDt = normStr(r.deal_type || '');
+        let fbKey = (fbDt === 'new deal' || fbDt === 'new') ? 'new' : (fbDt.indexOf('renewal') === 0 ? 'renewal' : fbDt);
+        let match = FILTERS.dealType.some(function (f) {
+          let fk = normStr(f);
+          fk = (fk === 'new deal' || fk === 'new') ? 'new' : (fk.indexOf('renewal') === 0 ? 'renewal' : fk);
+          return fk === fbKey;
+        });
+        if (!match) return;
       }
 
       // Lead source filter
@@ -1325,7 +1331,7 @@
     if (!RAW_ROWS.length) return;
     MAPPED_ROWS = RAW_ROWS.map(mapPipelineRow);
     let filtered = applyFilters(MAPPED_ROWS);
-    _fbRevenueMap = buildFbRevenueMap();
+    try { _fbRevenueMap = buildFbRevenueMap(); } catch (e) { console.error('[Pipeline] buildFbRevenueMap:', e); _fbRevenueMap = {}; }
     STATS = computeStats(filtered).filter(repInFundingRange);
     if (isFundingFilterActive()) {
       let keep = {};
