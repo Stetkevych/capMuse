@@ -105,7 +105,7 @@ function setCached(key, data) { summaryCache.set(key, { ts: Date.now(), data });
    RC heavy-group limit is 10 calls / 10 s, so we enforce an 11-second
    minimum window per batch so the limit always resets before the next batch. */
 const BATCH_SIZE       = 1;     // one user at a time — eliminates any possibility of concurrent-call bursts
-const BATCH_POST_MS    = 3000;  // 3s gap between users
+const BATCH_POST_MS    = 7000;  // 7s gap between users (RC heavy-group limit: 10 calls/10s)
 
 /* If the same cache key is already being fetched, queue this request to wait for it */
 const inFlightPromises = new Map();
@@ -331,7 +331,7 @@ function zeroRow(user) {
     user: getDisplayName(user), extension: user.extensionNumber,
     outbound_calls: 0, avg_calls_per_day: 0,
     connects: 0, pitch: 0,
-    outbound_messages: 0, total_messages: 0, avg_messages_per_day: 0,
+    outbound_messages: 0, avg_messages_per_day: 0,
     total_outbound_activity: 0, avg_total_activity_per_day: 0,
     avg_handle_time_seconds: 0, avg_handle_time: '00:00',
   };
@@ -341,10 +341,9 @@ function zeroRow(user) {
 async function processExt(user, start_date, end_date, days) {
   const name = getDisplayName(user);
   try {
-    const [calls, outboundMsgs, totalMsgs] = await Promise.all([
+    const [calls, outboundMsgs] = await Promise.all([
       fetchOutboundCalls(user.id, start_date, end_date),
       fetchOutboundMessages(user.id, start_date, end_date),
-      fetchTotalMessages(user.id, start_date, end_date),
     ]);
 
     const outboundCalls    = calls.length;
@@ -353,7 +352,6 @@ async function processExt(user, start_date, end_date, days) {
     const totalHandleSecs  = calls.reduce((s, c) => s + (c.duration || 0), 0);
     const avgHandleSecs    = outboundCalls > 0 ? Math.round(totalHandleSecs / outboundCalls) : 0;
     const outboundMessages = outboundMsgs.length;
-    const totalMessages    = totalMsgs.length;
 
     return {
       user:                       name,
@@ -365,7 +363,6 @@ async function processExt(user, start_date, end_date, days) {
       avg_handle_time_seconds:    avgHandleSecs,
       avg_handle_time:            formatSeconds(avgHandleSecs),
       outbound_messages:          outboundMessages,
-      total_messages:             totalMessages,
       avg_messages_per_day:       Number((outboundMessages / days).toFixed(1)),
       total_outbound_activity:    outboundCalls + outboundMessages,
       avg_total_activity_per_day: Number(((outboundCalls + outboundMessages) / days).toFixed(1)),
@@ -446,50 +443,6 @@ app.post("/ringcentral/all-users-summary", async (req, res) => {
   }
 });
 
-/* ── Startup date helpers ────────────────────────────────────────── */
-function getStandardPeriods() {
-  const today = new Date();
-  const iso   = d => d.toISOString().slice(0, 10);
-  const pad   = n => String(n).padStart(2, '0');
-  const todayStr = iso(today);
-
-  function monday(d) {
-    const r = new Date(d), day = r.getDay(), diff = day === 0 ? -6 : 1 - day;
-    r.setDate(r.getDate() + diff); return r;
-  }
-
-  const lm = monday(today); lm.setDate(lm.getDate() - 7);
-  const ls = new Date(lm);  ls.setDate(ls.getDate() + 6);
-
-  return [
-    [todayStr,                                              todayStr],
-    [iso(monday(today)),                                    todayStr],
-    [iso(lm),                                              iso(ls)],
-    [`${today.getFullYear()}-${pad(today.getMonth()+1)}-01`, todayStr],
-  ];
-}
-
 app.listen(PORT, () => {
   console.log(`RingCentral server running on port ${PORT}`);
-
-  /* Pre-fetch all 4 standard periods on startup — browser requests coalesce onto these */
-  (async () => {
-    await sleep(2000);
-    const periods = getStandardPeriods();
-    for (let p = 0; p < periods.length; p++) {
-      const [start, end] = periods[p];
-      try {
-        console.log(`[RC] startup: pre-fetching ${start} → ${end}`);
-        await fetchAndCachePeriod(start, end);
-        console.log(`[RC] startup: cached ${start} → ${end}`);
-      } catch (err) {
-        console.error(`[RC] startup error (${start} → ${end}):`, err.message);
-      }
-      if (p < periods.length - 1) {
-        console.log('[RC] startup: 30s cooldown between periods...');
-        await sleep(30000);
-      }
-    }
-    console.log('[RC] All standard periods ready');
-  })();
 });
