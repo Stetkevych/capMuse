@@ -63,7 +63,7 @@
     { id: 'last_3_months', label: 'Last 3 months' },
     { id: 'last_6_months', label: 'Last 6 months' },
     { id: 'this_month', label: 'This month' },
-    { id: 'all_time', label: 'All time' },
+    { id: 'all_time', label: 'Last 24 Months'},
     { id: 'custom', label: 'Custom range' }
   ];
 
@@ -475,7 +475,7 @@
       let amt = parseFloat(String(r['Amount'] || '0').replace(/[$,]/g, '')) || 0;
       let isRenewal = r['Position'] && r['Position'] !== '0' && r['Position'] !== '1';
 
-      if (!isRenewal) byRep[rep].apps++;
+      byRep[rep].apps++;
 
       if (stage.indexOf('funded') > -1 || stage === 'future funding' || stage === 'dd - default') {
         byRep[rep].approvals++;
@@ -503,10 +503,8 @@
       let row = byRep[k];
       row.appsToApprovals = pct(row.approvals, row.apps);
       row.approvalToFunding = pct(row.funded, row.approvals);
-      row.avgPointsNum = row.points.length
-        ? row.points.reduce(function (s, v) { return s + v; }, 0) / row.points.length
-        : 0;
-      row.avgPoints = row.points.length ? row.avgPointsNum.toFixed(2) + '%' : '—';
+      row.avgPointsNum = row.fundedAmt > 0 ? (row.revenue / row.fundedAmt) * 100 : 0;
+      row.avgPoints = row.fundedAmt > 0 ? row.avgPointsNum.toFixed(2) + '%' : '—';
       row.avgAmountNum = row.amounts.length
         ? row.amounts.reduce(function (s, v) { return s + v; }, 0) / row.amounts.length
         : 0;
@@ -1295,6 +1293,7 @@
         return;
       }
       console.log('[Pipeline] Loaded', rows.length, 'pipeline records');
+      window._pipelineRows = rows;
       loadRows(rows);
     }
 

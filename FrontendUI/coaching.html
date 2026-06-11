@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coaching — CapMuse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html[data-theme="dark"]{--page-bg:#0C0F14;--sidebar-bg:#111720;--sidebar-border:#1A2435;--topbar-border:#1A2435;--surface:#141C28;--surface-2:#1A2435;--text-primary:#F1F5F9;--text-secondary:#7A8FA8;--text-muted:#4A5F78;--nav-item-color:#8A9EBB;--nav-sub-color:#7A8FA8;--nav-active:#60A5FA;--nav-hover-bg:rgba(255,255,255,0.04);--border:#1A2435;--search-border:#1A2435;--blue:#60A5FA;--green:#34D399;--card-shadow:0 1px 3px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.4)}
+    html[data-theme="light"]{--page-bg:#EBEBEB;--sidebar-bg:#FFFFFF;--sidebar-border:#E8E8E8;--topbar-border:#E8E8E8;--surface:#FFFFFF;--surface-2:#F4F4F4;--text-primary:#111111;--text-secondary:#555555;--text-muted:#999999;--nav-item-color:#333333;--nav-sub-color:#444444;--nav-active:#2563EB;--nav-hover-bg:rgba(0,0,0,0.04);--border:#E8E8E8;--search-border:#E0E0E0;--blue:#2563EB;--green:#10B981;--card-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07)}
+    :root{--sidebar-w:215px;--sidebar-gap:16px;--ease:cubic-bezier(0.4,0,0.2,1)}
+    html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--page-bg);color:var(--text-primary)}
+    .layout{display:flex;min-height:100vh}
+    .sidebar{width:var(--sidebar-w);position:fixed;left:var(--sidebar-gap);top:var(--sidebar-gap);bottom:var(--sidebar-gap);background:var(--sidebar-bg);border:1px solid var(--sidebar-border);border-radius:18px;box-shadow:0 18px 45px rgba(15,23,42,0.12),0 3px 12px rgba(15,23,42,0.08);display:flex;flex-direction:column;z-index:300;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;transition:transform .3s var(--ease)}
+    .sidebar::-webkit-scrollbar{display:none}
+    .sidebar-logo{display:flex;align-items:center;gap:9px;padding:18px 18px 14px;flex-shrink:0}
+    .sidebar-logo img{width:30px;height:30px;object-fit:contain}
+    .sidebar-wordmark{font-family:'Orbitron',sans-serif;font-size:14.5px;font-weight:700;letter-spacing:.04em;background:linear-gradient(135deg,#2563EB,#10B981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .sidebar-nav{flex:1;padding:6px 0 8px;display:flex;flex-direction:column}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:8px 18px;color:var(--nav-item-color);font-size:14px;font-weight:400;cursor:pointer;text-decoration:none;transition:color .12s ease,background-color .12s ease}
+    .nav-item:hover{background:var(--nav-hover-bg);color:var(--text-primary)}
+    .nav-item.active{color:var(--nav-active);font-weight:600}
+    .sidebar-footer{padding:10px;border-top:1px solid var(--sidebar-border);flex-shrink:0}
+    .sidebar-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px}
+    .user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0F4C81,#10B981);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+    .user-info{flex:1;min-width:0}
+    .user-name{font-size:12px;font-weight:600;color:var(--text-primary)}
+    .user-role{font-size:10.5px;color:var(--text-muted)}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:250}
+
+    .main-wrapper{margin-left:calc(var(--sidebar-w) + 32px);flex:1;min-height:100vh;display:flex;flex-direction:column}
+    .page-content{flex:1;padding:24px 28px 32px;display:flex;flex-direction:column;gap:16px}
+
+    /* Gate */
+    .gate-overlay{position:fixed;inset:0;background:var(--page-bg);z-index:9999;display:flex;align-items:center;justify-content:center}
+    .gate-overlay.hidden{display:none}
+    .gate-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;max-width:360px;width:100%;box-shadow:var(--card-shadow);text-align:center}
+    .gate-box h2{font-size:20px;font-weight:700;margin-bottom:6px}
+    .gate-box p{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+    .gate-input{width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 14px;font-size:14px;background:var(--surface-2);color:var(--text-primary);outline:none;margin-bottom:12px}
+    .gate-input:focus{border-color:var(--blue)}
+    .gate-btn{width:100%;height:42px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+    .gate-btn:hover{opacity:.9}
+    .gate-error{color:#EF4444;font-size:12px;margin-top:8px;display:none}
+
+    /* Tabs */
+    .coaching-tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;box-shadow:var(--card-shadow)}
+    .coaching-tab{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;border:none;background:transparent;transition:all .15s}
+    .coaching-tab:hover{color:var(--text-primary)}
+    .coaching-tab.active{background:var(--blue);color:#fff}
+    .coaching-section{display:none}
+    .coaching-section.active{display:block}
+
+    /* Cards */
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--card-shadow)}
+    .stat-card-label{font-size:10.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+    .stat-card-value{font-size:22px;font-weight:800;color:var(--text-primary);letter-spacing:-.02em}
+    .stat-card-sub{font-size:11px;color:var(--text-muted);margin-top:3px}
+
+    /* Tables */
+    .report-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--card-shadow);margin-top:12px}
+    .report-card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+    .report-card-title{font-size:14px;font-weight:700}
+    .report-table{width:100%;border-collapse:collapse}
+    .report-table thead tr{background:var(--surface-2)}
+    .report-table th{padding:9px 12px;font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:.06em;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
+    .report-table td{padding:10px 12px;font-size:12.5px;color:var(--text-secondary);border-bottom:1px solid var(--border)}
+    .report-table tbody tr:last-child td{border-bottom:none}
+    .report-table tbody tr:hover td{background:rgba(37,99,235,.03)}
+    .report-table td:first-child{font-weight:600;color:var(--text-primary)}
+
+    /* Tracker */
+    .tracker-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--card-shadow);margin-top:12px}
+    .tracker-title{font-size:14px;font-weight:700;margin-bottom:10px}
+    .tracker-form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .tracker-form label{font-size:11px;font-weight:600;color:var(--text-muted);display:flex;flex-direction:column;gap:4px}
+    .tracker-form input,.tracker-form select,.tracker-form textarea{height:34px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:12.5px;background:var(--surface-2);color:var(--text-primary);outline:none;font-family:inherit}
+    .tracker-form textarea{height:70px;padding:8px 10px;grid-column:span 3;resize:vertical}
+    .tracker-form .tracker-submit{grid-column:span 3;height:36px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+
+    /* Chart */
+    .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--card-shadow);margin-top:12px}
+    .chart-controls{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+    .chart-controls select,.chart-controls button{height:34px;border:1px solid var(--border);border-radius:8px;padding:0 12px;font-size:12.5px;background:var(--surface-2);color:var(--text-primary);outline:none;font-family:inherit;cursor:pointer}
+    .chart-controls button{background:var(--blue);color:#fff;border:none;font-weight:600;padding:0 16px}
+    .chart-wrap{position:relative;height:280px}
+
+    .section-title{font-size:17px;font-weight:700;margin-bottom:2px}
+    .section-subtitle{font-size:12.5px;color:var(--text-muted);margin-bottom:10px}
+
+    @media(max-width:768px){.sidebar{width:min(var(--sidebar-w),calc(100vw - 32px));transform:translateX(calc(-100% - 24px))}.sidebar.open{transform:translateX(0)}.sidebar-overlay.visible{display:block}.main-wrapper{margin-left:0}.tracker-form{grid-template-columns:1fr 1fr}.tracker-form textarea,.tracker-form .tracker-submit{grid-column:span 2}}
+  </style>
+  <link rel="stylesheet" href="Assets/profile-stats.css" />
+</head>
+<body class="coaching-page">
+<div class="gate-overlay" id="coachingGate">
+  <div class="gate-box">
+    <h2>Coaching Portal</h2>
+    <p>Enter password to access coaching tools</p>
+    <input type="password" class="gate-input" id="gatePassword" placeholder="Password" autocomplete="off" />
+    <button class="gate-btn" id="gateSubmit">Enter</button>
+    <div class="gate-error" id="gateError">Incorrect password</div>
+  </div>
+</div>
+<div class="layout" id="mainLayout" style="display:none">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar" aria-label="Navigation">
+    <div class="sidebar-logo"><img src="Assets/LogoUpdates.png" alt="CapMuse" /><span class="sidebar-wordmark">CapMuse</span></div>
+    <nav class="sidebar-nav"></nav>
+    <div class="sidebar-footer"><div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">CM</div><div class="user-info"><div class="user-name" id="sidebarName">Coach</div><div class="user-role" id="sidebarRole">Admin</div></div></div></div>
+  </aside>
+  <div class="main-wrapper">
+    <main class="page-content">
+      <div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.02em">Coaching</h1><p style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Team performance, scorecards, and trackers</p></div>
+
+      <div class="coaching-tabs" id="coachingTabs">
+        <button class="coaching-tab active" data-tab="dashboard">Dashboard</button>
+        <button class="coaching-tab" data-tab="reports">Reports</button>
+        <button class="coaching-tab" data-tab="scorecards">Scorecards</button>
+        <button class="coaching-tab" data-tab="trends">Trends</button>
+        <button class="coaching-tab" data-tab="trackers">Trackers</button>
+      </div>
+
+      <!-- Dashboard -->
+      <div class="coaching-section active" id="sec-dashboard">
+        <div class="stat-grid" id="dashStats"></div>
+        <div class="report-card"><div class="report-card-head"><span class="report-card-title">Team Funded — New vs Renewals</span></div><table class="report-table"><thead><tr><th>Rep</th><th>New</th><th>Renewals</th><th>Total</th><th>Volume</th></tr></thead><tbody id="dashTable"></tbody></table></div>
+      </div>
+
+      <!-- Reports -->
+      <div class="coaching-section" id="sec-reports">
+        <div class="report-card"><div class="report-card-head"><span class="report-card-title">Pipeline</span></div><table class="report-table"><thead><tr><th>Rep</th><th>Apps</th><th>Approvals</th><th>Funded</th><th>Conv %</th></tr></thead><tbody id="reportPipeline"></tbody></table></div>
+        <div class="report-card"><div class="report-card-head"><span class="report-card-title">Funded</span></div><table class="report-table"><thead><tr><th>Rep</th><th>Deals</th><th>Volume</th><th>Avg Deal</th><th>Revenue</th></tr></thead><tbody id="reportFunded"></tbody></table></div>
+        <div class="report-card"><div class="report-card-head"><span class="report-card-title">Renewals</span></div><table class="report-table"><thead><tr><th>Rep</th><th>Renewals</th><th>Volume</th><th>% of Total</th></tr></thead><tbody id="reportRenewals"></tbody></table></div>
+      </div>
+
+      <!-- Scorecards -->
+      <div class="coaching-section" id="sec-scorecards">
+        <div class="report-card"><div class="report-card-head"><span class="report-card-title">Rep Scorecard</span></div><table class="report-table"><thead><tr><th>Rep</th><th>Apps</th><th>Funded</th><th>Conv %</th><th>Avg Pts</th><th>Revenue</th><th>Score</th></tr></thead><tbody id="scorecardRep"></tbody></table></div>
+        <div class="report-card"><div class="report-card-head"><span class="report-card-title">Lead Source Scorecard</span></div><table class="report-table"><thead><tr><th>Source</th><th>Apps</th><th>Funded</th><th>Conv %</th><th>Volume</th></tr></thead><tbody id="scorecardSource"></tbody></table></div>
+        <div class="report-card"><div class="report-card-head"><span class="report-card-title">Team Scorecard</span></div><table class="report-table"><thead><tr><th>Metric</th><th>Value</th><th>Target</th><th>Status</th></tr></thead><tbody id="scorecardTeam"></tbody></table></div>
+      </div>
+
+      <!-- Trends -->
+      <div class="coaching-section" id="sec-trends">
+        <div class="chart-card">
+          <div class="section-title">Rep Trend Over Time</div>
+          <div class="section-subtitle">Select a rep and metric to see monthly performance</div>
+          <div class="chart-controls">
+            <select id="trendRep"></select>
+            <select id="trendMetric">
+              <option value="funded">Funded Deals</option>
+              <option value="fundedAmt">Funded Amount</option>
+              <option value="apps">Apps</option>
+              <option value="approvals">Approvals</option>
+              <option value="revenue">Revenue</option>
+            </select>
+            <button id="trendBtn">Generate</button>
+          </div>
+          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Trackers -->
+      <div class="coaching-section" id="sec-trackers">
+        <div class="tracker-card"><div class="tracker-title">Prospecting Call Tracker</div><div class="tracker-form"><label>Rep<select id="trackProspRep"></select></label><label>Date<input type="date" /></label><label>Calls Made<input type="number" placeholder="0" /></label><label>Connects<input type="number" placeholder="0" /></label><label>Interested<input type="number" placeholder="0" /></label><label>Apps Pulled<input type="number" placeholder="0" /></label><textarea placeholder="Notes..."></textarea><button class="tracker-submit">Log Prospecting</button></div></div>
+        <div class="tracker-card"><div class="tracker-title">Closing Call Tracker</div><div class="tracker-form"><label>Rep<select id="trackCloseRep"></select></label><label>Date<input type="date" /></label><label>Calls<input type="number" placeholder="0" /></label><label>Contracts Sent<input type="number" placeholder="0" /></label><label>Deals Closed<input type="number" placeholder="0" /></label><label>Amount<input type="number" placeholder="0" /></label><textarea placeholder="Notes..."></textarea><button class="tracker-submit">Log Closing</button></div></div>
+        <div class="tracker-card"><div class="tracker-title">1:1 Tracker — Team Leads</div><div class="tracker-form"><label>Team Lead<select><option>Anthony Diaz</option></select></label><label>Rep<select id="track1on1Rep"></select></label><label>Date<input type="date" /></label><label>Rating (1-5)<input type="number" min="1" max="5" placeholder="3" /></label><label>Focus<select><option>Pipeline</option><option>Funded</option><option>Renewals</option><option>Leads</option></select></label><label>&nbsp;<span></span></label><textarea placeholder="Discussion notes, action items..."></textarea><button class="tracker-submit">Log 1:1</button></div></div>
+        <div class="tracker-card"><div class="tracker-title">1:1 Tracker — Rodney</div><div class="tracker-form"><label>With<select><option>Anthony Diaz</option></select></label><label>Date<input type="date" /></label><label>Rating (1-5)<input type="number" min="1" max="5" placeholder="3" /></label><label>Focus<select><option>Pipeline</option><option>Funded</option><option>Renewals</option><option>Leads</option><option>Culture</option></select></label><label>&nbsp;<span></span></label><label>&nbsp;<span></span></label><textarea placeholder="Discussion notes, action items, follow-ups..."></textarea><button class="tracker-submit">Log 1:1</button></div></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-auth.js"></script>
+<script>
+(function(){
+  var PASS='CapMuse123';
+  var gate=document.getElementById('coachingGate'),layout=document.getElementById('mainLayout');
+  var passInput=document.getElementById('gatePassword'),submitBtn=document.getElementById('gateSubmit'),errorEl=document.getElementById('gateError');
+  if(sessionStorage.getItem('coaching_auth')==='true'){gate.classList.add('hidden');layout.style.display='flex';init();}
+  submitBtn.addEventListener('click',tryLogin);
+  passInput.addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin()});
+  function tryLogin(){if(passInput.value===PASS){sessionStorage.setItem('coaching_auth','true');gate.classList.add('hidden');layout.style.display='flex';init();}else{errorEl.style.display='block';passInput.value='';}}
+
+  document.querySelectorAll('.coaching-tab').forEach(function(tab){tab.addEventListener('click',function(){document.querySelectorAll('.coaching-tab').forEach(function(t){t.classList.remove('active')});document.querySelectorAll('.coaching-section').forEach(function(s){s.classList.remove('active')});tab.classList.add('active');document.getElementById('sec-'+tab.dataset.tab).classList.add('active')})});
+
+  var html=document.documentElement;html.setAttribute('data-theme',localStorage.getItem('capmuse-theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+  if(window.CapMuseAuth)window.CapMuseAuth.initPage({requireLogin:true});
+
+  var PIPELINE_DATA=[];
+  var trendChart=null;
+
+  function fmt(n){if(n>=1e6)return '$'+(n/1e6).toFixed(2)+'M';if(n>=1e3)return '$'+(n/1e3).toFixed(0)+'K';return '$'+Math.round(n).toLocaleString()}
+
+  function init(){
+    fetch('https://capmuse-data-882611632216.s3.amazonaws.com/pipeline.csv').then(function(r){return r.text()}).then(function(text){
+      PIPELINE_DATA=parseCSV(text);
+      renderAll(PIPELINE_DATA);
+    }).catch(function(e){console.error('[Coaching]',e)});
+  }
+
+  function parseCSV(text){var lines=text.split('\n');if(lines.length<2)return[];var headers=lines[0].split(',');var rows=[];for(var i=1;i<lines.length;i++){if(!lines[i].trim())continue;var vals=lines[i].split(',');var obj={};for(var j=0;j<headers.length;j++)obj[headers[j]]=vals[j]||'';rows.push(obj)}return rows}
+
+  function renderAll(pipeline){
+    var byRep={};
+    pipeline.forEach(function(r){
+      var rep=(r['Puller']||r['Packages in Process Owner']||'').trim();
+      if(!rep||rep==='House .'||rep==='House')return;
+      if(!byRep[rep])byRep[rep]={name:rep,apps:0,approvals:0,funded:0,fundedAmt:0,renewals:0,renewalAmt:0,newDeals:0,newAmt:0,revenue:0,points:[]};
+      byRep[rep].apps++;
+      var stage=(r['Stage of Package']||'').toLowerCase();
+      var amt=parseFloat((r['Amount']||'0').replace(/[$,]/g,''))||0;
+      var pos=(r['Position']||'').trim();
+      var isRenewal=pos&&pos!=='0'&&pos!=='1';
+      if(stage.indexOf('funded')>-1||stage==='future funding'||stage==='dd - default')byRep[rep].approvals++;
+      if(stage.indexOf('fund')>-1&&stage.indexOf('decline')===-1){
+        byRep[rep].funded++;byRep[rep].fundedAmt+=amt;
+        if(isRenewal){byRep[rep].renewals++;byRep[rep].renewalAmt+=amt}else{byRep[rep].newDeals++;byRep[rep].newAmt+=amt}
+        var pts=parseFloat(r['Paid in Percentage']||'0')||0;
+        if(pts>0){byRep[rep].points.push(pts);byRep[rep].revenue+=amt*(pts/100)}
+      }
+    });
+    var reps=Object.values(byRep).sort(function(a,b){return b.fundedAmt-a.fundedAmt});
+
+    // Populate selects
+    ['trackProspRep','trackCloseRep','track1on1Rep','trendRep'].forEach(function(id){
+      var el=document.getElementById(id);if(!el)return;
+      el.innerHTML='';reps.forEach(function(r){var o=document.createElement('option');o.textContent=r.name;o.value=r.name;el.appendChild(o)});
+    });
+
+    var totalFunded=reps.reduce(function(s,r){return s+r.fundedAmt},0);
+    var totalNew=reps.reduce(function(s,r){return s+r.newAmt},0);
+    var totalRenewals=reps.reduce(function(s,r){return s+r.renewalAmt},0);
+    var totalDeals=reps.reduce(function(s,r){return s+r.funded},0);
+    var totalApps=reps.reduce(function(s,r){return s+r.apps},0);
+
+    document.getElementById('dashStats').innerHTML=
+      '<div class="stat-card"><div class="stat-card-label">Total Funded</div><div class="stat-card-value">'+fmt(totalFunded)+'</div><div class="stat-card-sub">'+totalDeals+' deals</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">New Deals</div><div class="stat-card-value">'+fmt(totalNew)+'</div><div class="stat-card-sub">'+(totalFunded>0?Math.round(totalNew/totalFunded*100):0)+'%</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Renewals</div><div class="stat-card-value">'+fmt(totalRenewals)+'</div><div class="stat-card-sub">'+(totalFunded>0?Math.round(totalRenewals/totalFunded*100):0)+'%</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Apps</div><div class="stat-card-value">'+totalApps.toLocaleString()+'</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Reps</div><div class="stat-card-value">'+reps.length+'</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Conversion</div><div class="stat-card-value">'+(totalApps>0?((totalDeals/totalApps)*100).toFixed(1):0)+'%</div></div>';
+
+    document.getElementById('dashTable').innerHTML=reps.slice(0,25).map(function(r){return '<tr><td>'+r.name+'</td><td>'+r.newDeals+'</td><td>'+r.renewals+'</td><td>'+r.funded+'</td><td>'+fmt(r.fundedAmt)+'</td></tr>'}).join('');
+    document.getElementById('reportPipeline').innerHTML=reps.slice(0,25).map(function(r){return '<tr><td>'+r.name+'</td><td>'+r.apps+'</td><td>'+r.approvals+'</td><td>'+r.funded+'</td><td>'+(r.apps>0?((r.funded/r.apps)*100).toFixed(1):0)+'%</td></tr>'}).join('');
+    document.getElementById('reportFunded').innerHTML=reps.filter(function(r){return r.funded>0}).slice(0,25).map(function(r){return '<tr><td>'+r.name+'</td><td>'+r.funded+'</td><td>'+fmt(r.fundedAmt)+'</td><td>'+fmt(r.funded>0?Math.round(r.fundedAmt/r.funded):0)+'</td><td>'+fmt(r.revenue)+'</td></tr>'}).join('');
+    var renewalReps=reps.filter(function(r){return r.renewals>0}).sort(function(a,b){return b.renewalAmt-a.renewalAmt});
+    document.getElementById('reportRenewals').innerHTML=renewalReps.slice(0,25).map(function(r){return '<tr><td>'+r.name+'</td><td>'+r.renewals+'</td><td>'+fmt(r.renewalAmt)+'</td><td>'+(r.fundedAmt>0?Math.round(r.renewalAmt/r.fundedAmt*100):0)+'%</td></tr>'}).join('');
+    document.getElementById('scorecardRep').innerHTML=reps.slice(0,25).map(function(r){var conv=r.apps>0?((r.funded/r.apps)*100).toFixed(1):0;var avgPts=r.points.length>0?(r.points.reduce(function(s,v){return s+v},0)/r.points.length).toFixed(2):'—';var score=Math.round((r.funded*2)+(parseFloat(conv)||0)+(r.revenue/1000));return '<tr><td>'+r.name+'</td><td>'+r.apps+'</td><td>'+r.funded+'</td><td>'+conv+'%</td><td>'+avgPts+'</td><td>'+fmt(r.revenue)+'</td><td><strong>'+score+'</strong></td></tr>'}).join('');
+
+    var bySrc={};
+    pipeline.forEach(function(r){var src=(r['Lead Source']||r['Original Lead Source']||'').trim();if(!src)return;if(!bySrc[src])bySrc[src]={name:src,apps:0,funded:0,volume:0};bySrc[src].apps++;var stage=(r['Stage of Package']||'').toLowerCase();var amt=parseFloat((r['Amount']||'0').replace(/[$,]/g,''))||0;if(stage.indexOf('fund')>-1&&stage.indexOf('decline')===-1){bySrc[src].funded++;bySrc[src].volume+=amt}});
+    var sources=Object.values(bySrc).sort(function(a,b){return b.funded-a.funded});
+    document.getElementById('scorecardSource').innerHTML=sources.slice(0,15).map(function(s){return '<tr><td>'+s.name+'</td><td>'+s.apps+'</td><td>'+s.funded+'</td><td>'+(s.apps>0?((s.funded/s.apps)*100).toFixed(1):0)+'%</td><td>'+fmt(s.volume)+'</td></tr>'}).join('');
+
+    var convRate=totalApps>0?((totalDeals/totalApps)*100).toFixed(1):0;
+    var avgDeal=totalDeals>0?Math.round(totalFunded/totalDeals):0;
+    document.getElementById('scorecardTeam').innerHTML='<tr><td>Total Funded</td><td>'+fmt(totalFunded)+'</td><td>—</td><td>—</td></tr><tr><td>Deals</td><td>'+totalDeals+'</td><td>—</td><td>—</td></tr><tr><td>Conversion</td><td>'+convRate+'%</td><td>15%</td><td>'+(parseFloat(convRate)>=15?'✅':'⚠️')+'</td></tr><tr><td>Avg Deal</td><td>'+fmt(avgDeal)+'</td><td>$50K</td><td>'+(avgDeal>=50000?'✅':'⚠️')+'</td></tr><tr><td>Reps</td><td>'+reps.length+'</td><td>—</td><td>—</td></tr>';
+
+    // Trend chart
+    document.getElementById('trendBtn').addEventListener('click',renderTrend);
+  }
+
+  function renderTrend(){
+    var repName=document.getElementById('trendRep').value;
+    var metric=document.getElementById('trendMetric').value;
+    if(!repName||!PIPELINE_DATA.length)return;
+
+    var monthly={};
+    PIPELINE_DATA.forEach(function(r){
+      var rep=(r['Puller']||r['Packages in Process Owner']||'').trim();
+      if(rep!==repName)return;
+      var date=r['Created Time']||r['Date Applied']||'';
+      if(!date)return;
+      var key=date.substring(0,7);
+      if(!key||key.length!==7)return;
+      if(!monthly[key])monthly[key]={apps:0,approvals:0,funded:0,fundedAmt:0,revenue:0};
+      monthly[key].apps++;
+      var stage=(r['Stage of Package']||'').toLowerCase();
+      var amt=parseFloat((r['Amount']||'0').replace(/[$,]/g,''))||0;
+      if(stage.indexOf('funded')>-1||stage==='future funding'||stage==='dd - default')monthly[key].approvals++;
+      if(stage.indexOf('fund')>-1&&stage.indexOf('decline')===-1){monthly[key].funded++;monthly[key].fundedAmt+=amt;var pts=parseFloat(r['Paid in Percentage']||'0')||0;if(pts>0)monthly[key].revenue+=amt*(pts/100)}
+    });
+
+    var labels=Object.keys(monthly).sort();
+    var data=labels.map(function(k){return monthly[k][metric]||0});
+
+    var ctx=document.getElementById('trendChart').getContext('2d');
+    if(trendChart)trendChart.destroy();
+    trendChart=new Chart(ctx,{
+      type:'line',
+      data:{labels:labels,datasets:[{label:repName+' — '+metric,data:data,borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.08)',tension:0.3,fill:true,pointRadius:3,pointBackgroundColor:'#2563EB'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:12}}}},scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false}}}}
+    });
+  }
+})();
+</script>
+<script src="Assets/capmuse-search.js"></script>
+</body>
+</html>

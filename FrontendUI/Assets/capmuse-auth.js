@@ -14,14 +14,12 @@
   let DEMO_DISABLED_PAGES = [
     'dashboard.html',
     'lead.html',
-    'lender_recommendation.html',
-    'ringcentral.html'
+    'lender_recommendation.html'
   ];
   let DEMO_HIDDEN_NAV = [
     { href: 'dashboard.html', label: 'Dashboard' },
     { href: 'lead.html', label: 'Leads' },
-    { href: 'lender_recommendation.html', label: 'Lender Match' },
-    { href: 'ringcentral.html', label: 'RingCentral' }
+    { href: 'lender_recommendation.html', label: 'Lender Match' }
   ];
 
   let demoStylesInjected = false;
@@ -149,7 +147,15 @@
       '<a class="nav-item' + (page === 'convoso.html' ? ' active' : '') + '" href="convoso.html"' +
         (page === 'convoso.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('convoso.html') +
-        'Convoso</a>';
+        'Convoso</a>' +
+      '<a class="nav-item' + (page === 'ringcentral.html' ? ' active' : '') + '" href="ringcentral.html"' +
+        (page === 'ringcentral.html' ? ' aria-current="page"' : '') + '>' +
+        linkIconHtml('ringcentral.html') +
+        'RingCentral</a>' +
+      '<a class="nav-item' + (page === 'coaching.html' ? ' active' : '') + '" href="coaching.html"' +
+        (page === 'coaching.html' ? ' aria-current="page"' : '') + '>' +
+        linkIconHtml('coaching.html') +
+        'Coaching</a>';
 
     let hiddenItems = DEMO_HIDDEN_NAV.map(function (item) {
       return '<a class="nav-sub-item nav-disabled" href="' + item.href + '" aria-disabled="true" title="Unavailable for demo">' +

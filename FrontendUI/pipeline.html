@@ -523,6 +523,7 @@
       </div>
       <div class="nav-sub" id="dialerSub">
         <a class="nav-sub-item" href="convoso.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/></svg>Convoso</a>
+        <a class="nav-sub-item" href="ringcentral.html"><svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 2a5 5 0 0 1 0 8" stroke-linecap="round"/></svg>RingCentral</a>
       </div>
 
     </nav>
@@ -629,6 +630,8 @@
         </div>
       </div>
 
+      <div id="pipelineChartBuilder"></div>
+
     </main>
   </div>
 </div>
@@ -680,7 +683,31 @@
     if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
   })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="Assets/capmuse-charts.js"></script>
 <script src="Assets/capmuse-search.js"></script>
 <script src="capmuse-pipeline.js"></script>
+<script>
+(function(){
+  // Wait for pipeline data to load, then init chart builder
+  var checkInterval = setInterval(function(){
+    var table = document.getElementById('pipelineTableBody');
+    if (table && table.children.length > 0 && window.CapMuseCharts && window._pipelineRows) {
+      clearInterval(checkInterval);
+      window.CapMuseCharts.init('pipelineChartBuilder', window._pipelineRows, {
+        repField: 'Puller',
+        dateField: 'Created Time',
+        metrics: [
+          { key: 'apps', label: 'Apps', calc: function(r) { return 1; } },
+          { key: 'funded', label: 'Funded Deals', calc: function(r) { var s=(r['Stage of Package']||'').toLowerCase(); return (s.indexOf('fund')>-1&&s.indexOf('decline')===-1)?1:0; } },
+          { key: 'fundedAmt', label: 'Funded Amount ($)', calc: function(r) { var s=(r['Stage of Package']||'').toLowerCase(); if(s.indexOf('fund')===-1||s.indexOf('decline')>-1)return 0; return parseFloat((r['Amount']||'0').replace(/[$,]/g,''))||0; } },
+          { key: 'approvals', label: 'Approvals', calc: function(r) { var s=(r['Stage of Package']||'').toLowerCase(); return (s.indexOf('funded')>-1||s==='future funding'||s==='dd - default')?1:0; } },
+          { key: 'revenue', label: 'Revenue ($)', calc: function(r) { var s=(r['Stage of Package']||'').toLowerCase(); if(s.indexOf('fund')===-1||s.indexOf('decline')>-1)return 0; var amt=parseFloat((r['Amount']||'0').replace(/[$,]/g,''))||0; var pts=parseFloat(r['Paid in Percentage']||'0')||0; return pts>0?amt*(pts/100):0; } }
+        ]
+      });
+    }
+  }, 500);
+})();
+</script>
 </body>
 </html>
