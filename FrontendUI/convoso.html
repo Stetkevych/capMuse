@@ -828,7 +828,7 @@
       var handle=tt+wt+wr;
       var non_pause=Math.max(0,tot-pt);
       var pct=function(v){ return tot>0?v/tot*100:0; };
-      var con=(u.inst_con||0)+(u.ni_con||0)+(u.nc_con||0);
+      var con=u.outbound_con||0;
       var inst_con=u.inst_con||0;
       var inst_wt=u.inst_wt||0;
       return {name:u.user,
