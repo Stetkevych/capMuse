@@ -58,6 +58,17 @@
     .score-btn:hover{border-color:var(--blue);color:var(--blue)}
     .score-btn.selected{background:var(--blue);border-color:var(--blue);color:#fff}
 
+    .section-score-bar,.total-score-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-top:6px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border)}
+    .total-score-bar{margin-top:16px;padding:14px 16px;border:2px solid var(--blue);background:var(--surface)}
+    .bar-label{font-size:11px;font-weight:700;color:var(--text-muted);min-width:100px}
+    .bar-value{font-size:14px;font-weight:800;color:var(--text-primary);min-width:55px}
+    .total-score-bar .bar-value{font-size:18px}
+    .bar-tier{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;min-width:80px;text-align:center}
+    .bar-fill-wrap{flex:1;height:8px;background:var(--border);border-radius:100px;overflow:hidden}
+    .total-score-bar .bar-fill-wrap{height:12px}
+    .bar-fill{height:100%;border-radius:100px;transition:width .3s ease,background .3s ease;width:0%}
+    .bar-fill-total{height:100%}
+
     .submit-btn{width:100%;height:42px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;transition:opacity .15s}
     .submit-btn:hover{opacity:.9}
     .submit-btn:disabled{opacity:.5;cursor:not-allowed}
@@ -240,15 +251,46 @@
   var scoringDiv=document.getElementById('scoringItems');
   var currentSection='';
   var scoreValues={};
-  ITEMS.forEach(function(item){
-    if(item.section!==currentSection){
-      currentSection=item.section;
-      scoringDiv.innerHTML+='<div class="scoring-section"><div class="scoring-section-title">'+currentSection+'</div></div>';
-    }
-    var btns='';
-    for(var i=1;i<=5;i++)btns+='<button class="score-btn" data-item="'+item.id+'" data-val="'+i+'">'+i+'</button>';
-    scoringDiv.innerHTML+='<div class="scoring-item"><span class="scoring-label">'+item.label+'</span><span class="scoring-weight">w'+item.weight+'</span><div class="scoring-input">'+btns+'</div></div>';
+  var sections=['Opening','Discovery','Alignment','Close'];
+  var sectionItems={};
+  sections.forEach(function(s){sectionItems[s]=ITEMS.filter(function(i){return i.section===s})});
+
+  // Render scoring items with section score bars
+  sections.forEach(function(sec){
+    scoringDiv.innerHTML+='<div class="scoring-section"><div class="scoring-section-title">'+sec+'</div></div>';
+    sectionItems[sec].forEach(function(item){
+      var btns='';
+      for(var i=1;i<=5;i++)btns+='<button class="score-btn" data-item="'+item.id+'" data-val="'+i+'">'+i+'</button>';
+      scoringDiv.innerHTML+='<div class="scoring-item"><span class="scoring-label">'+item.label+' <span style="color:var(--red);font-size:10px">*</span></span><span class="scoring-weight">w'+item.weight+'</span><div class="scoring-input">'+btns+'</div></div>';
+    });
+    scoringDiv.innerHTML+='<div class="section-score-bar" id="bar_'+sec+'"><span class="bar-label">'+sec+' Score:</span><span class="bar-value">—</span><div class="bar-fill-wrap"><div class="bar-fill" id="fill_'+sec+'"></div></div></div>';
   });
+
+  // Total score bar
+  scoringDiv.innerHTML+='<div class="total-score-bar" id="bar_total"><span class="bar-label">Total Call Score:</span><span class="bar-value" id="totalScoreVal">—</span><span class="bar-tier" id="totalTierVal"></span><div class="bar-fill-wrap"><div class="bar-fill bar-fill-total" id="fill_total"></div></div></div>';
+
+  function updateScoreBars(){
+    var totalWeighted=0,totalMaxWeighted=0;
+    sections.forEach(function(sec){
+      var secWeighted=0,secMax=0,allScored=true;
+      sectionItems[sec].forEach(function(item){
+        secMax+=item.weight;
+        if(scoreValues[item.id])secWeighted+=(scoreValues[item.id]/5)*item.weight;
+        else allScored=false;
+      });
+      var pct=secMax>0?Math.round((secWeighted/secMax)*100):0;
+      var barVal=document.querySelector('#bar_'+sec+' .bar-value');
+      var barFill=document.getElementById('fill_'+sec);
+      if(barVal)barVal.textContent=pct+'/100';
+      if(barFill){barFill.style.width=pct+'%';barFill.style.background=pct>=90?'var(--green)':pct>=75?'var(--blue)':pct>=60?'var(--amber)':'var(--red)'}
+      totalWeighted+=secWeighted;totalMaxWeighted+=secMax;
+    });
+    var totalPct=totalMaxWeighted>0?Math.round((totalWeighted/totalMaxWeighted)*100):0;
+    var tierLabel=totalPct>=90?'Exceptional':totalPct>=75?'Proficient':totalPct>=60?'Developing':'Coaching Plan Required';
+    var el=document.getElementById('totalScoreVal');if(el)el.textContent=totalPct+'/100';
+    var tierEl=document.getElementById('totalTierVal');if(tierEl){tierEl.textContent=tierLabel;tierEl.className='bar-tier '+(totalPct>=90?'tier-exceptional':totalPct>=75?'tier-proficient':totalPct>=60?'tier-developing':'tier-coaching')}
+    var fillEl=document.getElementById('fill_total');if(fillEl){fillEl.style.width=totalPct+'%';fillEl.style.background=totalPct>=90?'var(--green)':totalPct>=75?'var(--blue)':totalPct>=60?'var(--amber)':'var(--red)'}
+  }
 
   scoringDiv.addEventListener('click',function(e){
     var btn=e.target.closest('.score-btn');
@@ -258,10 +300,14 @@
     scoreValues[itemId]=val;
     btn.parentElement.querySelectorAll('.score-btn').forEach(function(b){b.classList.remove('selected')});
     btn.classList.add('selected');
+    updateScoreBars();
   });
 
   // Submit
   document.getElementById('submitScore').addEventListener('click',function(){
+    // Validate all items scored
+    var missing=ITEMS.filter(function(item){return !scoreValues[item.id]});
+    if(missing.length>0){showToast('Please score all '+missing.length+' remaining items before submitting');return;}
     var btn=this;btn.disabled=true;btn.textContent='Submitting...';
     var payload={
       rep:document.getElementById('fRep').value,
