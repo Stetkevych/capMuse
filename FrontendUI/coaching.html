@@ -280,37 +280,21 @@
     var metric=document.getElementById('trendMetric').value;
     if(!repName)return;
 
+    // Use FUNDING BOOK as source of truth for funded/fundedAmt/revenue/approvals
+    // Use PIPELINE for apps only
     var monthly={};
 
-    // Pipeline data - use Created Time for apps, Date Funded for funded metrics
+    // Apps from pipeline by Created Time
     PIPELINE_DATA.forEach(function(r){
       var rep=(r['Puller']||r['Packages in Process Owner']||'').trim();
       if(rep!==repName)return;
-
-      // Apps by Created Time
       var createdDate=(r['Created Time']||r['Date Applied']||'').substring(0,7);
-      if(createdDate&&createdDate.length===7){
-        if(!monthly[createdDate])monthly[createdDate]={apps:0,approvals:0,funded:0,fundedAmt:0,revenue:0};
-        monthly[createdDate].apps++;
-      }
-
-      // Funded metrics by Date Funded
-      var stage=(r['Stage of Package']||'').toLowerCase();
-      var fundedDate=(r['Date Funded']||'').substring(0,7);
-      if(fundedDate&&fundedDate.length===7){
-        if(!monthly[fundedDate])monthly[fundedDate]={apps:0,approvals:0,funded:0,fundedAmt:0,revenue:0};
-        var amt=parseFloat((r['Amount']||'0').replace(/[$,]/g,''))||0;
-        if(stage.indexOf('funded')>-1||stage==='future funding'||stage==='dd - default')monthly[fundedDate].approvals++;
-        if(stage.indexOf('fund')>-1&&stage.indexOf('decline')===-1){
-          monthly[fundedDate].funded++;
-          monthly[fundedDate].fundedAmt+=amt;
-          var pts=parseFloat(r['Paid in Percentage']||'0')||0;
-          if(pts>0)monthly[fundedDate].revenue+=amt*(pts/100);
-        }
-      }
+      if(!createdDate||createdDate.length!==7)return;
+      if(!monthly[createdDate])monthly[createdDate]={apps:0,approvals:0,funded:0,fundedAmt:0,revenue:0};
+      monthly[createdDate].apps++;
     });
 
-    // Also pull from funding book for funded/revenue/fundedAmt
+    // Funded metrics from funding book by date_funded
     FUNDING_DATA.forEach(function(r){
       var rep=(r.package_owner||r.puller||'').trim();
       if(rep!==repName)return;
@@ -319,8 +303,10 @@
       if(!monthly[date])monthly[date]={apps:0,approvals:0,funded:0,fundedAmt:0,revenue:0};
       var amt=parseFloat((r.funding||'0').replace(/[$,]/g,''))||0;
       var rev=parseFloat((r.revenue||'0').replace(/[$,]/g,''))||0;
-      // Only add if not already counted from pipeline (avoid double-count by checking if pipeline had this month)
-      // Simple approach: funding book is the source of truth for funded metrics
+      monthly[date].funded++;
+      monthly[date].fundedAmt+=amt;
+      monthly[date].revenue+=rev;
+      monthly[date].approvals++;
     });
 
     var labels=Object.keys(monthly).sort();
