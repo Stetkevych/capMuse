@@ -503,10 +503,8 @@
       let row = byRep[k];
       row.appsToApprovals = pct(row.approvals, row.apps);
       row.approvalToFunding = pct(row.funded, row.approvals);
-      row.avgPointsNum = row.points.length
-        ? row.points.reduce(function (s, v) { return s + v; }, 0) / row.points.length
-        : 0;
-      row.avgPoints = row.points.length ? row.avgPointsNum.toFixed(2) + '%' : '—';
+      row.avgPointsNum = row.fundedAmt > 0 ? (row.revenue / row.fundedAmt) * 100 : 0;
+      row.avgPoints = row.fundedAmt > 0 ? row.avgPointsNum.toFixed(2) + '%' : '—';
       row.avgAmountNum = row.amounts.length
         ? row.amounts.reduce(function (s, v) { return s + v; }, 0) / row.amounts.length
         : 0;
