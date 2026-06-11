@@ -1,0 +1,46 @@
+/* Achievement gems — transparent PNGs in achievement-gems/ */
+.pmc-ach-gem {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: auto;
+}
+
+.pmc-ach-gem.rarity-iron { background-image: url('achievement-gems/iron.png'); }
+.pmc-ach-gem.rarity-bronze { background-image: url('achievement-gems/bronze.png'); }
+.pmc-ach-gem.rarity-silver { background-image: url('achievement-gems/silver.png'); }
+.pmc-ach-gem.rarity-gold { background-image: url('achievement-gems/gold.png'); }
+.pmc-ach-gem.rarity-platinum { background-image: url('achievement-gems/platinum.png'); }
+.pmc-ach-gem.rarity-diamond { background-image: url('achievement-gems/diamond.png'); }
+.pmc-ach-gem.rarity-black_diamond,
+.pmc-ach-gem.rarity-blue_diamond,
+.pmc-ach-gem.rarity-ceo { background-image: url('achievement-gems/black_diamond.png'); }
+.pmc-ach-gem.rarity-red_diamond,
+.pmc-ach-gem.rarity-ultimate { background-image: url('achievement-gems/red_diamond.png'); }
+
+.pmc-ach-trophy .pmc-ach-gem {
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+}
+
+.cm-notif-icon .pmc-ach-gem {
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.3));
+}
+
+.cm-claim-toast-icon .pmc-ach-gem {
+  width: 32px;
+  height: 32px;
+}
+
+.cm-present-trophy .pmc-ach-gem {
+  width: 112px;
+  height: 112px;
+  filter: drop-shadow(0 14px 32px rgba(0, 0, 0, 0.45));
+}

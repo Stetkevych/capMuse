@@ -1085,59 +1085,24 @@ html[data-theme="light"] .pmc-fb-money-total { background: #2563EB; }
 }
 .pmc-ach-trophy {
   position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 56px;
+  height: 56px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
   cursor: default;
-  border: 1px solid transparent;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 .pmc-ach-trophy:hover,
 .pmc-ach-trophy:focus-visible {
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-2px) scale(1.06);
   z-index: 2;
   outline: none;
-}
-.pmc-ach-trophy.rarity-bronze {
-  background: linear-gradient(145deg, rgba(180, 83, 9, 0.2), rgba(180, 83, 9, 0.08));
-  border-color: rgba(180, 83, 9, 0.35);
-  box-shadow: 0 4px 12px rgba(180, 83, 9, 0.15);
-}
-.pmc-ach-trophy.rarity-silver {
-  background: linear-gradient(145deg, rgba(148, 163, 184, 0.25), rgba(148, 163, 184, 0.08));
-  border-color: rgba(148, 163, 184, 0.4);
-  box-shadow: 0 4px 12px rgba(148, 163, 184, 0.15);
-}
-.pmc-ach-trophy.rarity-gold {
-  background: linear-gradient(145deg, rgba(245, 158, 11, 0.28), rgba(245, 158, 11, 0.1));
-  border-color: rgba(245, 158, 11, 0.45);
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.22);
-}
-.pmc-ach-trophy.rarity-platinum {
-  background: linear-gradient(145deg, rgba(139, 92, 246, 0.28), rgba(139, 92, 246, 0.1));
-  border-color: rgba(139, 92, 246, 0.45);
-  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.22);
-}
-.pmc-ach-icon {
-  display: block;
-  line-height: 1;
-}
-.pmc-ach-trophy.rarity-ceo {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.88));
-  border-color: rgba(245, 158, 11, 0.55);
-  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-}
-html[data-theme="light"] .pmc-ach-trophy.rarity-ceo {
-  background: linear-gradient(145deg, #1E293B, #0F172A);
-  border-color: rgba(217, 119, 6, 0.6);
-  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.22);
-}
-.pmc-ach-trophy.rarity-ceo .pmc-ach-icon {
-  transform: translateY(-3px);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.22));
 }
 .pmc-ach-tip {
   position: absolute;

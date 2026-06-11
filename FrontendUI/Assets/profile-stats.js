@@ -1092,8 +1092,11 @@
       return;
     }
     let trophies = claimed.map(function (ach) {
+      let gemHtml = window.CapMuseAchievements.renderGemIcon
+        ? window.CapMuseAchievements.renderGemIcon(ach.rarity)
+        : '';
       return '<div class="pmc-ach-trophy rarity-' + escHtml(ach.rarity) + '" tabindex="0" role="img" aria-label="' + escHtml(ach.name) + '">' +
-        '<span class="pmc-ach-icon" aria-hidden="true">' + escHtml(ach.icon) + '</span>' +
+        gemHtml +
         '<div class="pmc-ach-tip">' +
           '<div class="pmc-ach-tip-name">' + escHtml(ach.name) + '</div>' +
           '<div class="pmc-ach-tip-rarity">' + escHtml(ach.rarityLabel) + ' Achievement</div>' +
