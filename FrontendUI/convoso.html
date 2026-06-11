@@ -414,7 +414,7 @@
       <section class="fb-hero" style="animation:cvFadeUp 0.4s ease-out both">
         <div class="fb-hero-spotlight" id="cvSpotlight">
           <div class="fb-spot-photo-ring" id="cvSpotRing">
-            <img id="cvSpotImg" hidden alt="" />
+            <img id="cvSpotImg" style="display:none" alt="" />
             <div class="hero-photo-placeholder" id="cvSpotInitials">—</div>
           </div>
           <div class="fb-spot-info">
@@ -426,7 +426,7 @@
         </div>
         <div class="fb-hero-sep"></div>
         <div class="fb-hero-main">
-          <div class="fb-hero-title">Dialer Leaderboard</div>
+          <div class="fb-hero-title">Convoso Leaderboard</div>
           <div class="fb-hero-context" id="cvHeroCtx">Loading…</div>
           <div class="fb-active-filters" id="cvActiveTags"></div>
         </div>
@@ -487,6 +487,11 @@
                 <th>Rep</th>
                 <th class="cv-sort-th" data-sort="con">Contacts <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th sorted" data-sort="inst">Interested <span class="cv-sort-ind">↓</span></th>
+                <th class="cv-sort-th" data-sort="calls_per_int">Calls / INT <span class="cv-sort-ind">↕</span></th>
+                <th class="cv-sort-th" data-sort="wait_per_con">Wait / Connected <span class="cv-sort-ind">↕</span></th>
+                <th class="cv-sort-th" data-sort="wrap_per_con">Wrap / Connected <span class="cv-sort-ind">↕</span></th>
+                <th class="cv-sort-th" data-sort="wait_per_inst">Wait / Interested <span class="cv-sort-ind">↕</span></th>
+                <th class="cv-sort-th" data-sort="total_per_inst">Total / INT <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="tt">Talk Time <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="wt">Wait Time <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="wr">Wrap Up <span class="cv-sort-ind">↕</span></th>
@@ -494,16 +499,11 @@
                 <th class="cv-sort-th" data-sort="pt">Pause Time <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="non_pause">Non-Pause <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="total_time">Total Time <span class="cv-sort-ind">↕</span></th>
-                <th class="cv-sort-th" data-sort="calls_per_int">Calls / INT <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="talk_pct">Talk % <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="wait_pct">Wait % <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="pause_pct">Pause % <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="wrap_pct">Wrap % <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="handle_pct">Handle % <span class="cv-sort-ind">↕</span></th>
-                <th class="cv-sort-th" data-sort="total_per_inst">Total / INT <span class="cv-sort-ind">↕</span></th>
-                <th class="cv-sort-th" data-sort="wait_per_con">Wait / Connected <span class="cv-sort-ind">↕</span></th>
-                <th class="cv-sort-th" data-sort="wrap_per_con">Wrap / Connected <span class="cv-sort-ind">↕</span></th>
-                <th class="cv-sort-th" data-sort="wait_per_inst">Wait / Interested <span class="cv-sort-ind">↕</span></th>
               </tr>
             </thead>
             <tbody id="cvTableBody">
@@ -934,11 +934,14 @@
     initEl.textContent = getInitials(top.name);
     var photoFile = getPhotoFile(top.name);
     if (photoFile && imgEl) {
-      imgEl.onload  = function(){ imgEl.hidden=false; initEl.hidden=true; };
-      imgEl.onerror = function(){ imgEl.hidden=true;  initEl.hidden=false; };
-      imgEl.hidden=true; imgEl.src='Assets/reps/'+photoFile; initEl.hidden=false;
+      imgEl.onload  = function(){ imgEl.style.display='block'; initEl.style.display='none'; };
+      imgEl.onerror = function(){ imgEl.style.display='none';  initEl.style.display='flex'; };
+      imgEl.style.display='none';
+      imgEl.src='Assets/reps/'+photoFile;
+      initEl.style.display='flex';
     } else {
-      if(imgEl) imgEl.hidden=true; initEl.hidden=false;
+      if(imgEl) imgEl.style.display='none';
+      initEl.style.display='flex';
     }
     if (ringEl) ringEl.onclick = function(){ openRepModal(top.name); };
   }
@@ -979,6 +982,11 @@
         +'<td><div class="cv-rep-cell">'+avatarHtml+'<span class="fb-rep-name">'+escHtml(r.name)+'</span></div></td>'
         +'<td>'+(r.con||'—')+'</td>'
         +'<td class="cv-inst">'+r.inst+'</td>'
+        +'<td>'+(r.inst>0?r.calls_per_int.toFixed(1):'—')+'</td>'
+        +'<td class="cv-tt">'+frat(r.wait_per_con)+'</td>'
+        +'<td class="cv-tt">'+frat(r.wrap_per_con)+'</td>'
+        +'<td class="cv-tt">'+frat(r.wait_per_inst)+'</td>'
+        +'<td class="cv-tt">'+frat(r.total_per_inst)+'</td>'
         +'<td class="cv-tt">'+ftt(r.tt)+'</td>'
         +'<td class="cv-tt">'+ftt(r.wt)+'</td>'
         +'<td class="cv-tt">'+ftt(r.wr)+'</td>'
@@ -986,16 +994,11 @@
         +'<td class="cv-tt">'+ftt(r.pt)+'</td>'
         +'<td class="cv-tt">'+ftt(r.non_pause)+'</td>'
         +'<td class="cv-tt">'+ftt(r.total_time)+'</td>'
-        +'<td>'+(r.inst>0?r.calls_per_int.toFixed(1):'—')+'</td>'
         +'<td>'+fpct(r.talk_pct)+'</td>'
         +'<td>'+fpct(r.wait_pct)+'</td>'
         +'<td>'+fpct(r.pause_pct)+'</td>'
         +'<td>'+fpct(r.wrap_pct)+'</td>'
         +'<td>'+fpct(r.handle_pct)+'</td>'
-        +'<td class="cv-tt">'+frat(r.total_per_inst)+'</td>'
-        +'<td class="cv-tt">'+frat(r.wait_per_con)+'</td>'
-        +'<td class="cv-tt">'+frat(r.wrap_per_con)+'</td>'
-        +'<td class="cv-tt">'+frat(r.wait_per_inst)+'</td>'
         +'</tr>';
     }).join('');
     /* Update sort header indicators */
