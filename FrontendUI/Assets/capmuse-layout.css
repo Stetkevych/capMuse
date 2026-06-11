@@ -1,0 +1,85 @@
+/* capmuse-layout.css — App chrome: sidebar logo, topbar, search, sticky FB headers */
+
+:root {
+  --topbar-h: 64px;
+}
+
+/* Logo band above nav links */
+.sidebar-logo {
+  justify-content: center;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--sidebar-border);
+  margin-bottom: 2px;
+}
+
+.sidebar-logo img {
+  width: 34px;
+  height: 34px;
+}
+
+.sidebar-wordmark {
+  font-size: 15px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Top chrome at page top — search left by nav, actions flush right; scrolls away (not sticky) */
+.topbar {
+  position: relative;
+  top: auto;
+  height: var(--topbar-h);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 14px 28px 0;
+  margin: 0;
+  background: transparent;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.search-wrap {
+  flex: 0 1 420px;
+  max-width: 480px;
+  min-width: 180px;
+  margin: 0;
+}
+
+.topbar-right {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Allow sticky thead (overflow:hidden on card breaks position:sticky) */
+.funding-book-page .fb-table-card {
+  overflow: visible;
+}
+
+/* Funding Book — sticky column headers while scrolling the page */
+.funding-book-page .fb-rep-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--table-head);
+  box-shadow: 0 1px 0 var(--table-border);
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    height: 66px;
+    padding: 10px 16px 0;
+    gap: 10px;
+  }
+
+  .search-wrap {
+    flex: 1 1 auto;
+    max-width: none;
+    min-width: 0;
+  }
+}

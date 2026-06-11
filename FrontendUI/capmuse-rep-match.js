@@ -22,7 +22,17 @@
     if (!rec || !target) return false;
     if (rec === target) return true;
 
+    let recTokens = tokens(recordName);
     let targetTokens = tokens(targetName);
+    if (targetTokens.length >= 2 && recTokens.length >= 2) {
+      let recLast = recTokens[recTokens.length - 1];
+      let targetLast = targetTokens[targetTokens.length - 1];
+      if (recLast !== targetLast) return false;
+      return targetTokens.every(function (t) {
+        if (t.length <= 1) return true;
+        return rec.indexOf(t) > -1;
+      });
+    }
     if (targetTokens.length >= 2) {
       return targetTokens.every(function (t) {
         if (t.length <= 1) return true;

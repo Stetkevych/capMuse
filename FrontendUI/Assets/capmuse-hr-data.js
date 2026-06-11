@@ -8,6 +8,7 @@
 
   let CSV_NAME_MAP = {
     matthew: 'Matthew',
+    mschweri: 'Matthew Schweri',
     matthewM: 'Matthew Mejia',
     anderson: 'Erik Anderson',
     colin: 'Colin O',
@@ -156,11 +157,11 @@
 
   function resolveCsvName(rep, userId) {
     if (rep && rep.csvName) return rep.csvName;
-    if (userId && CSV_NAME_MAP[userId]) return CSV_NAME_MAP[userId];
     if (rep && rep.bookName) {
       let byBook = findRowByName(rep.bookName);
       if (byBook) return byBook.name;
     }
+    if (userId && CSV_NAME_MAP[userId]) return CSV_NAME_MAP[userId];
     if (rep && rep.name) {
       let byName = findRowByName(rep.name);
       if (byName) return byName.name;
@@ -174,6 +175,9 @@
     if (!csvName) return { age: null, timeInCompany: null };
 
     let row = findRowByName(csvName);
+    if (!row && rep && rep.bookName) {
+      row = findRowByName(rep.bookName);
+    }
     if (!row) return { age: null, timeInCompany: null };
 
     let dobDate = row.dob ? parseMDYDate(row.dob) : null;
@@ -216,6 +220,7 @@
     load: load,
     prefetch: prefetch,
     getHrStatsForRep: getHrStatsForRep,
+    resolveCsvName: resolveCsvName,
     CSV_NAME_MAP: CSV_NAME_MAP
   };
 })();

@@ -23,6 +23,7 @@
     matthew: {
       name: 'Matthew Birnholz',
       bookName: 'Matthew Birnholz',
+      csvName: 'Matthew',
       role: 'Senior Funding Advisor',
       company: 'Capital Infusion',
       badge: 'Top Closer',
@@ -347,6 +348,14 @@
       company: 'Capital Infusion',
       badge: 'Rising Star',
       photo: 'Assets/reps/matthew.png'
+    },
+    mschweri: {
+      name: 'Matthew Schweri',
+      bookName: 'Matthew Schweri',
+      role: 'Funding Advisor',
+      company: 'Capital Infusion',
+      badge: 'Rising Star',
+      photo: 'Assets/reps/schweri.png'
     }
   };
 
@@ -375,7 +384,9 @@
     joseph: 'Joseph Hernandez',
     ken: 'Ken Pflug',
     kevin: 'Kevin Cohen',
-    jamar: 'Jamar Johnson'
+    jamar: 'Jamar Johnson',
+    mschweri: 'Matthew Schweri',
+    matthewM: 'Matthew Mejia'
   };
 
   Object.keys(REPS).forEach(function (id) {
@@ -388,7 +399,24 @@
   /* Expose REPS globally so other page scripts can read rep data */
   window.REPS = REPS;
 
-  let REP_ALIASES = { jimmy: 'gimmy', matt: 'matthew' };
+  let REP_ALIASES = {
+    jimmy: 'gimmy',
+    matt: 'matthew',
+    schweri: 'mschweri',
+    scheweri: 'mschweri'
+  };
+
+  let BOOK_NAME_TO_ID = {
+    'matthew birnholz': 'matthew',
+    'matthew schweri': 'mschweri',
+    'matthew scheweri': 'mschweri'
+  };
+
+  let LAST_NAME_TO_ID = {
+    birnholz: 'matthew',
+    schweri: 'mschweri',
+    scheweri: 'mschweri'
+  };
 
   function defaultRepProfile(id) {
     let name = id.charAt(0).toUpperCase() + id.slice(1);
@@ -422,7 +450,109 @@
 
   window.ensureRepProfile = ensureRepProfile;
 
-  let SKIP_COMPARE_KEYS = { gabe: 1, matt: 1, rondon2: 1, jimmy: 1 };
+  let REP_ID_SKIP = { gabe: 1, matt: 1, rondon2: 1, jimmy: 1 };
+
+  function normRepStr(s) {
+    return String(s || '')
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .trim()
+      .toLowerCase();
+  }
+
+  function resolveRepPersonId(name) {
+    if (!name) return null;
+    let n = normRepStr(name);
+    if (BOOK_NAME_TO_ID[n]) return BOOK_NAME_TO_ID[n];
+    let keys = Object.keys(REPS);
+    let i;
+
+    for (i = 0; i < keys.length; i++) {
+      if (REP_ID_SKIP[keys[i]]) continue;
+      let rep = REPS[keys[i]];
+      if (!rep || !rep.bookName) continue;
+      if (n === normRepStr(rep.bookName)) return keys[i];
+    }
+
+    for (i = 0; i < keys.length; i++) {
+      if (REP_ID_SKIP[keys[i]]) continue;
+      let rep = REPS[keys[i]];
+      if (!rep || !rep.name) continue;
+      if (n === normRepStr(rep.name)) return keys[i];
+    }
+
+    let parts = n.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      let first = parts[0];
+      let last = parts[parts.length - 1];
+      for (i = 0; i < keys.length; i++) {
+        if (REP_ID_SKIP[keys[i]]) continue;
+        let rep = REPS[keys[i]];
+        if (!rep) continue;
+        let labels = [rep.bookName, rep.name].filter(Boolean);
+        let j;
+        for (j = 0; j < labels.length; j++) {
+          let lp = normRepStr(labels[j]).split(/\s+/).filter(Boolean);
+          if (lp.length >= 2 && lp[0] === first && lp[lp.length - 1] === last) return keys[i];
+        }
+      }
+    }
+
+    let best = null;
+    let bestLen = 0;
+    for (i = 0; i < keys.length; i++) {
+      if (REP_ID_SKIP[keys[i]]) continue;
+      let rep = REPS[keys[i]];
+      if (!rep) continue;
+      let book = normRepStr(rep.bookName || '');
+      if (book.length > bestLen && (n.indexOf(book) > -1 || book.indexOf(n) > -1)) {
+        best = keys[i];
+        bestLen = book.length;
+      }
+    }
+    if (best) return best;
+
+    if (parts.length >= 1) {
+      let first = parts[0];
+      if (first.length > 2) {
+        let firstMatch = null;
+        let firstCount = 0;
+        for (i = 0; i < keys.length; i++) {
+          if (REP_ID_SKIP[keys[i]]) continue;
+          let rep = REPS[keys[i]];
+          if (!rep) continue;
+          let repFirst = normRepStr((rep.bookName || rep.name || '').split(/\s+/)[0]);
+          if (repFirst === first) {
+            firstMatch = keys[i];
+            firstCount++;
+          }
+        }
+        if (firstCount === 1) return firstMatch;
+      }
+    }
+
+    if (parts.length >= 2) {
+      let lastKey = parts[parts.length - 1];
+      if (LAST_NAME_TO_ID[lastKey]) return LAST_NAME_TO_ID[lastKey];
+      return lastKey;
+    }
+    return null;
+  }
+
+  function personIdFromClickTarget(trigger) {
+    if (!trigger) return null;
+    let fbName = trigger.getAttribute('data-fb-rep-name');
+    if (fbName && window.resolveRepPersonId) {
+      let resolved = window.resolveRepPersonId(fbName);
+      if (resolved) return resolved;
+    }
+    return trigger.getAttribute('data-person-id');
+  }
+
+  window.resolveRepPersonId = resolveRepPersonId;
+  window.personIdFromClickTarget = personIdFromClickTarget;
+
+  let SKIP_COMPARE_KEYS = REP_ID_SKIP;
 
   function getRepData(personId) {
     let key = ensureRepProfile(personId);
@@ -489,6 +619,9 @@
       })
       .then(function () {
         if (window.CapMuseData && window.CapMuseData.prefetch) window.CapMuseData.prefetch();
+      })
+      .then(function () {
+        return ensureHrDeps();
       });
     return liveDepsPromise;
   }
@@ -786,6 +919,8 @@
      Modal DOM — injected once on page load
   ═══════════════════════════════════════════════════════════════ */
   let overlay, flipEl, closeBtn;
+  let modalTabsEl, fundingPanelEl;
+  let activeProfileTab = 'overview';
   let compareOverlay, compareSelect, compareSelfCol, compareOtherCol, compareCloseBtn;
   let compareSelfId = '';
   let currentProfileId = '';
@@ -804,6 +939,282 @@
       imgEl.removeAttribute('src');
       imgEl.alt = rep.name || '';
       if (ring) ring.classList.add('pmc-photo-missing');
+    }
+  }
+
+  function isFundingBookPage() {
+    return document.body.classList.contains('funding-book-page');
+  }
+
+  function updateProfileTabButtons(tabName) {
+    let tabs = document.getElementById('pmcModalTabs');
+    if (!tabs) return;
+    tabs.querySelectorAll('.pmc-modal-tab').forEach(function (btn) {
+      let on = btn.getAttribute('data-pmc-tab') === tabName;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+  }
+
+  function applyProfileModalTabLayout(tabName) {
+    if (!isFundingBookPage()) tabName = 'overview';
+    let statsPanel = document.getElementById('pmcStatsPanel');
+    let fundingPanel = document.getElementById('pmcFundingPanel');
+    let rankPanel = document.getElementById('pmcFbRankPanel');
+    let achPanel = document.getElementById('pmcAchievementsPanel');
+    let cardWrap = document.querySelector('.pmc-card-wrap');
+    let backFace = document.querySelector('.pmc-face-back');
+    let expanded = isFundingBookPage() && tabName === 'stats';
+    if (statsPanel) statsPanel.hidden = tabName !== 'overview';
+    if (fundingPanel) fundingPanel.hidden = !isFundingBookPage() || tabName !== 'stats';
+    if (rankPanel) {
+      rankPanel.hidden = tabName !== 'overview' || !rankPanel.innerHTML.trim();
+    }
+    if (achPanel) {
+      achPanel.hidden = tabName !== 'overview' || !achPanel.innerHTML.trim();
+    }
+    if (cardWrap) cardWrap.classList.toggle('pmc-fb-stats-expanded', expanded);
+    if (backFace) backFace.classList.toggle('pmc-fb-expanded-back', expanded);
+  }
+
+  function animateStatsToOverviewCollapse() {
+    let statsPanel = document.getElementById('pmcStatsPanel');
+    let fundingPanel = document.getElementById('pmcFundingPanel');
+    let cardWrap = document.querySelector('.pmc-card-wrap');
+    let backFace = document.querySelector('.pmc-face-back');
+    if (!cardWrap || !backFace) {
+      activeProfileTab = 'overview';
+      updateProfileTabButtons('overview');
+      applyProfileModalTabLayout('overview');
+      return;
+    }
+
+    activeProfileTab = 'overview';
+    updateProfileTabButtons('overview');
+
+    let startHeight = backFace.offsetHeight;
+    let startWidth = cardWrap.offsetWidth;
+
+    if (fundingPanel) fundingPanel.classList.add('pmc-fb-panel-fade-out');
+
+    window.setTimeout(function () {
+      if (statsPanel) statsPanel.hidden = false;
+      if (fundingPanel) fundingPanel.hidden = true;
+      let rankPanel = document.getElementById('pmcFbRankPanel');
+      if (rankPanel) rankPanel.hidden = !rankPanel.innerHTML.trim();
+      cardWrap.classList.remove('pmc-fb-stats-expanded');
+      backFace.classList.remove('pmc-fb-expanded-back');
+
+      let endHeight = backFace.offsetHeight;
+      let endWidth = cardWrap.offsetWidth;
+
+      cardWrap.classList.add('pmc-fb-size-animating');
+      backFace.classList.add('pmc-fb-size-animating');
+      cardWrap.style.maxWidth = startWidth + 'px';
+      backFace.style.height = startHeight + 'px';
+      backFace.style.overflow = 'hidden';
+
+      window.requestAnimationFrame(function () {
+        cardWrap.style.maxWidth = endWidth + 'px';
+        backFace.style.height = endHeight + 'px';
+      });
+
+      let finished = false;
+      let finish = function () {
+        if (finished) return;
+        finished = true;
+        cardWrap.style.maxWidth = '';
+        backFace.style.height = '';
+        backFace.style.overflow = '';
+        cardWrap.classList.remove('pmc-fb-size-animating');
+        backFace.classList.remove('pmc-fb-size-animating');
+        if (fundingPanel) fundingPanel.classList.remove('pmc-fb-panel-fade-out');
+        cardWrap.removeEventListener('transitionend', onTransitionEnd);
+      };
+
+      let onTransitionEnd = function (e) {
+        if (e.target === backFace && e.propertyName === 'height') finish();
+      };
+
+      cardWrap.addEventListener('transitionend', onTransitionEnd);
+      window.setTimeout(finish, 480);
+    }, 120);
+  }
+
+  function setProfileModalTab(tab, options) {
+    options = options || {};
+    let nextTab = tab === 'stats' && isFundingBookPage() ? 'stats' : 'overview';
+    if (!options.instant && nextTab === 'overview' && activeProfileTab === 'stats' && isFundingBookPage()) {
+      animateStatsToOverviewCollapse();
+      return;
+    }
+    activeProfileTab = nextTab;
+    updateProfileTabButtons(nextTab);
+    applyProfileModalTabLayout(nextTab);
+  }
+
+  function renderFundingBookRankBadges(rankData) {
+    if (!rankData || !rankData.ones || !rankData.ones.length) return '';
+    let badges = rankData.ones.map(function (one) {
+      let scopeHtml = one.scope === 'month'
+        ? ''
+        : '<div class="pmc-fb-one-scope">' + escHtml(rankData.filterMeta || 'Current filters') + '</div>';
+      return '<div class="pmc-fb-one-badge">' +
+        '<div class="pmc-fb-one-crown" aria-hidden="true">#1</div>' +
+        '<div class="pmc-fb-one-body">' +
+          '<div class="pmc-fb-one-title">' + escHtml(one.label) + '</div>' +
+          '<div class="pmc-fb-one-value">' + escHtml(one.value) + '</div>' +
+          scopeHtml +
+        '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="pmc-fb-ones">' +
+      '<div class="pmc-fb-ones-head">' +
+        '<div class="pmc-fb-ones-title">Leading in:</div>' +
+      '</div>' +
+      '<div class="pmc-fb-ones-grid">' + badges + '</div>' +
+    '</div>';
+  }
+
+  function renderProfileAchievements(personId) {
+    let panel = document.getElementById('pmcAchievementsPanel');
+    if (!panel) return;
+    if (!window.CapMuseAchievements) {
+      panel.innerHTML = '';
+      panel.hidden = true;
+      return;
+    }
+    let repKey = ensureRepProfile(personId);
+    let claimed = window.CapMuseAchievements.getClaimedForRep(repKey);
+    if (!claimed.length) {
+      panel.innerHTML = '';
+      panel.hidden = true;
+      return;
+    }
+    let trophies = claimed.map(function (ach) {
+      return '<div class="pmc-ach-trophy rarity-' + escHtml(ach.rarity) + '" tabindex="0" role="img" aria-label="' + escHtml(ach.name) + '">' +
+        '<span class="pmc-ach-icon" aria-hidden="true">' + escHtml(ach.icon) + '</span>' +
+        '<div class="pmc-ach-tip">' +
+          '<div class="pmc-ach-tip-name">' + escHtml(ach.name) + '</div>' +
+          '<div class="pmc-ach-tip-rarity">' + escHtml(ach.rarityLabel) + ' Achievement</div>' +
+          '<div class="pmc-ach-tip-desc">' + escHtml(ach.description) + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    panel.innerHTML =
+      '<div class="pmc-achievements">' +
+        '<div class="pmc-achievements-head">Achievements</div>' +
+        '<div class="pmc-achievements-row">' + trophies + '</div>' +
+      '</div>';
+    panel.hidden = activeProfileTab !== 'overview';
+  }
+
+  window.CapMuseProfileAchievements = {
+    refreshOpen: function () {
+      if (overlay && overlay.classList.contains('pmc-open') && currentProfileId) {
+        renderProfileAchievements(currentProfileId);
+      }
+    }
+  };
+
+  function renderFundingBookOverviewRankings(personId) {
+    let panel = document.getElementById('pmcFbRankPanel');
+    if (!panel) return;
+    if (!isFundingBookPage()) {
+      panel.innerHTML = '';
+      panel.hidden = true;
+      return;
+    }
+    let fb = window.CapMuseFundingBook;
+    let rankData = fb && fb.getRepNumberOnes ? fb.getRepNumberOnes(personId) : null;
+    if (!rankData || !rankData.ones || !rankData.ones.length) {
+      panel.innerHTML = '';
+      panel.hidden = true;
+      return;
+    }
+    panel.innerHTML = renderFundingBookRankBadges(rankData);
+    panel.hidden = activeProfileTab !== 'overview';
+  }
+
+  function renderFundingBookStatsPanel(container, personId) {
+    if (!container) return;
+    let data = window.CapMuseFundingBook && window.CapMuseFundingBook.getRepYearlyStatsForPerson
+      ? window.CapMuseFundingBook.getRepYearlyStatsForPerson(personId)
+      : null;
+    if (!data || !data.years || !data.years.length) {
+      container.innerHTML =
+        '<div class="pmc-fb-empty">No yearly funding book data for this rep.</div>';
+      return;
+    }
+    let rows = data.years.map(function (y, i) {
+      let rowCls = i === 0 ? ' class="pmc-fb-row-top"' : '';
+      return '<tr' + rowCls + '>' +
+        '<td><span class="pmc-fb-year">' + escHtml(String(y.year)) + '</span></td>' +
+        '<td><span class="pmc-fb-money-total">' + escHtml(y.volume) + '</span></td>' +
+        '<td><span class="pmc-fb-money">' + escHtml(y.revenue) + '</span></td>' +
+        '<td><span class="pmc-fb-pts">' + escHtml(y.points) + '</span></td>' +
+        '<td>' + escHtml(y.team) + '</td>' +
+        '<td>' + escHtml(y.count) + '</td>' +
+        '<td><span class="pmc-fb-money">' + escHtml(y.avgFunding) + '</span></td>' +
+        '<td><span class="pmc-fb-money">' + escHtml(y.avgRev) + '</span></td>' +
+        '</tr>';
+    }).join('');
+    container.innerHTML =
+      '<div class="pmc-fb-yearly">' +
+        '<div class="pmc-fb-yearly-head">' +
+          '<div class="pmc-fb-yearly-title">Yearly Stats</div>' +
+        '</div>' +
+        '<div class="pmc-fb-table-wrap">' +
+          '<table class="pmc-fb-yearly-table" aria-label="Yearly funding stats for ' + escHtml(data.name) + '">' +
+            '<thead><tr>' +
+              '<th>Year</th>' +
+              '<th>Total Funding</th>' +
+              '<th>Total Revenue</th>' +
+              '<th>Points</th>' +
+              '<th>Team</th>' +
+              '<th>Count</th>' +
+              '<th>Avg. Funding</th>' +
+              '<th>Avg. Rev</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+          '</table>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function escHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function syncFundingBookModalTabs(personId) {
+    let tabs = document.getElementById('pmcModalTabs');
+    if (!tabs) return;
+    if (isFundingBookPage()) {
+      tabs.hidden = false;
+      setProfileModalTab('overview', { instant: true });
+      renderFundingBookOverviewRankings(personId);
+      renderFundingBookStatsPanel(document.getElementById('pmcFundingPanel'), personId);
+    } else {
+      tabs.hidden = true;
+      setProfileModalTab('overview', { instant: true });
+      let rankPanel = document.getElementById('pmcFbRankPanel');
+      if (rankPanel) {
+        rankPanel.innerHTML = '';
+        rankPanel.hidden = true;
+      }
+      let fundingPanel = document.getElementById('pmcFundingPanel');
+      if (fundingPanel) {
+        fundingPanel.innerHTML = '';
+        fundingPanel.hidden = true;
+      }
+      let cardWrap = document.querySelector('.pmc-card-wrap');
+      let backFace = document.querySelector('.pmc-face-back');
+      if (cardWrap) cardWrap.classList.remove('pmc-fb-stats-expanded');
+      if (backFace) backFace.classList.remove('pmc-fb-expanded-back');
     }
   }
 
@@ -853,7 +1264,14 @@
               '</div>' +
 
               '<div class="pmc-div"></div>' +
+              '<div class="pmc-modal-tabs" id="pmcModalTabs" role="tablist" hidden>' +
+                '<button type="button" class="pmc-modal-tab active" data-pmc-tab="overview" role="tab" aria-selected="true">Overview</button>' +
+                '<button type="button" class="pmc-modal-tab" data-pmc-tab="stats" role="tab" aria-selected="false">Stats</button>' +
+              '</div>' +
+              '<div id="pmcFbRankPanel" hidden></div>' +
+              '<div id="pmcAchievementsPanel" hidden></div>' +
               '<div id="pmcStatsPanel"></div>' +
+              '<div id="pmcFundingPanel" hidden></div>' +
             '</div>' +
 
           '</div>' +
@@ -864,11 +1282,21 @@
     overlay  = document.getElementById('pmcOverlay');
     flipEl   = document.getElementById('pmcFlip');
     closeBtn = document.getElementById('pmcClose');
+    modalTabsEl = document.getElementById('pmcModalTabs');
+    fundingPanelEl = document.getElementById('pmcFundingPanel');
 
     closeBtn.addEventListener('click', closeProfile);
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) closeProfile();
     });
+    if (modalTabsEl) {
+      modalTabsEl.querySelectorAll('.pmc-modal-tab').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (!isFundingBookPage()) return;
+          setProfileModalTab(btn.getAttribute('data-pmc-tab'));
+        });
+      });
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -889,6 +1317,8 @@
     document.getElementById('pmcBadge').textContent      = rep.badge;
 
     renderProfileStatsPanel(document.getElementById('pmcStatsPanel'), rep.id);
+    renderProfileAchievements(rep.id);
+    syncFundingBookModalTabs(rep.id);
   }
 
   function populate(personId) {
@@ -907,6 +1337,8 @@
     document.getElementById('pmcBadge').textContent      = rep.badge;
 
     renderProfileStatsPanel(document.getElementById('pmcStatsPanel'), currentProfileId, { loading: true });
+    renderProfileAchievements(currentProfileId);
+    syncFundingBookModalTabs(currentProfileId);
 
     Promise.all([
       loadLiveStatsForRep(currentProfileId),
@@ -1085,6 +1517,7 @@
     setTimeout(function () {
       flipEl.classList.remove('pmc-flipped');
       overlay.setAttribute('hidden', '');
+      setProfileModalTab('overview', { instant: true });
     }, 330);
   }
 
@@ -1096,7 +1529,7 @@
     if (overlay && overlay.contains(e.target) && e.target !== overlay) return;
     if (e.target.closest('#btnCompareStats')) return;
     let trigger = e.target.closest('[data-person-id]');
-    if (trigger) openProfile(trigger.dataset.personId);
+    if (trigger) openProfile(personIdFromClickTarget(trigger));
   });
 
   document.addEventListener('keydown', function (e) {
@@ -1115,11 +1548,30 @@
     buildCompareModal();
   }
 
+  window.addEventListener('capmuse:funding-book-rendered', function () {
+    if (!overlay || !overlay.classList.contains('pmc-open') || !isFundingBookPage() || !currentProfileId) return;
+    renderFundingBookOverviewRankings(currentProfileId);
+    if (activeProfileTab === 'stats') {
+      renderFundingBookStatsPanel(document.getElementById('pmcFundingPanel'), currentProfileId);
+    }
+  });
+
+  window.addEventListener('capmuse:achievement-claimed', function (e) {
+    if (!e.detail || !e.detail.repId) return;
+    if (overlay && overlay.classList.contains('pmc-open') && currentProfileId === e.detail.repId) {
+      renderProfileAchievements(currentProfileId);
+    }
+  });
+
   window.addEventListener('capmuse:rep-stats-updated', function (e) {
     let uid = e.detail && e.detail.userId;
     if (!uid) return;
     if (overlay && overlay.classList.contains('pmc-open') && currentProfileId === uid) {
       renderProfileView(currentProfileId);
+      renderProfileAchievements(currentProfileId);
+      if (isFundingBookPage() && activeProfileTab === 'stats') {
+        renderFundingBookStatsPanel(document.getElementById('pmcFundingPanel'), currentProfileId);
+      }
     }
     if (compareOverlay && compareOverlay.classList.contains('pmc-open')) {
       if (uid === compareSelfId) {
@@ -1149,6 +1601,17 @@
   }
 
   window.addEventListener('capmuse:hr-data-loaded', refreshOpenHrPanels);
+
+  function refreshOpenLivePanels() {
+    if (!overlay || !overlay.classList.contains('pmc-open') || !currentProfileId) return;
+    loadLiveStatsForRep(currentProfileId).then(function () {
+      if (overlay.classList.contains('pmc-open') && currentProfileId) {
+        fillProfileStatsValues(document.getElementById('pmcStatsPanel'), currentProfileId);
+      }
+    });
+  }
+
+  window.addEventListener('capmuse:pipeline-updated', refreshOpenLivePanels);
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initModals);

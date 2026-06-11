@@ -125,7 +125,7 @@
        FUNDING BOOK â€” Filter + Rep Leaderboard
     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .fb-hero {
-      background: var(--surface);
+      background: linear-gradient(135deg, rgba(37,99,235,0.07) 0%, var(--surface) 58%);
       border: 2px solid var(--blue);
       border-radius: 20px;
       padding: 20px 28px;
@@ -138,6 +138,7 @@
       min-height: 200px;
     }
     html[data-theme="dark"] .fb-hero {
+      background: linear-gradient(135deg, rgba(96,165,250,0.10) 0%, var(--surface) 58%);
       border-color: #60A5FA;
       box-shadow: var(--card-shadow), 0 0 0 1px rgba(96,165,250,0.15);
     }
@@ -235,13 +236,49 @@
       margin-top: 8px; line-height: 1.4; width: 100%; text-align: center;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .fb-hero-kpis-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+      align-self: center;
+      padding: 12px 16px;
+      background: rgba(37,99,235,0.08);
+      border: 1px solid rgba(37,99,235,0.14);
+      border-radius: 12px;
+    }
+    html[data-theme="dark"] .fb-hero-kpis-wrap {
+      background: rgba(96,165,250,0.10);
+      border-color: rgba(96,165,250,0.18);
+    }
+    .fb-kpi-panel-head {
+      text-align: center;
+      padding: 0 2px 2px;
+      border-bottom: 1px solid rgba(37,99,235,0.12);
+    }
+    html[data-theme="dark"] .fb-kpi-panel-head {
+      border-bottom-color: rgba(96,165,250,0.16);
+    }
+    .fb-kpi-heading {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--blue);
+      line-height: 1.2;
+    }
+    html[data-theme="dark"] .fb-kpi-heading { color: #60A5FA; }
+    .fb-kpi-scope {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      line-height: 1.3;
+    }
     .fb-hero-kpis {
       display: flex;
       align-items: stretch;
-      flex-shrink: 0;
-      align-self: center;
       gap: 0;
-      padding: 4px 0;
     }
     .fb-kpi {
       display: flex; flex-direction: column; justify-content: center;
@@ -258,8 +295,14 @@
       font-variant-numeric: tabular-nums;
     }
     .fb-kpi-lbl {
-      font-size: 10px; font-weight: 700; color: var(--text-muted);
+      font-size: 10px; font-weight: 700; color: var(--text-secondary);
       text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px;
+      display: inline-block; padding: 3px 8px; border-radius: 4px;
+      background: rgba(255,255,255,0.65);
+    }
+    html[data-theme="dark"] .fb-kpi-lbl {
+      color: rgba(255,255,255,0.82);
+      background: rgba(0,0,0,0.28);
     }
     .fb-kpi--primary .fb-kpi-val { color: var(--blue); }
     html[data-theme="dark"] .fb-kpi--primary .fb-kpi-val { color: #60A5FA; }
@@ -268,16 +311,13 @@
     .fb-active-tag button { border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; }
     .fb-active-tag button:hover { color: var(--text-primary); }
 
-    .fb-filter-section { display: flex; flex-direction: column; gap: 10px; }
-    .fb-filter-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; }
-    .fb-filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    @media (min-width: 901px) {
-      .fb-filter-grid { grid-template-columns: repeat(4, 1fr); }
-    }
+    .fb-filter-section { display: flex; flex-direction: column; gap: 8px; }
+    .fb-filter-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; }
+    .fb-filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .fb-filter-chip {
-      display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-      min-height: 56px; padding: 12px 14px;
-      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px;
+      min-height: 48px; padding: 8px 10px; width: 100%;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
       cursor: pointer; text-align: left; font-family: inherit;
       transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
       box-shadow: var(--card-shadow);
@@ -285,8 +325,8 @@
     .fb-filter-chip:hover:not(:disabled) { border-color: rgba(37,99,235,0.45); transform: translateY(-1px); }
     .fb-filter-chip.active { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.10); }
     .fb-filter-chip:disabled { opacity: 0.55; cursor: not-allowed; }
-    .fb-filter-chip-name { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    .fb-filter-chip-val { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .fb-filter-chip-name { font-size: 9.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; width: 100%; }
+    .fb-filter-chip-val { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; width: 100%; }
     .fb-filter-chip.active .fb-filter-chip-val { color: var(--blue); }
     html[data-theme="dark"] .fb-filter-chip.active .fb-filter-chip-val { color: #60A5FA; }
 
@@ -310,8 +350,32 @@
     .fb-rep-table td:last-child { padding-right: 18px; }
     .fb-rep-table tbody tr:last-child td { border-bottom: none; }
     .fb-rep-table tbody tr:hover td { background: var(--table-hover); }
-    .fb-rep-name { font-weight: 600; color: var(--text-primary); cursor: pointer; text-decoration: none; }
-    .fb-rep-name:hover { color: var(--blue); }
+    .fb-rep-name { font-weight: 600; color: var(--text-primary); text-decoration: none; }
+    .fb-rep-name[data-person-id] { color: var(--blue); cursor: pointer; }
+    .fb-rep-name[data-person-id]:hover { text-decoration: underline; text-underline-offset: 2px; }
+    html[data-theme="dark"] .fb-rep-name[data-person-id] { color: #60A5FA; }
+    .fb-spot-name[data-person-id] {
+      color: var(--blue); cursor: pointer; transition: opacity 0.15s ease;
+    }
+    .fb-spot-name[data-person-id]:hover { text-decoration: underline; text-underline-offset: 3px; opacity: 0.88; }
+    html[data-theme="dark"] .fb-spot-name[data-person-id] { color: #60A5FA; }
+    .fb-rep-cell { display: flex; align-items: center; gap: 12px; justify-content: flex-start; }
+    .fb-rep-avatar {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      object-fit: cover; object-position: center 12%; cursor: pointer;
+      border: 2px solid rgba(37,99,235,0.18);
+    }
+    html[data-theme="dark"] .fb-rep-avatar { border-color: rgba(96,165,250,0.28); }
+    .fb-rep-initials {
+      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff; cursor: default;
+    }
+    .fb-rep-initials[data-person-id] { cursor: pointer; }
+    .fb-rep-table th.fb-col-name,
+    .fb-rep-table td.fb-col-name { text-align: left; padding-left: 14px; min-width: 160px; }
+    .fb-rep-table td.fb-col-name .fb-rep-name { text-align: left; }
     .fb-money { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-primary); }
     .fb-money-total {
       display: inline-block; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700;
@@ -409,8 +473,10 @@
     .fb-btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
     .fb-btn-primary:hover { opacity: 0.92; color: #fff; }
 
-    @media (max-width: 900px) {
+    @media (max-width: 600px) {
       .fb-filter-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 900px) {
       .fb-hero { flex-direction: column; align-items: stretch; gap: 0; flex-wrap: wrap; min-height: 0; padding: 20px; }
       .fb-hero-sep { width: 100%; height: 1px; margin: 16px 0; }
       .fb-hero-spotlight[hidden] + .fb-hero-sep { display: none; }
@@ -426,9 +492,11 @@
       .fb-hero-context { white-space: normal; }
       .fb-active-filters { justify-content: center; }
       .fb-hero-sep--kpis { margin-top: 16px; }
+      .fb-hero-kpis-wrap { width: 100%; }
+      .fb-kpi-panel-head { text-align: center; }
       .fb-hero-kpis {
         width: 100%; display: grid; grid-template-columns: repeat(2, 1fr);
-        padding-top: 16px; gap: 16px 0;
+        gap: 16px 0;
       }
       .fb-kpi { border-left: none; padding: 0; min-width: 0; text-align: left; }
       .fb-kpi:nth-child(odd) { padding-right: 12px; }
@@ -446,100 +514,225 @@
     }
 
     /* ═══════════════════════════════════════════════════════════
-       UI/UX ENHANCEMENTS — Data-Dense Dashboard
-       Palette: Navy Blue primary · Amber accent for rank #1
-       Typography: Fira Code for all data / monetary values
+       UI/UX ENHANCEMENTS — Data-Dense Dashboard v2
+       Design System: Navy Blue · Amber rank accent · Fira Code data
     ═══════════════════════════════════════════════════════════ */
 
-    /* — Fira Code for monetary & data values — */
-    .fb-kpi-val,
-    .fb-spot-stat,
-    .fb-money,
-    .fb-money-total,
-    .fb-pts,
-    .fb-rep-table td:nth-child(7) {
+    /* ── Keyframes ── */
+    @keyframes fbFadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fbShimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    @keyframes fbGradientShift {
+      0%,100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
+    }
+    @keyframes fbRingPulse {
+      0%,100% {
+        background: conic-gradient(from 0deg, var(--blue) 0%, var(--green) 50%, var(--blue) 100%) !important;
+        box-shadow: 0 0 32px rgba(37,99,235,0.30), 0 10px 30px rgba(0,0,0,0.18);
+      }
+      50% {
+        background: conic-gradient(from 180deg, var(--green) 0%, var(--blue) 50%, var(--green) 100%) !important;
+        box-shadow: 0 0 48px rgba(16,185,129,0.28), 0 10px 30px rgba(0,0,0,0.18);
+      }
+    }
+
+    /* ── Page section entrance animations ── */
+    .fb-hero        { animation: fbFadeUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.05s both; }
+    .fb-filter-section { animation: fbFadeUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.12s both; }
+    .fb-table-card  { animation: fbFadeUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.20s both; }
+
+    /* ── Fira Code for all numeric/monetary values ── */
+    .fb-kpi-val, .fb-spot-stat, .fb-money, .fb-money-total, .fb-pts,
+    .fb-rep-table td:nth-child(3), .fb-rep-table td:nth-child(4),
+    .fb-rep-table td:nth-child(5), .fb-rep-table td:nth-child(7),
+    .fb-rep-table td:nth-child(8), .fb-rep-table td:nth-child(9) {
       font-family: 'Fira Code', 'Inter', ui-monospace, monospace;
     }
-    .fb-rep-table td:nth-child(7) { font-weight: 600; color: var(--text-primary); }
 
-    /* — Hero: gradient accent bar at top edge — */
-    .fb-hero { position: relative; overflow: hidden; }
+    /* ══════════════════════════════════════════
+       HERO — dot-grid ambient + accent bar
+    ══════════════════════════════════════════ */
+    .fb-hero {
+      position: relative; overflow: hidden;
+      /* dot-grid background layer */
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(37,99,235,0.06) 1px, transparent 0),
+        linear-gradient(135deg, rgba(37,99,235,0.07) 0%, var(--surface) 58%);
+      background-size: 24px 24px, 100% 100%;
+    }
+    html[data-theme="dark"] .fb-hero {
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(96,165,250,0.05) 1px, transparent 0),
+        linear-gradient(135deg, rgba(96,165,250,0.10) 0%, var(--surface) 58%);
+      background-size: 24px 24px, 100% 100%;
+    }
+
+    /* Top edge gradient bar */
     .fb-hero::before {
       content: '';
       position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--blue) 0%, var(--green) 100%);
-      z-index: 2;
+      background: linear-gradient(90deg, var(--blue) 0%, var(--green) 60%, var(--blue) 100%);
+      background-size: 200% 100%;
+      animation: fbGradientShift 6s ease-in-out infinite;
+      z-index: 3;
     }
 
-    /* — KPI: larger & gradient text for primary — */
-    .fb-kpi-val { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+    /* Subtle ambient glow in corner */
+    .fb-hero::after {
+      content: '';
+      position: absolute; top: -40px; right: -40px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(37,99,235,0.10) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    html[data-theme="dark"] .fb-hero::after {
+      background: radial-gradient(circle, rgba(96,165,250,0.12) 0%, transparent 70%);
+    }
+
+    /* ── Spotlight photo ring — pulsing conic border ── */
+    .fb-spot-photo-ring {
+      animation: fbRingPulse 6s ease-in-out infinite;
+    }
+
+    /* ── Spotlight lead badge ── */
+    .fb-spot-lead {
+      font-size: 9px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 100px; margin-bottom: 4px;
+      background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.22);
+      color: var(--blue); display: inline-flex; align-items: center; gap: 5px;
+    }
+    .fb-spot-lead::before {
+      content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+      background: var(--blue);
+    }
+    html[data-theme="dark"] .fb-spot-lead {
+      background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.24); color: #93C5FD;
+    }
+    html[data-theme="dark"] .fb-spot-lead::before { background: #60A5FA; }
+
+    /* ── KPI values — Fira Code + gradient for primary ── */
+    .fb-kpi-val { font-size: 30px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
     .fb-kpi--primary .fb-kpi-val {
-      background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%);
+      background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 60%, #3B82F6 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     html[data-theme="dark"] .fb-kpi--primary .fb-kpi-val {
-      background: linear-gradient(135deg, #60A5FA 0%, #93C5FD 100%);
+      background: linear-gradient(135deg, #93C5FD 0%, #60A5FA 60%, #BFDBFE 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
 
-    /* — Spotlight "Leading Rep": pill badge — */
-    .fb-spot-lead {
-      font-size: 9px; font-weight: 800; letter-spacing: 0.18em;
-      padding: 3px 10px; border-radius: 100px; margin-bottom: 4px;
-      background: rgba(37,99,235,0.08); border: 1px solid rgba(37,99,235,0.20);
-      color: var(--blue);
+    /* ── KPI panel label ── */
+    .fb-kpi-heading {
+      font-size: 9.5px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.15em; color: var(--blue); line-height: 1.2;
     }
-    .fb-spot-lead::before { content: none; }
-    html[data-theme="dark"] .fb-spot-lead {
-      background: rgba(96,165,250,0.12); border-color: rgba(96,165,250,0.22); color: #93C5FD;
+    html[data-theme="dark"] .fb-kpi-heading { color: #60A5FA; }
+
+    /* ── KPI label pill ── */
+    .fb-kpi-lbl {
+      font-size: 9.5px; font-weight: 700; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.07em; margin-top: 6px;
+      display: inline-block; padding: 3px 9px; border-radius: 4px;
+      background: rgba(255,255,255,0.70); border: 1px solid rgba(0,0,0,0.06);
+    }
+    html[data-theme="dark"] .fb-kpi-lbl {
+      color: rgba(255,255,255,0.75); background: rgba(0,0,0,0.30); border-color: rgba(255,255,255,0.06);
     }
 
-    /* — Filter section label: accented with gradient line — */
-    .fb-filter-label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; color: var(--text-secondary); }
+    /* ══════════════════════════════════════════
+       FILTER SECTION
+    ══════════════════════════════════════════ */
+
+    /* Section label with gradient accent */
+    .fb-filter-label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-secondary);
+    }
     .fb-filter-label::before {
-      content: ''; width: 18px; height: 2px; flex-shrink: 0; border-radius: 2px;
+      content: ''; width: 20px; height: 2.5px; flex-shrink: 0; border-radius: 2px;
       background: linear-gradient(90deg, var(--blue), var(--green));
     }
 
-    /* — Filter chips: dropdown chevron + relative positioning — */
-    .fb-filter-chip { position: relative; padding-right: 28px; }
+    /* Filter chips — premium card style */
+    .fb-filter-chip {
+      position: relative; padding-right: 24px;
+      border-radius: 10px;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease,
+                  transform 0.18s cubic-bezier(0.22,1,0.36,1), background 0.18s ease;
+    }
+    .fb-filter-chip:hover:not(:disabled) {
+      border-color: rgba(37,99,235,0.40);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37,99,235,0.12), var(--card-shadow);
+    }
+    html[data-theme="dark"] .fb-filter-chip:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(96,165,250,0.12), var(--card-shadow);
+    }
+    .fb-filter-chip.active {
+      border-color: var(--blue);
+      background: rgba(37,99,235,0.04);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.10), var(--card-shadow);
+    }
+    html[data-theme="dark"] .fb-filter-chip.active {
+      background: rgba(96,165,250,0.06);
+      box-shadow: 0 0 0 3px rgba(96,165,250,0.12), var(--card-shadow);
+    }
+
+    /* Active chip top-edge accent */
+    .fb-filter-chip.active::before {
+      content: ''; position: absolute; top: 0; left: 8px; right: 8px; height: 2px;
+      border-radius: 0 0 2px 2px;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+      pointer-events: none;
+    }
+
+    /* Chevron indicator */
     .fb-filter-chip::after {
-      content: ''; position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+      content: ''; position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
       width: 0; height: 0; pointer-events: none;
       border-left: 4px solid transparent; border-right: 4px solid transparent;
       border-top: 5px solid var(--text-muted);
-      transition: border-top-color 0.15s ease;
+      transition: border-top-color 0.15s ease, transform 0.15s ease;
     }
     .fb-filter-chip.active::after { border-top-color: var(--blue); }
     html[data-theme="dark"] .fb-filter-chip.active::after { border-top-color: #60A5FA; }
     .fb-filter-chip:hover:not(:disabled)::after { border-top-color: var(--text-secondary); }
 
-    /* — Table meta: pill badge — */
+    .fb-filter-chip-name { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; }
+    .fb-filter-chip-val  { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .fb-filter-chip.active .fb-filter-chip-name { color: var(--blue); }
+    .fb-filter-chip.active .fb-filter-chip-val  { color: var(--blue); }
+    html[data-theme="dark"] .fb-filter-chip.active .fb-filter-chip-name { color: #60A5FA; }
+    html[data-theme="dark"] .fb-filter-chip.active .fb-filter-chip-val  { color: #60A5FA; }
+
+    /* ══════════════════════════════════════════
+       TABLE / LEADERBOARD
+    ══════════════════════════════════════════ */
+
+    /* Table card top border accent */
+    .fb-table-card { position: relative; overflow: hidden; }
+    .fb-table-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--blue) 0%, var(--green) 100%);
+      z-index: 1;
+    }
+
+    /* Table meta pill */
     .fb-table-meta {
-      font-size: 11px; font-weight: 500; color: var(--text-muted);
+      font-size: 10.5px; font-weight: 600; color: var(--text-muted);
       background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: 100px; padding: 3px 10px;
+      border-radius: 100px; padding: 3px 11px;
+      white-space: nowrap;
     }
 
-    /* — Total Funding badge: gradient + depth shadow — */
-    .fb-money-total {
-      background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%);
-      box-shadow: 0 2px 6px rgba(37,99,235,0.28);
-      font-size: 13px; letter-spacing: -0.02em;
-    }
-    html[data-theme="dark"] .fb-money-total { box-shadow: 0 2px 8px rgba(37,99,235,0.38); }
-
-    /* — Rank #1 row: amber accent — */
-    .fb-row-top td { background: rgba(245,158,11,0.03) !important; }
-    .fb-row-top td:first-child { box-shadow: inset 3px 0 0 #F59E0B !important; }
-    html[data-theme="dark"] .fb-row-top td { background: rgba(245,158,11,0.05) !important; }
-
-    /* — Rank medal colors: gold · silver · bronze — */
-    .fb-rep-table tbody tr:nth-child(1) td:first-child { color: #F59E0B !important; font-weight: 800; font-size: 14px; }
-    .fb-rep-table tbody tr:nth-child(2) td:first-child { color: #94A3B8; font-weight: 700; }
-    .fb-rep-table tbody tr:nth-child(3) td:first-child { color: #CD7F32; font-weight: 700; }
-
-    /* — Numeric columns: right-align for data scanning — */
+    /* Numeric columns: right-aligned */
     .fb-rep-table th:nth-child(3), .fb-rep-table th:nth-child(4), .fb-rep-table th:nth-child(5),
     .fb-rep-table th:nth-child(7), .fb-rep-table th:nth-child(8), .fb-rep-table th:nth-child(9),
     .fb-rep-table td:nth-child(3), .fb-rep-table td:nth-child(4), .fb-rep-table td:nth-child(5),
@@ -547,60 +740,172 @@
       text-align: right;
     }
 
-    /* — Table rows: smooth hover transition — */
-    .fb-rep-table tbody tr { transition: background-color 0.12s ease; }
+    /* Row transitions */
+    .fb-rep-table tbody tr { transition: background-color 0.14s ease; }
 
-    /* — Apply button: gradient + depth — */
+    /* ── Rank #1 — gold amber accent ── */
+    .fb-row-top td { background: rgba(245,158,11,0.04) !important; }
+    .fb-row-top td:first-child { box-shadow: inset 4px 0 0 #F59E0B !important; }
+    html[data-theme="dark"] .fb-row-top td { background: rgba(245,158,11,0.06) !important; }
+
+    /* Rank medals: gold · silver · bronze */
+    .fb-rep-table tbody tr:nth-child(1) td:first-child {
+      color: #F59E0B !important; font-weight: 900; font-size: 15px;
+      text-shadow: 0 0 10px rgba(245,158,11,0.5);
+    }
+    .fb-rep-table tbody tr:nth-child(2) td:first-child { color: #94A3B8; font-weight: 800; }
+    .fb-rep-table tbody tr:nth-child(3) td:first-child { color: #B87333; font-weight: 800; }
+
+    /* Top-3 row subtle left highlight */
+    .fb-rep-table tbody tr:nth-child(1) td:first-child { box-shadow: inset 4px 0 0 #F59E0B; }
+    .fb-rep-table tbody tr:nth-child(2) td:first-child { box-shadow: inset 4px 0 0 #94A3B8; }
+    .fb-rep-table tbody tr:nth-child(3) td:first-child { box-shadow: inset 4px 0 0 #B87333; }
+
+    /* ── Total Funding badge ── */
+    .fb-money-total {
+      display: inline-block; font-family: 'Fira Code', ui-monospace, monospace;
+      font-size: 13px; font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+      border-radius: 7px; padding: 4px 9px;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.30), inset 0 1px 0 rgba(255,255,255,0.15);
+      letter-spacing: -0.02em;
+    }
+    html[data-theme="dark"] .fb-money-total {
+      box-shadow: 0 2px 10px rgba(37,99,235,0.40), inset 0 1px 0 rgba(255,255,255,0.10);
+    }
+
+    /* ── Empty state ── */
+    .fb-empty {
+      padding: 56px 24px; text-align: center; color: var(--text-muted);
+      font-size: 14px; font-weight: 500;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .fb-empty::before {
+      content: '';
+      display: block; width: 40px; height: 40px;
+      border-radius: 12px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M4 3h9l4 4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z'/%3E%3Cpath d='M13 3v4h4M7 9h6M7 12h6M7 15h3'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    /* ══════════════════════════════════════════
+       FILTER MODAL
+    ══════════════════════════════════════════ */
+
+    /* Overlay with spring-style modal animation */
+    .fb-filter-modal {
+      transform: translateY(14px) scale(0.97);
+      transition: transform 0.25s cubic-bezier(0.22,1,0.36,1);
+      box-shadow: 0 28px 90px rgba(0,0,0,0.38), 0 0 0 1px rgba(0,0,0,0.06);
+    }
+    .fb-filter-overlay.open .fb-filter-modal {
+      transform: translateY(0) scale(1);
+    }
+
+    /* Modal close — danger hover */
+    .fb-filter-modal-close {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; border-radius: 8px;
+      transition: background 0.14s ease, color 0.14s ease, transform 0.14s ease;
+    }
+    .fb-filter-modal-close:hover {
+      background: rgba(239,68,68,0.10); color: #EF4444; transform: scale(1.08);
+    }
+
+    /* Apply/primary button */
     .fb-btn-primary {
-      background: linear-gradient(135deg, #2563EB 0%, #1d4ed8 100%) !important;
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
       border-color: transparent !important;
       box-shadow: 0 2px 8px rgba(37,99,235,0.28);
-      transition: box-shadow 0.15s ease;
+      transition: box-shadow 0.16s ease, background 0.16s ease;
     }
     .fb-btn-primary:hover {
       opacity: 1 !important; color: #fff !important;
-      background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%) !important;
-      box-shadow: 0 4px 14px rgba(37,99,235,0.40);
+      background: linear-gradient(135deg, #1D4ED8 0%, #1E3A8A 100%) !important;
+      box-shadow: 0 5px 16px rgba(37,99,235,0.44);
+    }
+    .fb-btn-primary:focus-visible {
+      outline: 2px solid rgba(37,99,235,0.6); outline-offset: 2px;
     }
 
-    /* — Filter modal close: danger hover — */
-    .fb-filter-modal-close {
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; transition: background 0.12s ease, color 0.12s ease;
+    /* Range slider styling */
+    .fb-range-val {
+      font-family: 'Fira Code', ui-monospace, monospace;
+      font-size: 19px; font-weight: 800;
+      color: var(--blue); letter-spacing: -0.03em;
     }
-    .fb-filter-modal-close:hover { background: rgba(239,68,68,0.08); color: #EF4444; }
+    html[data-theme="dark"] .fb-range-val { color: #60A5FA; }
 
-    /* — Active filter tags: blue-tinted badge — */
+    /* ══════════════════════════════════════════
+       ACTIVE FILTER TAGS
+    ══════════════════════════════════════════ */
     .fb-active-tag {
-      font-size: 11.5px; background: rgba(37,99,235,0.06);
-      border-color: rgba(37,99,235,0.18); color: var(--blue);
+      font-size: 11px; font-weight: 600;
+      background: rgba(37,99,235,0.07); border-color: rgba(37,99,235,0.20);
+      color: var(--blue); border-radius: 100px;
+      transition: background 0.15s ease, border-color 0.15s ease;
     }
+    .fb-active-tag:hover { background: rgba(37,99,235,0.12); }
     html[data-theme="dark"] .fb-active-tag {
-      background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.20); color: #93C5FD;
+      background: rgba(96,165,250,0.10); border-color: rgba(96,165,250,0.22); color: #93C5FD;
     }
-    .fb-active-tag button { color: currentColor; opacity: 0.6; transition: opacity 0.12s ease; }
+    html[data-theme="dark"] .fb-active-tag:hover { background: rgba(96,165,250,0.16); }
+    .fb-active-tag button { color: currentColor; opacity: 0.55; transition: opacity 0.12s ease; }
     .fb-active-tag button:hover { opacity: 1; }
 
-    /* — Filter options: thin scrollbar — */
-    .fb-filter-options { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    /* ══════════════════════════════════════════
+       SCROLLBAR + FILTER OPTIONS
+    ══════════════════════════════════════════ */
+    .fb-filter-options {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
     .fb-filter-options::-webkit-scrollbar { width: 4px; }
     .fb-filter-options::-webkit-scrollbar-track { background: transparent; }
     .fb-filter-options::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
     .fb-filter-options::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-    /* — Focus states: keyboard accessibility — */
-    .fb-filter-chip:focus-visible, .fb-btn:focus-visible, .fb-filter-modal-close:focus-visible {
+    /* Filter option hover */
+    .fb-filter-option:hover { background: var(--nav-hover-bg); color: var(--text-primary); }
+    .fb-filter-option.selected {
+      background: rgba(37,99,235,0.10); color: var(--blue); font-weight: 700;
+    }
+    html[data-theme="dark"] .fb-filter-option.selected { color: #60A5FA; background: rgba(96,165,250,0.10); }
+
+    /* ══════════════════════════════════════════
+       FOCUS + ACCESSIBILITY
+    ══════════════════════════════════════════ */
+    .fb-filter-chip:focus-visible,
+    .fb-btn:focus-visible,
+    .fb-filter-modal-close:focus-visible {
       outline: 2px solid var(--blue); outline-offset: 2px;
     }
     html[data-theme="dark"] .fb-filter-chip:focus-visible,
     html[data-theme="dark"] .fb-btn:focus-visible,
     html[data-theme="dark"] .fb-filter-modal-close:focus-visible { outline-color: #60A5FA; }
 
-    /* — Reduced motion — */
+    /* Sort arrow highlight */
+    .fb-sort-arrow { display: inline-block; margin-left: 4px; font-size: 9px; opacity: 0.85; }
+    .fb-rep-table th[data-sort]:hover { color: var(--blue); }
+    .fb-rep-table th.sorted { color: var(--blue); }
+    html[data-theme="dark"] .fb-rep-table th[data-sort]:hover,
+    html[data-theme="dark"] .fb-rep-table th.sorted { color: #60A5FA; }
+
+    /* ══════════════════════════════════════════
+       REDUCED MOTION
+    ══════════════════════════════════════════ */
     @media (prefers-reduced-motion: reduce) {
-      .fb-hero::before, .fb-filter-chip, .fb-rep-table tbody tr,
+      .fb-hero, .fb-filter-section, .fb-table-card { animation: none !important; }
+      .fb-hero::before { animation: none !important; background-position: 0% 50%; }
+      .fb-spot-photo-ring { animation: none !important; }
+      .fb-filter-chip, .fb-rep-table tbody tr,
       .fb-filter-modal, .fb-filter-overlay, .fb-spot-photo-ring[data-person-id],
-      .nav-sub, .avatar-menu { transition: none !important; animation: none !important; }
+      .nav-sub, .avatar-menu, .fb-active-tag, .fb-btn-primary {
+        transition: none !important; animation: none !important;
+      }
     }
 
   </style>
@@ -680,7 +985,7 @@
       <button class="burger" id="burgerBtn" aria-label="Open navigation"><svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14" stroke-linecap="round"/></svg></button>
       <div class="search-wrap">
         <svg class="search-icon-l" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
-        <input class="search-input" type="search" placeholder="Search funded deals by business, lender, or repâ€¦" aria-label="Search" />
+        <input class="search-input" type="search" placeholder="Search funded deals by business, lender, or rep" aria-label="Search" />
         <svg class="search-icon-r" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
       </div>
       <div class="topbar-right">
@@ -712,11 +1017,17 @@
           <div class="fb-active-filters" id="fbActiveFilters" aria-label="Active filters"></div>
         </div>
         <div class="fb-hero-sep fb-hero-sep--kpis" aria-hidden="true"></div>
-        <div class="fb-hero-kpis">
-          <div class="fb-kpi fb-kpi--primary"><div class="fb-kpi-val" id="fbKpiVolume">—</div><div class="fb-kpi-lbl">Total funded</div></div>
-          <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiDeals">—</div><div class="fb-kpi-lbl">Deals</div></div>
-          <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiAvg">—</div><div class="fb-kpi-lbl">Avg deal</div></div>
-          <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiReps">—</div><div class="fb-kpi-lbl">Reps</div></div>
+        <div class="fb-hero-kpis-wrap">
+          <div class="fb-kpi-panel-head">
+            <div class="fb-kpi-heading">Company Totals</div>
+            <div class="fb-kpi-scope" id="fbKpiScope">Year to date</div>
+          </div>
+          <div class="fb-hero-kpis">
+            <div class="fb-kpi fb-kpi--primary"><div class="fb-kpi-val" id="fbKpiVolume">—</div><div class="fb-kpi-lbl">Total funded</div></div>
+            <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiDeals">—</div><div class="fb-kpi-lbl">Deals</div></div>
+            <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiAvg">—</div><div class="fb-kpi-lbl">Avg deal</div></div>
+            <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiReps">—</div><div class="fb-kpi-lbl">Reps</div></div>
+          </div>
         </div>
       </section>
 
@@ -734,7 +1045,7 @@
           <thead>
             <tr>
               <th>#</th>
-              <th data-sort="name">Name <span class="fb-sort-arrow"></span></th>
+              <th class="fb-col-name" data-sort="name">Name <span class="fb-sort-arrow"></span></th>
               <th data-sort="volume">Total Funding <span class="fb-sort-arrow"></span></th>
               <th data-sort="revenue">Total Revenue <span class="fb-sort-arrow"></span></th>
               <th data-sort="points">Points <span class="fb-sort-arrow"></span></th>
@@ -746,7 +1057,6 @@
           </thead>
           <tbody id="fbRepTableBody"></tbody>
         </table>
-        <div class="fb-empty" id="fbEmptyState" hidden>No deals match the current filters.</div>
       </section>
 
       <div class="fb-filter-overlay" id="fbFilterOverlay" hidden>
@@ -765,8 +1075,6 @@
           </div>
         </div>
       </div>
-
-      <div id="fundingChartBuilder"></div>
 
     </main>
   </div>
@@ -801,48 +1109,14 @@
   })();
 </script>
 <script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-achievements.js"></script>
+<script src="Assets/capmuse-notifications.js"></script>
 <script>
   (function () {
     if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
   })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<script src="Assets/capmuse-charts.js"></script>
 <script src="capmuse-funding-book.js"></script>
 <script src="Assets/capmuse-search.js"></script>
-<script>
-(function(){
-  // Init chart builder once funding data loads
-  window.addEventListener('capmuse:deals-updated', initFBChart);
-  var tried = 0;
-  var iv = setInterval(function(){
-    tried++;
-    if (tried > 20) { clearInterval(iv); return; }
-    if (window.CapMuseData && window.CapMuseCharts) {
-      window.CapMuseData.getRawDeals().then(function(deals){
-        if (!deals || !deals.length) return;
-        clearInterval(iv);
-        initFBChart({detail: deals});
-      });
-    }
-  }, 500);
-  function initFBChart(e){
-    var deals = e && e.detail ? e.detail : null;
-    if (!deals) return;
-    var rows = deals.map(function(d){
-      return { rep: d.package_owner || d.puller || '', date: d.date_funded || '', funding: d.funding || '0', revenue: d.revenue || '0', points: d.points || '0', lender: d.lender || '', lead_source: d.lead_source || '', deal_type: d.deal_type || '' };
-    });
-    window.CapMuseCharts.init('fundingChartBuilder', rows, {
-      repField: 'rep',
-      dateField: 'date',
-      metrics: [
-        { key: 'deals', label: 'Deals Funded', calc: function(r){ return 1; } },
-        { key: 'volume', label: 'Funded Volume ($)', calc: function(r){ return parseFloat((r.funding||'0').replace(/[$,]/g,''))||0; } },
-        { key: 'revenue', label: 'Revenue ($)', calc: function(r){ return parseFloat((r.revenue||'0').replace(/[$,]/g,''))||0; } }
-      ]
-    });
-  }
-})();
-</script>
 </body>
 </html>
