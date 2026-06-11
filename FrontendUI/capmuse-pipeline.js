@@ -63,7 +63,7 @@
     { id: 'last_3_months', label: 'Last 3 months' },
     { id: 'last_6_months', label: 'Last 6 months' },
     { id: 'this_month', label: 'This month' },
-    { id: 'all_time', label: 'All time' },
+    { id: 'all_time', label: 'Last 24 Months'},
     { id: 'custom', label: 'Custom range' }
   ];
 
