@@ -778,6 +778,13 @@
               calls_per_int:(u.inst>0 ? totalCalls/u.inst : 0)};
     }).filter(function(r){ return r.inst>0||r.ni>0||r.nc>0; }).sort(function(a,b){
       var av=a[sortColumn]||0, bv=b[sortColumn]||0;
+      if(sortColumn==='calls_per_int'){
+        /* 0 means no INTs — always sink to bottom regardless of direction */
+        if(!av && !bv) return 0;
+        if(!av) return 1;
+        if(!bv) return -1;
+        return sortDir==='asc' ? av-bv : bv-av;
+      }
       return sortDir==='desc' ? bv-av : av-bv;
     });
   }
@@ -1232,7 +1239,7 @@
       if(!th) return;
       var col=th.getAttribute('data-sort');
       if(sortColumn===col) { sortDir=sortDir==='desc'?'asc':'desc'; }
-      else { sortColumn=col; sortDir='desc'; }
+      else { sortColumn=col; sortDir=col==='calls_per_int'?'asc':'desc'; }
       renderAll(currentUsers);
     });
 

@@ -578,6 +578,8 @@ app.post("/convoso/rep-history", async (req, res) => {
 
     if (diffDays <= 14) {
       for (let d = new Date(startDt); d <= endDt; d.setDate(d.getDate() + 1)) {
+        const dow = d.getDay();
+        if (dow === 0 || dow === 6) continue; // skip Sun/Sat
         const s = d.toISOString().slice(0, 10);
         periods.push({ start: s, end: s, label: MON[d.getMonth()] + ' ' + d.getDate() });
       }
