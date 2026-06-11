@@ -6,11 +6,15 @@
   'use strict';
 
   let BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
-  let _deals        = [];
-  let _loaded       = false;
-  let _loading      = false;
-  let _queue        = [];
-  let _currentQuery = '';
+  let _deals           = [];
+  let _loaded          = false;
+  let _loading         = false;
+  let _queue           = [];
+  let _pipeline        = [];
+  let _pipelineLoaded  = false;
+  let _pipelineLoading = false;
+  let _pipelineQueue   = [];
+  let _currentQuery    = '';
 
   let NOW = new Date();
   let FILTER_CHIPS = [
@@ -111,6 +115,31 @@
     };
   }
 
+  function mapSearchPipelineRow(r) {
+    let stageLc = (r['Stage of Package'] || '').toLowerCase();
+    let isFunded    = stageLc.indexOf('fund') > -1 && stageLc.indexOf('decline') === -1;
+    let isApproval  = isFunded || stageLc === 'future funding' || stageLc === 'dd - default';
+    let pos         = (r['Position'] || '').trim();
+    let isApp       = !pos || pos === '0' || pos === '1';
+    let dateStr     = (r['Date Applied'] || r['Created Time'] || '').trim();
+    let dateObj     = dateStr ? new Date(dateStr.length === 10 ? dateStr + 'T12:00:00' : dateStr) : null;
+    if (dateObj && isNaN(dateObj.getTime())) dateObj = null;
+    return {
+      rep_name:    (r['Puller'] || r['Packages in Process Owner'] || '').trim(),
+      state:       (r['State'] || '').trim().toUpperCase(),
+      lead_source: (r['Lead Source'] || '').trim(),
+      lender_name: (r['Funder'] || r['Funder 2'] || '').trim(),
+      deal_type:   (r['Deal Type'] || '').trim(),
+      date_applied: dateObj,
+      stage:       r['Stage of Package'] || '',
+      amount:      nn(r['Amount']),
+      is_funded:   isFunded,
+      is_approval: isApproval,
+      is_app:      isApp,
+      position:    pos,
+    };
+  }
+
   function calcDays(start, end) {
     if (!start || !end) return null;
     try {
@@ -146,6 +175,31 @@
       .catch(function () { finish([]); });
   }
 
+  function loadPipelineData(cb) {
+    if (_pipelineLoaded) { cb(_pipeline); return; }
+    _pipelineQueue.push(cb);
+    if (_pipelineLoading) return;
+    _pipelineLoading = true;
+
+    function finish(rows) {
+      _pipeline = (rows || []).map(mapSearchPipelineRow).filter(function (r) { return r.rep_name && r.rep_name !== 'House .' && r.rep_name !== 'House'; });
+      _pipelineLoaded  = true;
+      _pipelineLoading = false;
+      console.log('[CapMuse Search] Loaded ' + _pipeline.length + ' pipeline rows');
+      _pipelineQueue.forEach(function (fn) { fn(_pipeline); });
+      _pipelineQueue = [];
+    }
+
+    if (window.CapMuseData) {
+      window.CapMuseData.getPipelineRows().then(finish).catch(function () { finish([]); });
+      return;
+    }
+    fetch(BUCKET + '/pipeline.csv')
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (text) { finish(text ? parseCSV(text) : []); })
+      .catch(function () { finish([]); });
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   function fmt(n) {
     if (!n) return '0';
@@ -178,6 +232,20 @@
   // ── Time detection (comprehensive) ────────────────────────────────────────
   let MONTH_NAMES = ['january','february','march','april','may','june','july','august','september','october','november','december'];
   let MONTH_MAP   = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+
+  let US_STATE_NAMES = {
+    'alabama':'AL','alaska':'AK','arizona':'AZ','arkansas':'AR','california':'CA',
+    'colorado':'CO','connecticut':'CT','delaware':'DE','florida':'FL','georgia':'GA',
+    'hawaii':'HI','idaho':'ID','illinois':'IL','indiana':'IN','iowa':'IA',
+    'kansas':'KS','kentucky':'KY','louisiana':'LA','maine':'ME','maryland':'MD',
+    'massachusetts':'MA','michigan':'MI','minnesota':'MN','mississippi':'MS','missouri':'MO',
+    'montana':'MT','nebraska':'NE','nevada':'NV','new hampshire':'NH','new jersey':'NJ',
+    'new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND','ohio':'OH',
+    'oklahoma':'OK','oregon':'OR','pennsylvania':'PA','rhode island':'RI','south carolina':'SC',
+    'south dakota':'SD','tennessee':'TN','texas':'TX','utah':'UT','vermont':'VT',
+    'virginia':'VA','washington':'WA','west virginia':'WV','wisconsin':'WI','wyoming':'WY',
+    'new york city':'NY','nyc':'NY'
+  };
 
   // Parses "june 5" / "june 5th" / "june 5 2024" into a Date, or null
   function parseNamedDate(str) {
@@ -398,6 +466,14 @@
     return null;
   }
 
+  function detectState(q) {
+    let names = Object.keys(US_STATE_NAMES).sort(function (a, b) { return b.length - a.length; });
+    for (let i = 0; i < names.length; i++) {
+      if (q.indexOf(names[i]) > -1) return US_STATE_NAMES[names[i]];
+    }
+    return null;
+  }
+
   function resolveRepName(repMatch, deals) {
     let names = uniqueRepNames(deals);
     let i, lower;
@@ -433,6 +509,7 @@
       /trend|over time|month.by.month|monthly|histor|progress/.test(q)     ? 'trend'       :
       /source|where.*come from|lead.*source|referr/.test(q)                ? 'lead_source' :
       /largest|biggest deal|highest deal|max deal|single deal/.test(q)     ? 'largest'     :
+      /pull(?:er|ed|s)?\s|most apps|most pulled|fewest apps|least apps|app count|top puller|who.*pull|who.*submit|pulled.*most|submitted.*most|how many apps/.test(q) ? 'apps' :
       /pipeline|funnel|stage|in progress|outstanding/.test(q)              ? 'pipeline'    :
       /\blender\b|\bfunder\b|financing|which bank/.test(q)                 ? 'lender'      :
       /\bstate\b|region|geography|by state|which state|top state/.test(q)  ? 'state'       :
@@ -451,6 +528,7 @@
     let q = query.toLowerCase().trim();
     let repMatch    = detectRep(q, deals);
     let lenderMatch = detectLender(q, deals);
+    let stateMatch  = detectState(q);
     let intent      = classifyIntent(q);
 
     let periodFilter, timeFilter;
@@ -521,6 +599,26 @@
     if (intent.metric === 'state')       return topStates(filtered, timeLabel);
     if (intent.metric === 'position')    return topPositions(filtered, timeLabel);
     if (intent.metric === 'deal_type')   return dealTypes(filtered, timeLabel);
+
+    // ── Pipeline / Apps intent (uses pipeline.csv data) ─────────────────────
+    if (intent.metric === 'apps') {
+      let pRows = applyPipelineTimeFilter(_pipeline, periodFilter, timeFilter);
+      if (repMatch && stateMatch) return repAppsInState(pRows, repMatch, stateMatch, timeLabel);
+      if (stateMatch)             return topAppsByState(pRows, stateMatch, timeLabel);
+      if (repMatch)               return repAppCount(pRows, repMatch, timeLabel);
+      return intent.direction === 'bottom' ? topAppPullers(pRows, timeLabel, true) : topAppPullers(pRows, timeLabel, false);
+    }
+
+    // ── Approval + state → pipeline data ─────────────────────────────────────
+    if (intent.metric === 'approval' && stateMatch) {
+      let pRows = applyPipelineTimeFilter(_pipeline, periodFilter, timeFilter);
+      return topApprovalsByState(pRows, stateMatch, timeLabel, intent.direction);
+    }
+
+    if (intent.metric === 'pipeline') {
+      let pRows = applyPipelineTimeFilter(_pipeline, periodFilter, timeFilter);
+      return pipelineFunnel(pRows, timeLabel);
+    }
 
     // Default: rep leaderboard, direction-aware
     return intent.direction === 'bottom' ? bottomFunders(filtered, timeLabel) : topFunders(filtered, timeLabel);
@@ -1049,6 +1147,121 @@
     };
   }
 
+  // ── Pipeline result builders ───────────────────────────────────────────────
+
+  function applyPipelineTimeFilter(rows, periodFilter, timeFilter) {
+    return rows.filter(function (r) {
+      let dt = r.date_applied;
+      if (!dt) return false;
+      if (periodFilter) {
+        let m = dt.getMonth() + 1, y = dt.getFullYear();
+        if (periodFilter.type === 'month')   return m === periodFilter.month   && (!periodFilter.year || y === periodFilter.year);
+        if (periodFilter.type === 'quarter') return m >= periodFilter.startMonth && m <= periodFilter.endMonth && (!periodFilter.year || y === periodFilter.year);
+        if (periodFilter.type === 'year')    return y === periodFilter.year;
+        if (periodFilter.type === 'date' || periodFilter.type === 'range') return dt >= periodFilter.start && dt <= periodFilter.end;
+        return false;
+      }
+      if (timeFilter && timeFilter.days) {
+        return dt.getTime() >= Date.now() - timeFilter.days * 86400000;
+      }
+      return true;
+    });
+  }
+
+  function buildPipelineRepStats(pRows) {
+    let byRep = {};
+    pRows.forEach(function (r) {
+      let name = r.rep_name;
+      if (!name) return;
+      if (!byRep[name]) byRep[name] = { name: name, apps: 0, approvals: 0, funded: 0, fundedAmt: 0 };
+      if (r.is_app)      byRep[name].apps++;
+      if (r.is_approval) byRep[name].approvals++;
+      if (r.is_funded)  { byRep[name].funded++; byRep[name].fundedAmt += r.amount || 0; }
+    });
+    return Object.values(byRep);
+  }
+
+  function topAppPullers(pRows, timeLabel, bottom) {
+    if (!pRows.length) return { title: 'App Pullers — ' + timeLabel, answer: 'No pipeline data available.', insight: null, chart: null, table: null };
+    let stats = buildPipelineRepStats(pRows).sort(function (a, b) { return bottom ? a.apps - b.apps : b.apps - a.apps; });
+    let top = stats[0];
+    return {
+      title:   (bottom ? 'Fewest' : 'Top') + ' App Pullers — ' + timeLabel,
+      answer:  top ? top.name + (bottom ? ' pulled the fewest apps with ' : ' pulled the most apps with ') + top.apps + ' submissions.' : 'No data.',
+      insight: stats[1] ? (bottom ? 'Next: ' : 'Runner-up: ') + stats[1].name + ' — ' + stats[1].apps + ' apps.' : null,
+      chart:   { data: stats.slice(0, 8).map(function (r) { return { name: r.name.split(' ')[0], value: r.apps }; }), label: 'Apps Pulled' },
+      table:   { cols: ['Rank', 'Rep', 'Apps', 'Approvals', 'App→Appr %', 'Funded'], rows: stats.slice(0, 15).map(function (r, i) { return [i + 1, r.name, r.apps, r.approvals, r.apps ? Math.round(r.approvals / r.apps * 100) + '%' : '—', r.funded]; }) },
+    };
+  }
+
+  function topAppsByState(pRows, stateCode, timeLabel) {
+    let stateRows = pRows.filter(function (r) { return r.state === stateCode && r.is_app; });
+    if (!stateRows.length) return { title: stateCode + ' — App Pullers — ' + timeLabel, answer: 'No apps found for ' + stateCode + ' in this period.', insight: null, chart: null, table: null };
+    let stats = buildPipelineRepStats(stateRows).sort(function (a, b) { return b.apps - a.apps; });
+    let top = stats[0];
+    let totalApps = stateRows.length;
+    return {
+      title:   stateCode + ' — App Pullers — ' + timeLabel,
+      answer:  top ? top.name + ' leads ' + stateCode + ' with ' + top.apps + ' pulled apps out of ' + totalApps + ' total.' : 'No data.',
+      insight: stats.length > 1 ? stats.length + ' reps pulled apps in ' + stateCode + '. Runner-up: ' + stats[1].name + ' (' + stats[1].apps + ' apps).' : null,
+      chart:   { data: stats.slice(0, 8).map(function (r) { return { name: r.name.split(' ')[0], value: r.apps }; }), label: 'Apps in ' + stateCode },
+      table:   { cols: ['Rank', 'Rep', 'Apps', 'Approvals', 'Funded', 'Funded Amt'], rows: stats.slice(0, 15).map(function (r, i) { return [i + 1, r.name, r.apps, r.approvals, r.funded, fmt(r.fundedAmt)]; }) },
+    };
+  }
+
+  function repAppCount(pRows, repMatch, timeLabel) {
+    let repRows = pRows.filter(function (r) { return r.rep_name && r.rep_name.toLowerCase().indexOf(repMatch) > -1; });
+    if (!repRows.length) return { title: cap(repMatch) + ' — Pipeline — ' + timeLabel, answer: 'No pipeline data found for ' + cap(repMatch) + '.', insight: null, chart: null, table: null };
+    let repName = repRows[0].rep_name;
+    let apps = repRows.filter(function (r) { return r.is_app; }).length;
+    let approvals = repRows.filter(function (r) { return r.is_approval; }).length;
+    let funded = repRows.filter(function (r) { return r.is_funded; }).length;
+    let fundedAmt = repRows.filter(function (r) { return r.is_funded; }).reduce(function (s, r) { return s + r.amount; }, 0);
+    let byState = {};
+    repRows.forEach(function (r) { if (!r.state) return; if (!byState[r.state]) byState[r.state] = 0; byState[r.state]++; });
+    let stateList = Object.keys(byState).sort(function (a, b) { return byState[b] - byState[a]; });
+    return {
+      title:   repName + ' — Pipeline — ' + timeLabel,
+      answer:  repName + ' pulled ' + apps + ' apps with ' + approvals + ' approval' + (approvals !== 1 ? 's' : '') + ' (' + (apps ? Math.round(approvals / apps * 100) : 0) + '% rate) and ' + funded + ' funded (' + fmt(fundedAmt) + ').',
+      insight: stateList[0] ? 'Top state: ' + stateList[0] + ' (' + byState[stateList[0]] + ' apps).' : null,
+      chart:   { data: stateList.slice(0, 8).map(function (s) { return { name: s, value: byState[s] }; }), label: 'Apps by State' },
+      table:   { cols: ['State', 'Apps'], rows: stateList.slice(0, 15).map(function (s) { return [s, byState[s]]; }) },
+    };
+  }
+
+  function pipelineFunnel(pRows, timeLabel) {
+    if (!pRows.length) return { title: 'Pipeline Funnel — ' + timeLabel, answer: 'No pipeline data available.', insight: null, chart: null, table: null };
+    let apps      = pRows.filter(function (r) { return r.is_app; }).length;
+    let approvals = pRows.filter(function (r) { return r.is_approval; }).length;
+    let funded    = pRows.filter(function (r) { return r.is_funded; }).length;
+    let fundedAmt = pRows.filter(function (r) { return r.is_funded; }).reduce(function (s, r) { return s + r.amount; }, 0);
+    return {
+      title:   'Pipeline Funnel — ' + timeLabel,
+      answer:  apps + ' apps pulled → ' + approvals + ' approvals → ' + funded + ' funded (' + fmt(fundedAmt) + ').',
+      insight: apps ? 'App→funded rate: ' + Math.round(funded / apps * 100) + '%.' : null,
+      chart:   { data: [{ name: 'Apps', value: apps }, { name: 'Approvals', value: approvals }, { name: 'Funded', value: funded }], label: 'Pipeline Funnel' },
+      table:   { cols: ['Stage', 'Count', '% of Apps'], rows: [['Apps (new deals)', apps, '100%'], ['Approvals', approvals, apps ? Math.round(approvals / apps * 100) + '%' : '—'], ['Funded', funded, apps ? Math.round(funded / apps * 100) + '%' : '—']] },
+    };
+  }
+
+  function topApprovalsByState(pRows, stateCode, timeLabel, direction) {
+    let stateRows = pRows.filter(function (r) { return r.state === stateCode; });
+    if (!stateRows.length) return { title: stateCode + ' — Approvals — ' + timeLabel, answer: 'No pipeline data found for ' + stateCode + ' in this period.', insight: null, chart: null, table: null };
+    let stats = buildPipelineRepStats(stateRows)
+      .filter(function (r) { return r.approvals > 0; })
+      .sort(function (a, b) { return direction === 'bottom' ? a.approvals - b.approvals : b.approvals - a.approvals; });
+    if (!stats.length) return { title: stateCode + ' — Approvals — ' + timeLabel, answer: 'No approvals found in ' + stateCode + ' for this period.', insight: null, chart: null, table: null };
+    let top = stats[0];
+    let totalApprovals = stats.reduce(function (s, r) { return s + r.approvals; }, 0);
+    return {
+      title:   stateCode + ' — ' + (direction === 'bottom' ? 'Fewest' : 'Most') + ' Approvals — ' + timeLabel,
+      answer:  top.name + (direction === 'bottom' ? ' had the fewest approvals in ' : ' leads ') + stateCode + ' with ' + top.approvals + ' approval' + (top.approvals !== 1 ? 's' : '') + ' from ' + top.apps + ' apps (' + (top.apps ? Math.round(top.approvals / top.apps * 100) : 0) + '% rate).',
+      insight: stats.length > 1 ? stats.length + ' reps with approvals in ' + stateCode + ' (' + totalApprovals + ' total). Runner-up: ' + stats[1].name + ' (' + stats[1].approvals + ').' : null,
+      chart:   { data: stats.slice(0, 8).map(function (r) { return { name: r.name.split(' ')[0], value: r.approvals }; }), label: 'Approvals in ' + stateCode },
+      table:   { cols: ['Rank', 'Rep', 'Approvals', 'Apps', 'Appr Rate', 'Funded'], rows: stats.slice(0, 15).map(function (r, i) { return [i + 1, r.name, r.approvals, r.apps, r.apps ? Math.round(r.approvals / r.apps * 100) + '%' : '—', r.funded]; }) },
+    };
+  }
+
   // ── Result rendering ───────────────────────────────────────────────────────
   function renderBarChart(data, label) {
     if (!data || !data.length) return '';
@@ -1182,7 +1395,10 @@
   function renderBody(query, filterOverride) {
     let body = document.getElementById('cms-panel-body');
     body.innerHTML = '<div class="cms-loading"><div class="cms-spinner"></div>Analyzing your query…</div>';
-    loadData(function (deals) {
+    let dealsReady    = new Promise(function (res) { loadData(res); });
+    let pipelineReady = new Promise(function (res) { loadPipelineData(res); });
+    Promise.all([dealsReady, pipelineReady]).then(function (results) {
+      let deals  = results[0];
       let result = processQuery(query, deals, filterOverride);
       body.innerHTML = renderResult(result, query);
       setTimeout(function () {
@@ -1287,7 +1503,14 @@
     window.addEventListener('capmuse:deals-updated', function (e) {
       if (e.detail && e.detail.length) applyLiveRows(e.detail);
     });
+    window.addEventListener('capmuse:pipeline-updated', function (e) {
+      if (e.detail && e.detail.length) {
+        _pipeline = e.detail.map(mapSearchPipelineRow).filter(function (r) { return r.rep_name && r.rep_name !== 'House .' && r.rep_name !== 'House'; });
+        _pipelineLoaded = true;
+      }
+    });
     loadData(function () {});
+    loadPipelineData(function () {});
   }
 
   if (document.readyState === 'loading') {
