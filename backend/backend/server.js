@@ -613,14 +613,16 @@ app.post("/convoso/rep-history", async (req, res) => {
         ]);
         const ir = iMap[user_id] || {}, nr = nMap[user_id] || {}, cr = cMap[user_id] || {};
         return {
-          label:      p.label,
-          inst:       (ir.calls      || 0),
-          ni:         (nr.calls      || 0),
-          nc:         (cr.calls      || 0),
-          contacts:   (ir.connects   || 0) + (nr.connects   || 0) + (cr.connects   || 0),
-          talk_time:  (ir.talk_time  || 0) + (nr.talk_time  || 0) + (cr.talk_time  || 0),
-          pause_time: (ir.pause_time || 0) + (nr.pause_time || 0) + (cr.pause_time || 0),
-          total_time: (ir.total_time || 0) + (nr.total_time || 0) + (cr.total_time || 0),
+          label:           p.label,
+          inst:            (ir.calls      || 0),
+          ni:              (nr.calls      || 0),
+          nc:              (cr.calls      || 0),
+          total_calls:     (ir.calls      || 0) + (nr.calls      || 0) + (cr.calls      || 0),
+          inst_talk_time:  (ir.talk_time  || 0),
+          contacts:        (ir.connects   || 0) + (nr.connects   || 0) + (cr.connects   || 0),
+          talk_time:       (ir.talk_time  || 0) + (nr.talk_time  || 0) + (cr.talk_time  || 0),
+          pause_time:      (ir.pause_time || 0) + (nr.pause_time || 0) + (cr.pause_time || 0),
+          total_time:      (ir.total_time || 0) + (nr.total_time || 0) + (cr.total_time || 0),
         };
       }));
       results.push(...batchOut);
