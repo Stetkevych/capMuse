@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call Scoring — CapMuse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html[data-theme="dark"]{--page-bg:#0C0F14;--sidebar-bg:#111720;--sidebar-border:#1A2435;--surface:#141C28;--surface-2:#1A2435;--text-primary:#F1F5F9;--text-secondary:#7A8FA8;--text-muted:#4A5F78;--border:#1A2435;--blue:#60A5FA;--green:#34D399;--red:#F87171;--amber:#FCD34D;--card-shadow:0 1px 3px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.4)}
+    html[data-theme="light"]{--page-bg:#EBEBEB;--sidebar-bg:#FFFFFF;--sidebar-border:#E8E8E8;--surface:#FFFFFF;--surface-2:#F4F4F4;--text-primary:#111111;--text-secondary:#555555;--text-muted:#999999;--border:#E8E8E8;--blue:#2563EB;--green:#10B981;--red:#EF4444;--amber:#F59E0B;--card-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07)}
+    :root{--sidebar-w:215px;--sidebar-gap:16px}
+    html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--page-bg);color:var(--text-primary)}
+    .layout{display:flex;min-height:100vh}
+    .sidebar{width:var(--sidebar-w);position:fixed;left:var(--sidebar-gap);top:var(--sidebar-gap);bottom:var(--sidebar-gap);background:var(--sidebar-bg);border:1px solid var(--sidebar-border);border-radius:18px;box-shadow:0 18px 45px rgba(15,23,42,.12);display:flex;flex-direction:column;z-index:300;overflow-y:auto;scrollbar-width:none}
+    .sidebar::-webkit-scrollbar{display:none}
+    .sidebar-logo{display:flex;align-items:center;gap:9px;padding:18px 18px 14px}
+    .sidebar-logo img{width:30px;height:30px;object-fit:contain}
+    .sidebar-wordmark{font-family:'Orbitron',sans-serif;font-size:14.5px;font-weight:700;letter-spacing:.04em;background:linear-gradient(135deg,#2563EB,#10B981);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sidebar-nav{flex:1;padding:6px 0 8px;display:flex;flex-direction:column}
+    .sidebar-footer{padding:10px;border-top:1px solid var(--sidebar-border)}
+    .sidebar-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px}
+    .user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0F4C81,#10B981);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+    .user-name{font-size:12px;font-weight:600;color:var(--text-primary)}
+    .user-role{font-size:10.5px;color:var(--text-muted)}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:250}
+    .main-wrapper{margin-left:calc(var(--sidebar-w) + 32px);flex:1;min-height:100vh;display:flex;flex-direction:column}
+    .page-content{flex:1;padding:20px 28px 32px;display:flex;flex-direction:column;gap:16px;max-width:1200px}
+
+    .tabs{display:flex;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;box-shadow:var(--card-shadow);flex-wrap:wrap}
+    .tab{padding:9px 16px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--text-muted);cursor:pointer;border:none;background:transparent;transition:all .15s}
+    .tab:hover{color:var(--text-primary)}
+    .tab.active{background:var(--blue);color:#fff}
+    .section{display:none}.section.active{display:block}
+
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--card-shadow);margin-bottom:14px}
+    .card-title{font-size:14px;font-weight:700;margin-bottom:12px}
+    .card-subtitle{font-size:11.5px;color:var(--text-muted);margin-bottom:10px}
+
+    .form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .form-grid label{font-size:11px;font-weight:600;color:var(--text-muted);display:flex;flex-direction:column;gap:4px}
+    .form-grid input,.form-grid select,.form-grid textarea{height:34px;border:1px solid var(--border);border-radius:8px;padding:0 10px;font-size:12.5px;background:var(--surface-2);color:var(--text-primary);outline:none;font-family:inherit}
+    .form-grid textarea{height:60px;padding:8px 10px;resize:vertical}
+    .form-grid .full{grid-column:span 3}
+    .form-grid .half{grid-column:span 2}
+
+    .scoring-section{margin-top:14px}
+    .scoring-section-title{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+    .scoring-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.03)}
+    .scoring-item:last-child{border-bottom:none}
+    .scoring-label{flex:1;font-size:12px;color:var(--text-secondary);line-height:1.4}
+    .scoring-weight{font-size:10px;font-weight:700;color:var(--text-muted);min-width:36px;text-align:center;background:var(--surface-2);border:1px solid var(--border);border-radius:5px;padding:3px 4px}
+    .scoring-weighted{font-size:10px;font-weight:700;color:var(--blue);min-width:40px;text-align:center}
+    .scoring-input{display:flex;gap:3px;margin-left:8px}
+    .score-btn{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--text-muted);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
+    .score-btn:hover{border-color:var(--blue);color:var(--blue)}
+    .score-btn.selected{background:var(--blue);border-color:var(--blue);color:#fff}
+
+    .section-score-bar,.total-score-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-top:6px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border)}
+    .total-score-bar{margin-top:16px;padding:14px 16px;border:2px solid var(--blue);background:var(--surface)}
+    .bar-label{font-size:11px;font-weight:700;color:var(--text-muted);min-width:100px}
+    .bar-value{font-size:14px;font-weight:800;color:var(--text-primary);min-width:55px}
+    .total-score-bar .bar-value{font-size:18px}
+    .bar-tier{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;min-width:80px;text-align:center}
+    .bar-fill-wrap{flex:1;height:8px;background:var(--border);border-radius:100px;overflow:hidden}
+    .total-score-bar .bar-fill-wrap{height:12px}
+    .bar-fill{height:100%;border-radius:100px;transition:width .3s ease,background .3s ease;width:0%}
+    .bar-fill-total{height:100%}
+
+    .submit-btn{width:100%;height:42px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;transition:opacity .15s}
+    .submit-btn:hover{opacity:.9}
+    .submit-btn:disabled{opacity:.5;cursor:not-allowed}
+
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:var(--card-shadow)}
+    .stat-card-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+    .stat-card-value{font-size:20px;font-weight:800;color:var(--text-primary)}
+    .stat-card-sub{font-size:10px;color:var(--text-muted);margin-top:2px}
+
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--card-shadow);margin-bottom:14px}
+    .table-card-head{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700}
+    table{width:100%;border-collapse:collapse}
+    th{padding:8px 12px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;text-align:left;border-bottom:1px solid var(--border);background:var(--surface-2)}
+    td{padding:9px 12px;font-size:12px;color:var(--text-secondary);border-bottom:1px solid var(--border)}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(37,99,235,.02)}
+    td:first-child{font-weight:600;color:var(--text-primary)}
+
+    .tier-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700}
+    .tier-exceptional{background:rgba(16,185,129,.1);color:#059669}
+    .tier-proficient{background:rgba(37,99,235,.1);color:#2563EB}
+    .tier-developing{background:rgba(245,158,11,.1);color:#B45309}
+    .tier-coaching{background:rgba(239,68,68,.1);color:#DC2626}
+
+    .chart-wrap{position:relative;height:260px;margin-top:10px}
+    .ai-input{display:flex;gap:8px;margin-bottom:14px}
+    .ai-input input{flex:1;height:40px;border:1px solid var(--border);border-radius:10px;padding:0 14px;font-size:13px;background:var(--surface);color:var(--text-primary);outline:none}
+    .ai-input input:focus{border-color:var(--blue)}
+    .ai-input button{height:40px;padding:0 20px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+    .ai-response{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:13px;color:var(--text-secondary);line-height:1.6;min-height:60px}
+
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s}
+    .toast.show{opacity:1}
+
+    @media(max-width:768px){.main-wrapper{margin-left:0}.form-grid{grid-template-columns:1fr}.form-grid .full,.form-grid .half{grid-column:span 1}}
+  </style>
+  <link rel="stylesheet" href="Assets/profile-stats.css" />
+</head>
+<body class="call-scoring-page">
+<div class="layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar"><div class="sidebar-logo"><img src="Assets/LogoUpdates.png" alt="CapMuse" /><span class="sidebar-wordmark">CapMuse</span></div><nav class="sidebar-nav"></nav><div class="sidebar-footer"><div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">CS</div><div class="user-info"><div class="user-name" id="sidebarName">Call Scoring</div><div class="user-role" id="sidebarRole">Admin</div></div></div></div></aside>
+  <div class="main-wrapper">
+    <main class="page-content">
+      <div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.02em">Call Scoring Tracker</h1><p style="font-size:12px;color:var(--text-muted);margin-top:2px">Score, analyze, and coach MCA sales calls</p></div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="score">Score a Call</button>
+        <button class="tab" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="reps">Rep Analytics</button>
+        <button class="tab" data-tab="behaviors">Behaviors</button>
+        <button class="tab" data-tab="outcomes">Outcomes</button>
+        <button class="tab" data-tab="trends">Trends</button>
+        <button class="tab" data-tab="ai">AI Insights</button>
+        <button class="tab" data-tab="history">History</button>
+        <button class="tab" data-tab="admin">Super Admin</button>
+      </div>
+
+      <!-- Score a Call -->
+      <div class="section active" id="sec-score">
+        <div class="card">
+          <div class="card-title">Call Metadata</div>
+          <div class="form-grid" id="metaForm">
+            <label>Rep<select id="fRep"></select></label>
+            <label>Team Lead<select id="fTeamLead"><option>Anthony Diaz</option><option>Rodney Rabah</option></select></label>
+            <label>Date<input type="date" id="fDate" /></label>
+            <label>Call Type<select id="fCallType"><option>Prospecting</option><option>Follow-Up</option><option>Closing</option><option>Renewal</option></select></label>
+            <label>Lead Source<input id="fLeadSource" placeholder="e.g. Facebook, Convoso" /></label>
+            <label>Duration (min)<input type="number" id="fDuration" placeholder="0" /></label>
+            <label>Merchant / Business<input id="fMerchant" placeholder="Business name" /></label>
+            <label>Funding Outcome<select id="fOutcome"><option>Pending</option><option>Approved</option><option>Funded</option><option>Declined</option></select></label>
+            <label>Deal Amount<input type="number" id="fAmount" placeholder="0" /></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Scoring (1-5 per behavior)</div>
+          <div class="card-subtitle">1=Poor · 2=Below Standard · 3=Meets Standard · 4=Above Standard · 5=Exceptional</div>
+          <div id="scoringItems"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Qualitative Notes</div>
+          <div class="form-grid">
+            <label class="full">Strength Observed<textarea id="qStrength" placeholder="What did the rep do well?"></textarea></label>
+            <label class="full">Coaching Note<textarea id="qCoaching" placeholder="What needs improvement?"></textarea></label>
+            <label>Owner<input id="qOwner" placeholder="Who owns follow-up?" /></label>
+            <label>Rep Self-Assessment<input id="qSelfAssess" placeholder="Rep's own take" /></label>
+            <label>Top Strength to Reinforce<input id="qTopStrength" /></label>
+            <label>Primary Development Area<input id="qDevArea" /></label>
+            <label>Rep Commitment<input id="qCommitment" placeholder="What rep commits to" /></label>
+            <label>Missed Checklist Items<input id="qMissed" /></label>
+            <label>Team Lead Follow-Up<input id="qFollowUp" /></label>
+          </div>
+        </div>
+
+        <button class="submit-btn" id="submitScore">Submit Call Score</button>
+      </div>
+
+      <!-- Dashboard -->
+      <div class="section" id="sec-dashboard"><div id="dashContent">Loading...</div></div>
+
+      <!-- Rep Analytics -->
+      <div class="section" id="sec-reps"><div id="repsContent">Loading...</div></div>
+
+      <!-- Behaviors -->
+      <div class="section" id="sec-behaviors"><div id="behaviorsContent">Loading...</div></div>
+
+      <!-- Outcomes -->
+      <div class="section" id="sec-outcomes"><div id="outcomesContent">Loading...</div></div>
+
+      <!-- Trends -->
+      <div class="section" id="sec-trends"><div class="card"><div class="card-title">Score Trends Over Time</div><div class="chart-wrap"><canvas id="trendCanvas"></canvas></div></div></div>
+
+      <!-- AI -->
+      <div class="section" id="sec-ai">
+        <div class="card">
+          <div class="card-title">AI Query — Ask Anything</div>
+          <div class="ai-input"><input id="aiQuery" placeholder="e.g. Which reps are strongest at discovery?" /><button id="aiBtn">Ask</button></div>
+          <div class="ai-response" id="aiResponse">Ask a question about call scoring data...</div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="section" id="sec-history"><div id="historyContent">Loading...</div></div>
+
+      <!-- Super Admin -->
+      <div class="section" id="sec-admin">
+        <div class="card">
+          <div class="card-title">Section Weight Configuration</div>
+          <div class="card-subtitle">Adjust how much each section contributes to the total score (must total 100%)</div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr 1fr">
+            <label>Opening<input type="number" id="adminWtOpening" value="25" min="0" max="100" style="font-weight:700" />%</label>
+            <label>Discovery<input type="number" id="adminWtDiscovery" value="25" min="0" max="100" style="font-weight:700" />%</label>
+            <label>Alignment<input type="number" id="adminWtAlignment" value="25" min="0" max="100" style="font-weight:700" />%</label>
+            <label>Close<input type="number" id="adminWtClose" value="25" min="0" max="100" style="font-weight:700" />%</label>
+          </div>
+          <div style="margin-top:12px;font-size:12px;color:var(--text-muted)">Total: <strong id="adminWtTotal">100%</strong></div>
+          <button class="submit-btn" id="adminSaveWeights" style="margin-top:12px;max-width:200px">Save Weights</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Current Scoring Schema</div>
+          <div class="table-card"><table><thead><tr><th>#</th><th>Behavior</th><th>Section</th><th>Item Weight</th><th>Section %</th></tr></thead><tbody id="adminSchemaTable"></tbody></table></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-auth.js"></script>
+<script>
+(function(){
+  var API='https://zlvhup1o02.execute-api.us-east-1.amazonaws.com';
+  var SCORES_DATA=[];
+  var SCHEMA=[];
+  var TOTAL_WEIGHT=100;
+  var trendChart=null;
+
+  // Theme
+  var html=document.documentElement;html.setAttribute('data-theme',localStorage.getItem('capmuse-theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+  if(window.CapMuseAuth)window.CapMuseAuth.initPage({requireLogin:true});
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(function(t){t.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active')});document.querySelectorAll('.section').forEach(function(x){x.classList.remove('active')});t.classList.add('active');document.getElementById('sec-'+t.dataset.tab).classList.add('active');renderTab(t.dataset.tab)})});
+
+  // Reps list
+  var REPS=['Erik Anderson','Blake Fiorito','Christian Quintana','Colin O\'Bryan','Emilio Arguello','Guillermo Loaiza','Nikholas Lazo','Kip Langat','Santiago Diaz','Ivan Ortega','Dylan Rosenberg','Jonathan Montpeirous','Dominic Basilio','Nicholas Orchano','William Jamison','Andy Rondon','Jacob Rosero','Rio Pampallona','Eduardo Zambrana','Matthew Birnholz','Ken Pflug'];
+  var repSel=document.getElementById('fRep');
+  REPS.forEach(function(r){var o=document.createElement('option');o.textContent=r;repSel.appendChild(o)});
+  document.getElementById('fDate').value=new Date().toISOString().substring(0,10);
+
+  // Scoring items
+  var ITEMS=[
+    {id:1,section:'Opening',label:'Has 1-3 openers prepared and adjusts approach',weight:10},
+    {id:2,section:'Opening',label:'Objection Handling - responds to early resistance calmly',weight:0},
+    {id:3,section:'Opening',label:'Gives name, company, and subject line clearly',weight:1},
+    {id:4,section:'Opening',label:'Confirms speaking to the decision maker',weight:1},
+    {id:5,section:'Opening',label:'Matches tone and energy of the merchant',weight:5},
+    {id:6,section:'Discovery',label:'CCTI Discovery - Credit, Cash Flow, Time in Business, Industry',weight:20},
+    {id:7,section:'Discovery',label:'Business Discovery Questions - goes beyond CCTI',weight:10},
+    {id:8,section:'Discovery',label:'Practices active listening - does not cut off prospect',weight:10},
+    {id:9,section:'Discovery',label:'Confirms when the money is needed',weight:1},
+    {id:10,section:'Discovery',label:'Confirms talking to decision maker if not at open',weight:1},
+    {id:11,section:'Alignment',label:'Aligns needs and plants seeds',weight:10},
+    {id:12,section:'Alignment',label:'Confirms what good looks like to move forward',weight:10},
+    {id:13,section:'Alignment',label:'Creates urgency tied to merchant stated need',weight:10},
+    {id:14,section:'Alignment',label:'Gets 3 Yeses - builds agreement before the ask',weight:5},
+    {id:15,section:'Alignment',label:'Layers in negatives to test conviction',weight:5},
+    {id:16,section:'Close',label:'Schedules follow-up with confirmed date/time',weight:1},
+    {id:17,section:'Close',label:'Sends email - name, company, clear subject line',weight:1},
+    {id:18,section:'Close',label:'Verifies receipt of email during or after call',weight:1},
+    {id:19,section:'Close',label:'Confirms merchant saving their direct number',weight:1},
+    {id:20,section:'Close',label:'3 Nos - pushes back 3 times before releasing',weight:5}
+  ];
+  TOTAL_WEIGHT=ITEMS.reduce(function(s,i){return s+i.weight},0);
+
+  var scoringDiv=document.getElementById('scoringItems');
+  var currentSection='';
+  var scoreValues={};
+  var sections=['Opening','Discovery','Alignment','Close'];
+  var sectionItems={};
+  sections.forEach(function(s){sectionItems[s]=ITEMS.filter(function(i){return i.section===s})});
+
+  // Render scoring items with section score bars
+  sections.forEach(function(sec){
+    scoringDiv.innerHTML+='<div class="scoring-section"><div class="scoring-section-title">'+sec+'</div></div>';
+    sectionItems[sec].forEach(function(item){
+      var btns='';
+      for(var i=1;i<=5;i++)btns+='<button class="score-btn" data-item="'+item.id+'" data-val="'+i+'">'+i+'</button>';
+      scoringDiv.innerHTML+='<div class="scoring-item"><span class="scoring-label">'+item.label+' <span style="color:var(--red);font-size:10px">*</span></span><div class="scoring-input">'+btns+'</div><span class="scoring-weight">25%</span><span class="scoring-weighted" id="ws_'+item.id+'">—</span></div>';
+    });
+    scoringDiv.innerHTML+='<div class="section-score-bar" id="bar_'+sec+'"><span class="bar-label">'+sec+' Score:</span><span class="bar-value">—</span><div class="bar-fill-wrap"><div class="bar-fill" id="fill_'+sec+'"></div></div></div>';
+  });
+
+  // Total score bar
+  scoringDiv.innerHTML+='<div class="total-score-bar" id="bar_total"><span class="bar-label">Total Call Score:</span><span class="bar-value" id="totalScoreVal">—</span><span class="bar-tier" id="totalTierVal"></span><div class="bar-fill-wrap"><div class="bar-fill bar-fill-total" id="fill_total"></div></div></div>';
+
+  function updateScoreBars(){
+    var sectionWeight=25; // 25% per section
+    var totalWeighted=0,totalMax=0;
+    sections.forEach(function(sec){
+      var secTotal=0,secMax=0;
+      sectionItems[sec].forEach(function(item){
+        var ws=document.getElementById('ws_'+item.id);
+        if(scoreValues[item.id]){
+          var itemWeighted=(scoreValues[item.id]/5)*sectionWeight;
+          secTotal+=scoreValues[item.id];
+          secMax+=5;
+          if(ws)ws.textContent=itemWeighted.toFixed(1);
+        } else {
+          secMax+=5;
+          if(ws)ws.textContent='\u2014';
+        }
+      });
+      var pct=secMax>0?Math.round((secTotal/secMax)*100):0;
+      var barVal=document.querySelector('#bar_'+sec+' .bar-value');
+      var barFill=document.getElementById('fill_'+sec);
+      if(barVal)barVal.textContent=pct+'/100';
+      if(barFill){barFill.style.width=pct+'%';barFill.style.background=pct>=90?'var(--green)':pct>=75?'var(--blue)':pct>=60?'var(--amber)':'var(--red)'}
+      var secWeightedScore=(secMax>0?(secTotal/secMax):0)*sectionWeight;
+      totalWeighted+=secWeightedScore;
+      totalMax+=sectionWeight;
+    });
+    var totalPct=totalMax>0?Math.round((totalWeighted/totalMax)*100):0;
+    var tierLabel=totalPct>=90?'Exceptional':totalPct>=75?'Proficient':totalPct>=60?'Developing':'Coaching Plan Required';
+    var el=document.getElementById('totalScoreVal');if(el)el.textContent=totalPct+'/100';
+    var tierEl=document.getElementById('totalTierVal');if(tierEl){tierEl.textContent=tierLabel;tierEl.className='bar-tier '+(totalPct>=90?'tier-exceptional':totalPct>=75?'tier-proficient':totalPct>=60?'tier-developing':'tier-coaching')}
+    var fillEl=document.getElementById('fill_total');if(fillEl){fillEl.style.width=totalPct+'%';fillEl.style.background=totalPct>=90?'var(--green)':totalPct>=75?'var(--blue)':totalPct>=60?'var(--amber)':'var(--red)'}
+  }
+
+  scoringDiv.addEventListener('click',function(e){
+    var btn=e.target.closest('.score-btn');
+    if(!btn)return;
+    var itemId=btn.dataset.item;
+    var val=parseInt(btn.dataset.val);
+    scoreValues[itemId]=val;
+    btn.parentElement.querySelectorAll('.score-btn').forEach(function(b){b.classList.remove('selected')});
+    btn.classList.add('selected');
+    updateScoreBars();
+  });
+
+  // Submit
+  document.getElementById('submitScore').addEventListener('click',function(){
+    // Validate all items scored
+    var missing=ITEMS.filter(function(item){return !scoreValues[item.id]});
+    if(missing.length>0){showToast('Please score all '+missing.length+' remaining items before submitting');return;}
+    var btn=this;btn.disabled=true;btn.textContent='Submitting...';
+    var payload={
+      rep:document.getElementById('fRep').value,
+      teamLead:document.getElementById('fTeamLead').value,
+      date:document.getElementById('fDate').value,
+      callType:document.getElementById('fCallType').value,
+      leadSource:document.getElementById('fLeadSource').value,
+      callDuration:document.getElementById('fDuration').value,
+      merchant:document.getElementById('fMerchant').value,
+      fundingOutcome:document.getElementById('fOutcome').value,
+      dealAmount:parseFloat(document.getElementById('fAmount').value)||0,
+      scores:scoreValues,
+      qualitative:{
+        strength:document.getElementById('qStrength').value,
+        coaching:document.getElementById('qCoaching').value,
+        owner:document.getElementById('qOwner').value,
+        selfAssess:document.getElementById('qSelfAssess').value,
+        topStrength:document.getElementById('qTopStrength').value,
+        devArea:document.getElementById('qDevArea').value,
+        commitment:document.getElementById('qCommitment').value,
+        missed:document.getElementById('qMissed').value,
+        followUp:document.getElementById('qFollowUp').value
+      }
+    };
+    fetch(API+'/call-score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+      .then(function(r){return r.json()})
+      .then(function(d){
+        btn.disabled=false;btn.textContent='Submit Call Score';
+        if(d.success){showToast('Score submitted: '+d.call_score+' ('+d.tier+')');loadData();}
+        else showToast('Error: '+(d.error||'Unknown'));
+      }).catch(function(e){btn.disabled=false;btn.textContent='Submit Call Score';showToast('Error: '+e.message)});
+  });
+
+  function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3500)}
+  function tierClass(tier){if(tier==='Exceptional')return'tier-exceptional';if(tier==='Proficient')return'tier-proficient';if(tier==='Developing')return'tier-developing';return'tier-coaching'}
+  function fmt(n){return n>=1e6?'$'+(n/1e6).toFixed(1)+'M':n>=1e3?'$'+(n/1e3).toFixed(0)+'K':'$'+Math.round(n)}
+
+  function loadData(){
+    fetch(API+'/call-scores').then(function(r){return r.json()}).then(function(d){
+      SCORES_DATA=d.scores||[];SCHEMA=d.schema||ITEMS;
+      renderTab('dashboard');
+    }).catch(function(){});
+  }
+  loadData();
+
+  function renderTab(tab){
+    if(tab==='dashboard')renderDashboard();
+    if(tab==='reps')renderReps();
+    if(tab==='behaviors')renderBehaviors();
+    if(tab==='outcomes')renderOutcomes();
+    if(tab==='trends')renderTrends();
+    if(tab==='history')renderHistory();
+    if(tab==='admin')renderAdmin();
+  }
+
+  function renderDashboard(){
+    if(!SCORES_DATA.length){document.getElementById('dashContent').innerHTML='<div class="card"><p style="color:var(--text-muted)">No call scores yet. Score your first call to see analytics.</p></div>';return}
+    var avgScore=SCORES_DATA.reduce(function(s,c){return s+c.call_score},0)/SCORES_DATA.length;
+    var tiers={Exceptional:0,Proficient:0,Developing:0,'Coaching Plan Required':0};
+    SCORES_DATA.forEach(function(c){tiers[c.tier]=(tiers[c.tier]||0)+1});
+    var byRep={};SCORES_DATA.forEach(function(c){if(!byRep[c.rep])byRep[c.rep]={scores:[],count:0};byRep[c.rep].scores.push(c.call_score);byRep[c.rep].count++});
+    var repAvgs=Object.keys(byRep).map(function(r){var avg=byRep[r].scores.reduce(function(s,v){return s+v},0)/byRep[r].scores.length;return{name:r,avg:avg,count:byRep[r].count}}).sort(function(a,b){return b.avg-a.avg});
+
+    var h='<div class="stat-grid">'+
+      '<div class="stat-card"><div class="stat-card-label">Total Calls Scored</div><div class="stat-card-value">'+SCORES_DATA.length+'</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Avg Score</div><div class="stat-card-value">'+avgScore.toFixed(1)+'</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Exceptional</div><div class="stat-card-value" style="color:var(--green)">'+tiers.Exceptional+'</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Proficient</div><div class="stat-card-value" style="color:var(--blue)">'+tiers.Proficient+'</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Developing</div><div class="stat-card-value" style="color:var(--amber)">'+tiers.Developing+'</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Coaching Required</div><div class="stat-card-value" style="color:var(--red)">'+(tiers['Coaching Plan Required']||0)+'</div></div>'+
+      '</div>';
+    h+='<div class="table-card"><div class="table-card-head">Rep Rankings</div><table><thead><tr><th>#</th><th>Rep</th><th>Avg Score</th><th>Calls</th><th>Tier</th></tr></thead><tbody>';
+    repAvgs.forEach(function(r,i){var tier=r.avg>=90?'Exceptional':r.avg>=75?'Proficient':r.avg>=60?'Developing':'Coaching Plan Required';h+='<tr><td>'+(i+1)+'</td><td>'+r.name+'</td><td>'+r.avg.toFixed(1)+'</td><td>'+r.count+'</td><td><span class="tier-badge '+tierClass(tier)+'">'+tier+'</span></td></tr>'});
+    h+='</tbody></table></div>';
+    document.getElementById('dashContent').innerHTML=h;
+  }
+
+  function renderReps(){
+    if(!SCORES_DATA.length){document.getElementById('repsContent').innerHTML='<div class="card"><p style="color:var(--text-muted)">No data yet.</p></div>';return}
+    var byRep={};SCORES_DATA.forEach(function(c){if(!byRep[c.rep])byRep[c.rep]={scores:[],items:{}};byRep[c.rep].scores.push(c.call_score);ITEMS.forEach(function(item){if(!byRep[c.rep].items[item.id])byRep[c.rep].items[item.id]=[];if(c.scores[item.id])byRep[c.rep].items[item.id].push(c.scores[item.id])})});
+    var h='';
+    Object.keys(byRep).sort().forEach(function(rep){
+      var avg=byRep[rep].scores.reduce(function(s,v){return s+v},0)/byRep[rep].scores.length;
+      var best={id:0,avg:0},worst={id:0,avg:5};
+      ITEMS.forEach(function(item){var arr=byRep[rep].items[item.id]||[];if(!arr.length)return;var a=arr.reduce(function(s,v){return s+v},0)/arr.length;if(a>best.avg){best={id:item.id,avg:a,label:item.label}}if(a<worst.avg){worst={id:item.id,avg:a,label:item.label}}});
+      h+='<div class="card"><div class="card-title">'+rep+' — Avg: '+avg.toFixed(1)+'</div><div class="card-subtitle">Calls: '+byRep[rep].scores.length+' | Best: '+(best.label||'—')+' ('+best.avg.toFixed(1)+') | Weakest: '+(worst.label||'—')+' ('+worst.avg.toFixed(1)+')</div></div>';
+    });
+    document.getElementById('repsContent').innerHTML=h;
+  }
+
+  function renderBehaviors(){
+    if(!SCORES_DATA.length){document.getElementById('behaviorsContent').innerHTML='<div class="card"><p style="color:var(--text-muted)">No data yet.</p></div>';return}
+    var byItem={};ITEMS.forEach(function(item){byItem[item.id]={label:item.label,section:item.section,weight:item.weight,scores:[]}});
+    SCORES_DATA.forEach(function(c){ITEMS.forEach(function(item){if(c.scores[item.id])byItem[item.id].scores.push(c.scores[item.id])})});
+    var ranked=Object.values(byItem).filter(function(b){return b.scores.length>0}).map(function(b){b.avg=b.scores.reduce(function(s,v){return s+v},0)/b.scores.length;return b}).sort(function(a,b){return b.avg-a.avg});
+    var h='<div class="table-card"><div class="table-card-head">Behavior Rankings (Highest to Lowest)</div><table><thead><tr><th>Behavior</th><th>Section</th><th>Avg Score</th><th>Weight</th><th>Samples</th></tr></thead><tbody>';
+    ranked.forEach(function(b){h+='<tr><td>'+b.label+'</td><td>'+b.section+'</td><td>'+b.avg.toFixed(2)+'</td><td>'+b.weight+'</td><td>'+b.scores.length+'</td></tr>'});
+    h+='</tbody></table></div>';
+    document.getElementById('behaviorsContent').innerHTML=h;
+  }
+
+  function renderOutcomes(){
+    if(!SCORES_DATA.length){document.getElementById('outcomesContent').innerHTML='<div class="card"><p style="color:var(--text-muted)">No data yet.</p></div>';return}
+    var byOutcome={Pending:{scores:[],count:0},Approved:{scores:[],count:0},Funded:{scores:[],count:0},Declined:{scores:[],count:0}};
+    SCORES_DATA.forEach(function(c){var o=c.funding_outcome||'Pending';if(!byOutcome[o])byOutcome[o]={scores:[],count:0};byOutcome[o].scores.push(c.call_score);byOutcome[o].count++});
+    var h='<div class="stat-grid">';
+    Object.keys(byOutcome).forEach(function(o){var avg=byOutcome[o].scores.length?byOutcome[o].scores.reduce(function(s,v){return s+v},0)/byOutcome[o].scores.length:0;h+='<div class="stat-card"><div class="stat-card-label">'+o+'</div><div class="stat-card-value">'+avg.toFixed(1)+'</div><div class="stat-card-sub">'+byOutcome[o].count+' calls</div></div>'});
+    h+='</div>';
+
+    var bands=[{label:'90-100',min:90,max:100},{label:'75-89',min:75,max:89},{label:'60-74',min:60,max:74},{label:'Below 60',min:0,max:59}];
+    h+='<div class="table-card"><div class="table-card-head">Conversion by Score Band</div><table><thead><tr><th>Band</th><th>Calls</th><th>Funded</th><th>Conv %</th></tr></thead><tbody>';
+    bands.forEach(function(b){var inBand=SCORES_DATA.filter(function(c){return c.call_score>=b.min&&c.call_score<=b.max});var funded=inBand.filter(function(c){return c.funding_outcome==='Funded'}).length;h+='<tr><td>'+b.label+'</td><td>'+inBand.length+'</td><td>'+funded+'</td><td>'+(inBand.length?((funded/inBand.length)*100).toFixed(1):0)+'%</td></tr>'});
+    h+='</tbody></table></div>';
+    document.getElementById('outcomesContent').innerHTML=h;
+  }
+
+  function renderTrends(){
+    if(!SCORES_DATA.length)return;
+    var monthly={};SCORES_DATA.forEach(function(c){var m=(c.date||'').substring(0,7);if(!m)return;if(!monthly[m])monthly[m]={total:0,count:0};monthly[m].total+=c.call_score;monthly[m].count++});
+    var labels=Object.keys(monthly).sort();
+    var data=labels.map(function(m){return Math.round(monthly[m].total/monthly[m].count*10)/10});
+    var ctx=document.getElementById('trendCanvas').getContext('2d');
+    if(trendChart)trendChart.destroy();
+    trendChart=new Chart(ctx,{type:'line',data:{labels:labels,datasets:[{label:'Avg Call Score',data:data,borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,.06)',tension:.3,fill:true,pointRadius:3,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:100,grid:{color:'rgba(0,0,0,.04)'}},x:{grid:{display:false}}}}});
+  }
+
+  function renderHistory(){
+    if(!SCORES_DATA.length){document.getElementById('historyContent').innerHTML='<div class="card"><p style="color:var(--text-muted)">No calls scored yet.</p></div>';return}
+    var sorted=SCORES_DATA.slice().sort(function(a,b){return b.created_at>a.created_at?1:-1});
+    var h='<div class="table-card"><div class="table-card-head">Recent Calls ('+sorted.length+' total)</div><table><thead><tr><th>Date</th><th>Rep</th><th>Score</th><th>Tier</th><th>Type</th><th>Merchant</th><th>Outcome</th></tr></thead><tbody>';
+    sorted.slice(0,50).forEach(function(c){h+='<tr><td>'+c.date+'</td><td>'+c.rep+'</td><td>'+c.call_score+'</td><td><span class="tier-badge '+tierClass(c.tier)+'">'+c.tier+'</span></td><td>'+(c.call_type||'—')+'</td><td>'+(c.merchant||'—')+'</td><td>'+(c.funding_outcome||'—')+'</td></tr>'});
+    h+='</tbody></table></div>';
+    document.getElementById('historyContent').innerHTML=h;
+  }
+
+  // AI Query
+  document.getElementById('aiBtn').addEventListener('click',function(){
+    var q=document.getElementById('aiQuery').value.trim().toLowerCase();
+    if(!q||!SCORES_DATA.length){document.getElementById('aiResponse').textContent='No data or empty query.';return}
+    var resp=processAIQuery(q);
+    document.getElementById('aiResponse').innerHTML=resp;
+  });
+  document.getElementById('aiQuery').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('aiBtn').click()});
+
+  function processAIQuery(q){
+    var byRep={};SCORES_DATA.forEach(function(c){if(!byRep[c.rep])byRep[c.rep]={scores:[],items:{}};byRep[c.rep].scores.push(c.call_score);ITEMS.forEach(function(item){if(!byRep[c.rep].items[item.id])byRep[c.rep].items[item.id]=[];if(c.scores[item.id])byRep[c.rep].items[item.id].push(c.scores[item.id])})});
+
+    if(q.includes('strongest')&&q.includes('discovery')){
+      var disc=ITEMS.filter(function(i){return i.section==='Discovery'}).map(function(i){return i.id});
+      var repDisc=Object.keys(byRep).map(function(r){var total=0,cnt=0;disc.forEach(function(id){(byRep[r].items[id]||[]).forEach(function(v){total+=v;cnt++})});return{name:r,avg:cnt?total/cnt:0}}).sort(function(a,b){return b.avg-a.avg});
+      return '<strong>Strongest at Discovery:</strong><br>'+repDisc.slice(0,5).map(function(r,i){return(i+1)+'. '+r.name+' — '+r.avg.toFixed(2)}).join('<br>');
+    }
+    if(q.includes('coaching plan')||q.includes('need coaching')){
+      var needCoaching=Object.keys(byRep).filter(function(r){var avg=byRep[r].scores.reduce(function(s,v){return s+v},0)/byRep[r].scores.length;return avg<60});
+      return needCoaching.length?'<strong>Reps needing coaching plan (avg below 60):</strong><br>'+needCoaching.join(', '):'No reps currently below 60 average.';
+    }
+    if(q.includes('correlat')&&q.includes('fund')){
+      var funded=SCORES_DATA.filter(function(c){return c.funding_outcome==='Funded'});
+      var notFunded=SCORES_DATA.filter(function(c){return c.funding_outcome!=='Funded'});
+      var diffs=ITEMS.map(function(item){var fAvg=funded.reduce(function(s,c){return s+(c.scores[item.id]||0)},0)/(funded.length||1);var nAvg=notFunded.reduce(function(s,c){return s+(c.scores[item.id]||0)},0)/(notFunded.length||1);return{label:item.label,diff:fAvg-nAvg,fAvg:fAvg}}).sort(function(a,b){return b.diff-a.diff});
+      return '<strong>Behaviors most correlated with funding:</strong><br>'+diffs.slice(0,5).map(function(d,i){return(i+1)+'. '+d.label+' (funded avg: '+d.fAvg.toFixed(2)+', gap: +'+d.diff.toFixed(2)+')'}).join('<br>');
+    }
+    if(q.includes('compare')&&(q.includes('top')&&q.includes('bottom'))){
+      var repAvgs=Object.keys(byRep).map(function(r){return{name:r,avg:byRep[r].scores.reduce(function(s,v){return s+v},0)/byRep[r].scores.length}}).sort(function(a,b){return b.avg-a.avg});
+      var top3=repAvgs.slice(0,3);var bot3=repAvgs.slice(-3);
+      return '<strong>Top 3:</strong> '+top3.map(function(r){return r.name+' ('+r.avg.toFixed(1)+')'}).join(', ')+'<br><strong>Bottom 3:</strong> '+bot3.map(function(r){return r.name+' ('+r.avg.toFixed(1)+')'}).join(', ');
+    }
+    if(q.includes('lead source')){
+      var bySrc={};SCORES_DATA.forEach(function(c){var src=c.lead_source||'Unknown';if(!bySrc[src])bySrc[src]={scores:[],count:0};bySrc[src].scores.push(c.call_score);bySrc[src].count++});
+      var srcRanked=Object.keys(bySrc).map(function(s){return{name:s,avg:bySrc[s].scores.reduce(function(x,v){return x+v},0)/bySrc[s].scores.length,count:bySrc[s].count}}).sort(function(a,b){return b.avg-a.avg});
+      return '<strong>Avg score by lead source:</strong><br>'+srcRanked.map(function(s){return s.name+': '+s.avg.toFixed(1)+' ('+s.count+' calls)'}).join('<br>');
+    }
+    if(q.includes('coaching')&&(q.includes('theme')||q.includes('issue')||q.includes('common'))){
+      var notes=SCORES_DATA.map(function(c){return(c.qualitative&&c.qualitative.coaching)||''}).filter(function(n){return n.length>5});
+      return '<strong>Recent coaching notes ('+notes.length+' total):</strong><br>'+notes.slice(0,8).map(function(n){return '• '+n}).join('<br>');
+    }
+    return 'Try: "Which reps are strongest at discovery?", "Which behaviors correlate with funded deals?", "Compare top reps against bottom reps", "Show scores by lead source", "Which reps need a coaching plan?"';
+  }
+  function renderAdmin(){
+    var tbody=document.getElementById('adminSchemaTable');
+    if(!tbody)return;
+    var h='';
+    ITEMS.forEach(function(item,i){
+      h+='<tr><td>'+(i+1)+'</td><td>'+item.label+'</td><td>'+item.section+'</td><td>w'+item.weight+'</td><td>25%</td></tr>';
+    });
+    tbody.innerHTML=h;
+    // Weight total
+    var inputs=['adminWtOpening','adminWtDiscovery','adminWtAlignment','adminWtClose'];
+    function updateTotal(){
+      var total=inputs.reduce(function(s,id){return s+(parseInt(document.getElementById(id).value)||0)},0);
+      document.getElementById('adminWtTotal').textContent=total+'%';
+      document.getElementById('adminWtTotal').style.color=total===100?'var(--green)':'var(--red)';
+    }
+    inputs.forEach(function(id){document.getElementById(id).addEventListener('input',updateTotal)});
+    updateTotal();
+    document.getElementById('adminSaveWeights').addEventListener('click',function(){
+      var total=inputs.reduce(function(s,id){return s+(parseInt(document.getElementById(id).value)||0)},0);
+      if(total!==100){showToast('Weights must total 100% (currently '+total+'%)');return;}
+      showToast('Weights saved: Opening '+document.getElementById('adminWtOpening').value+'%, Discovery '+document.getElementById('adminWtDiscovery').value+'%, Alignment '+document.getElementById('adminWtAlignment').value+'%, Close '+document.getElementById('adminWtClose').value+'%');
+    });
+  }
+
+})();
+</script>
+<script src="Assets/capmuse-search.js"></script>
+</body>
+</html>
