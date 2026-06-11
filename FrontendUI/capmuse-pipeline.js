@@ -56,7 +56,10 @@
     'can equipment': 'CAN Equipment',
     'ondeck (loc)': 'OnDeck (LOC)',
     'ondeck (canada)': 'OnDeck (Canada)',
-    'ondeck (canda)': 'OnDeck (Canada)'
+    'ondeck (canda)': 'OnDeck (Canada)',
+    '2m7': '2M7',
+    'newco': 'NewCo',
+    'sheaves': 'Sheaves'
   };
 
   let DATE_PRESETS = [
