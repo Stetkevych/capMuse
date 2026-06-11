@@ -765,6 +765,8 @@
         </div>
       </div>
 
+      <div id="fundingChartBuilder"></div>
+
     </main>
   </div>
 </div>
@@ -803,7 +805,43 @@
     if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
   })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="Assets/capmuse-charts.js"></script>
 <script src="capmuse-funding-book.js"></script>
 <script src="Assets/capmuse-search.js"></script>
+<script>
+(function(){
+  // Init chart builder once funding data loads
+  window.addEventListener('capmuse:deals-updated', initFBChart);
+  var tried = 0;
+  var iv = setInterval(function(){
+    tried++;
+    if (tried > 20) { clearInterval(iv); return; }
+    if (window.CapMuseData && window.CapMuseCharts) {
+      window.CapMuseData.getRawDeals().then(function(deals){
+        if (!deals || !deals.length) return;
+        clearInterval(iv);
+        initFBChart({detail: deals});
+      });
+    }
+  }, 500);
+  function initFBChart(e){
+    var deals = e && e.detail ? e.detail : null;
+    if (!deals) return;
+    var rows = deals.map(function(d){
+      return { rep: d.package_owner || d.puller || '', date: d.date_funded || '', funding: d.funding || '0', revenue: d.revenue || '0', points: d.points || '0', lender: d.lender || '', lead_source: d.lead_source || '', deal_type: d.deal_type || '' };
+    });
+    window.CapMuseCharts.init('fundingChartBuilder', rows, {
+      repField: 'rep',
+      dateField: 'date',
+      metrics: [
+        { key: 'deals', label: 'Deals Funded', calc: function(r){ return 1; } },
+        { key: 'volume', label: 'Funded Volume ($)', calc: function(r){ return parseFloat((r.funding||'0').replace(/[$,]/g,''))||0; } },
+        { key: 'revenue', label: 'Revenue ($)', calc: function(r){ return parseFloat((r.revenue||'0').replace(/[$,]/g,''))||0; } }
+      ]
+    });
+  }
+})();
+</script>
 </body>
 </html>

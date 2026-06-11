@@ -1295,6 +1295,7 @@
         return;
       }
       console.log('[Pipeline] Loaded', rows.length, 'pipeline records');
+      window._pipelineRows = rows;
       loadRows(rows);
     }
 
