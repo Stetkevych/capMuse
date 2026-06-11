@@ -216,6 +216,37 @@ async function fetchOutboundMessages(extensionId, start_date, end_date) {
   return allMessages;
 }
 
+async function fetchTotalMessages(extensionId, start_date, end_date) {
+  let allMessages = [];
+  let page = 1;
+
+  while (true) {
+    const response = await platform.get(
+      `/restapi/v1.0/account/~/extension/${extensionId}/message-store`,
+      {
+        dateFrom: rcDateStart(start_date),
+        dateTo: rcDateEnd(end_date),
+        availability: "Alive",
+        perPage: 1000,
+        page,
+      }
+    );
+
+    const data = await response.json();
+
+    const messages = (data.records || []).filter((m) =>
+      ["SMS", "MMS", "Pager", "Text"].includes(m.type)
+    );
+
+    allMessages.push(...messages);
+
+    if (!data.navigation?.nextPage) break;
+    page++;
+  }
+
+  return allMessages;
+}
+
 app.post("/ringcentral/analytics-summary", async (req, res) => {
   try {
     const { user, start_date, end_date } = req.body;
@@ -299,7 +330,8 @@ function zeroRow(user) {
   return {
     user: getDisplayName(user), extension: user.extensionNumber,
     outbound_calls: 0, avg_calls_per_day: 0,
-    outbound_messages: 0, avg_messages_per_day: 0,
+    connects: 0, pitch: 0,
+    outbound_messages: 0, total_messages: 0, avg_messages_per_day: 0,
     total_outbound_activity: 0, avg_total_activity_per_day: 0,
     avg_handle_time_seconds: 0, avg_handle_time: '00:00',
   };
@@ -309,27 +341,34 @@ function zeroRow(user) {
 async function processExt(user, start_date, end_date, days) {
   const name = getDisplayName(user);
   try {
-    const [calls, messages] = await Promise.all([
+    const [calls, outboundMsgs, totalMsgs] = await Promise.all([
       fetchOutboundCalls(user.id, start_date, end_date),
       fetchOutboundMessages(user.id, start_date, end_date),
+      fetchTotalMessages(user.id, start_date, end_date),
     ]);
 
     const outboundCalls    = calls.length;
-    const outboundMessages = messages.length;
+    const connects         = calls.filter(c => (c.duration || 0) > 0).length;
+    const pitch            = calls.filter(c => (c.duration || 0) > 45).length;
     const totalHandleSecs  = calls.reduce((s, c) => s + (c.duration || 0), 0);
     const avgHandleSecs    = outboundCalls > 0 ? Math.round(totalHandleSecs / outboundCalls) : 0;
+    const outboundMessages = outboundMsgs.length;
+    const totalMessages    = totalMsgs.length;
 
     return {
-      user:                         name,
-      extension:                    user.extensionNumber,
-      outbound_calls:               outboundCalls,
-      avg_calls_per_day:            Number((outboundCalls    / days).toFixed(1)),
-      outbound_messages:            outboundMessages,
-      avg_messages_per_day:         Number((outboundMessages / days).toFixed(1)),
-      total_outbound_activity:      outboundCalls + outboundMessages,
-      avg_total_activity_per_day:   Number(((outboundCalls + outboundMessages) / days).toFixed(1)),
-      avg_handle_time_seconds:      avgHandleSecs,
-      avg_handle_time:              formatSeconds(avgHandleSecs),
+      user:                       name,
+      extension:                  user.extensionNumber,
+      outbound_calls:             outboundCalls,
+      avg_calls_per_day:          Number((outboundCalls    / days).toFixed(1)),
+      connects:                   connects,
+      pitch:                      pitch,
+      avg_handle_time_seconds:    avgHandleSecs,
+      avg_handle_time:            formatSeconds(avgHandleSecs),
+      outbound_messages:          outboundMessages,
+      total_messages:             totalMessages,
+      avg_messages_per_day:       Number((outboundMessages / days).toFixed(1)),
+      total_outbound_activity:    outboundCalls + outboundMessages,
+      avg_total_activity_per_day: Number(((outboundCalls + outboundMessages) / days).toFixed(1)),
     };
   } catch (err) {
     if (isRateLimited(err)) throw err; // outer loop will retry with backoff

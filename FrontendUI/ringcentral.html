@@ -231,6 +231,17 @@
     .btn-load-at:hover { background: var(--blue); color: #fff; }
     .btn-load-at:disabled { opacity: 0.45; cursor: default; }
 
+    /* Hero mini stats */
+    .cv-hero-minis { display: flex; gap: 28px; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .cv-hero-mini-num { font-family: 'Orbitron', sans-serif; font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.65); line-height: 1; }
+    .cv-hero-mini-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.28); margin-top: 3px; }
+
+    /* Additional stat badges */
+    .sb-con  { background: rgba(16,185,129,0.12); color: #10B981; }
+    .sb-pch  { background: rgba(245,158,11,0.12); color: #F59E0B; }
+    .sb-txt  { background: rgba(139,92,246,0.12); color: #8B5CF6; }
+    .sb-cpd  { background: rgba(96,165,250,0.12); color: #60A5FA; }
+
     /* Rep Stats */
     .cv-rep-head-row { padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface-2); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     .cv-rep-select { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text-primary); font-family: inherit; font-size: 13px; cursor: pointer; outline: none; min-width: 190px; transition: border-color 0.15s; }
@@ -464,7 +475,7 @@
         <div>
           <div class="cv-hero-number" id="rcHeroCalls">—</div>
           <div class="cv-hero-alltime">
-            <div class="cv-hero-alltime-label">Messages Today</div>
+            <div class="cv-hero-alltime-label">Outbound Texts Today</div>
             <div class="cv-hero-alltime-num" id="rcHeroMsgs">—</div>
           </div>
         </div>
@@ -472,6 +483,16 @@
           <div class="cv-hero-eyebrow">All Reps · Today <span class="cv-live-badge"><span class="cv-live-dot"></span>LIVE</span></div>
           <div class="cv-hero-title">Total Outbound Calls</div>
           <div class="cv-hero-sub" id="rcHeroSub">Loading data…</div>
+          <div class="cv-hero-minis">
+            <div>
+              <div class="cv-hero-mini-num" id="rcHeroConnects">—</div>
+              <div class="cv-hero-mini-label">Connects</div>
+            </div>
+            <div>
+              <div class="cv-hero-mini-num" id="rcHeroPitch">—</div>
+              <div class="cv-hero-mini-label">Pitch (&gt;45s)</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -509,10 +530,74 @@
         </div>
       </div>
 
+      <!-- Top 5 Connects -->
+      <div class="cv-card">
+        <div class="cv-card-head">
+          <span class="cv-card-title">Top 5 Connects — calls answered</span>
+          <span class="cv-card-ts" id="connectsUpdated"></span>
+        </div>
+        <div class="cv-5col">
+          <div class="cv-col">
+            <div class="cv-col-head">Today</div>
+            <div id="connects-today"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">This Week</div>
+            <div id="connects-week"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">Last Week</div>
+            <div id="connects-lastweek"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">This Month</div>
+            <div id="connects-month"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">All Time</div>
+            <div id="connects-alltime">
+              <div class="cv-placeholder" style="font-size:11px">← click Load All Time</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top 5 Pitch -->
+      <div class="cv-card">
+        <div class="cv-card-head">
+          <span class="cv-card-title">Top 5 Pitch — talk time &gt; 45s</span>
+          <span class="cv-card-ts" id="pitchUpdated"></span>
+        </div>
+        <div class="cv-5col">
+          <div class="cv-col">
+            <div class="cv-col-head">Today</div>
+            <div id="pitch-today"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">This Week</div>
+            <div id="pitch-week"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">Last Week</div>
+            <div id="pitch-lastweek"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">This Month</div>
+            <div id="pitch-month"><div class="cv-placeholder">Loading…</div></div>
+          </div>
+          <div class="cv-col">
+            <div class="cv-col-head">All Time</div>
+            <div id="pitch-alltime">
+              <div class="cv-placeholder" style="font-size:11px">← click Load All Time</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Top 5 Messagers -->
       <div class="cv-card">
         <div class="cv-card-head">
-          <span class="cv-card-title">Top 5 Messagers — outbound_messages</span>
+          <span class="cv-card-title">Top 5 Messagers — outbound texts</span>
           <span class="cv-card-ts" id="msgersUpdated"></span>
         </div>
         <div class="cv-5col">
@@ -560,41 +645,61 @@
             <div class="cv-period-col">
               <div class="cv-period-head">Today</div>
               <div class="cv-stat-row"><span class="cv-stat-badge sb-call">CALL</span><span class="cv-stat-label">Calls</span><span class="cv-stat-val" id="rrCallsT">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">MSG</span><span class="cv-stat-label">Messages</span><span class="cv-stat-val" id="rrMsgsT">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Handle Time</span><span class="cv-stat-val plain" id="rrHandleT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-cpd">CPD</span><span class="cv-stat-label">Avg/Day</span><span class="cv-stat-val plain" id="rrCpdT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-con">CON</span><span class="cv-stat-label">Connects</span><span class="cv-stat-val" id="rrConT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Avg Handle</span><span class="cv-stat-val plain" id="rrHandleT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-pch">PCH</span><span class="cv-stat-label">Pitch (&gt;45s)</span><span class="cv-stat-val" id="rrPitchT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-txt">TXT</span><span class="cv-stat-label">Total Texts</span><span class="cv-stat-val" id="rrTotMsgT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">OUT</span><span class="cv-stat-label">Outbound Texts</span><span class="cv-stat-val" id="rrMsgsT">—</span></div>
             </div>
             <div class="cv-period-col">
               <div class="cv-period-head">This Week</div>
               <div class="cv-stat-row"><span class="cv-stat-badge sb-call">CALL</span><span class="cv-stat-label">Calls</span><span class="cv-stat-val" id="rrCallsW">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">MSG</span><span class="cv-stat-label">Messages</span><span class="cv-stat-val" id="rrMsgsW">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Handle Time</span><span class="cv-stat-val plain" id="rrHandleW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-cpd">CPD</span><span class="cv-stat-label">Avg/Day</span><span class="cv-stat-val plain" id="rrCpdW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-con">CON</span><span class="cv-stat-label">Connects</span><span class="cv-stat-val" id="rrConW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Avg Handle</span><span class="cv-stat-val plain" id="rrHandleW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-pch">PCH</span><span class="cv-stat-label">Pitch (&gt;45s)</span><span class="cv-stat-val" id="rrPitchW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-txt">TXT</span><span class="cv-stat-label">Total Texts</span><span class="cv-stat-val" id="rrTotMsgW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">OUT</span><span class="cv-stat-label">Outbound Texts</span><span class="cv-stat-val" id="rrMsgsW">—</span></div>
             </div>
             <div class="cv-period-col">
               <div class="cv-period-head">Last Week</div>
               <div class="cv-stat-row"><span class="cv-stat-badge sb-call">CALL</span><span class="cv-stat-label">Calls</span><span class="cv-stat-val" id="rrCallsLW">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">MSG</span><span class="cv-stat-label">Messages</span><span class="cv-stat-val" id="rrMsgsLW">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Handle Time</span><span class="cv-stat-val plain" id="rrHandleLW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-cpd">CPD</span><span class="cv-stat-label">Avg/Day</span><span class="cv-stat-val plain" id="rrCpdLW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-con">CON</span><span class="cv-stat-label">Connects</span><span class="cv-stat-val" id="rrConLW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Avg Handle</span><span class="cv-stat-val plain" id="rrHandleLW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-pch">PCH</span><span class="cv-stat-label">Pitch (&gt;45s)</span><span class="cv-stat-val" id="rrPitchLW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-txt">TXT</span><span class="cv-stat-label">Total Texts</span><span class="cv-stat-val" id="rrTotMsgLW">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">OUT</span><span class="cv-stat-label">Outbound Texts</span><span class="cv-stat-val" id="rrMsgsLW">—</span></div>
             </div>
             <div class="cv-period-col">
               <div class="cv-period-head">This Month</div>
               <div class="cv-stat-row"><span class="cv-stat-badge sb-call">CALL</span><span class="cv-stat-label">Calls</span><span class="cv-stat-val" id="rrCallsM">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">MSG</span><span class="cv-stat-label">Messages</span><span class="cv-stat-val" id="rrMsgsM">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Handle Time</span><span class="cv-stat-val plain" id="rrHandleM">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-cpd">CPD</span><span class="cv-stat-label">Avg/Day</span><span class="cv-stat-val plain" id="rrCpdM">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-con">CON</span><span class="cv-stat-label">Connects</span><span class="cv-stat-val" id="rrConM">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Avg Handle</span><span class="cv-stat-val plain" id="rrHandleM">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-pch">PCH</span><span class="cv-stat-label">Pitch (&gt;45s)</span><span class="cv-stat-val" id="rrPitchM">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-txt">TXT</span><span class="cv-stat-label">Total Texts</span><span class="cv-stat-val" id="rrTotMsgM">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">OUT</span><span class="cv-stat-label">Outbound Texts</span><span class="cv-stat-val" id="rrMsgsM">—</span></div>
             </div>
             <div class="cv-period-col">
               <div class="cv-period-head">All Time</div>
               <div class="cv-stat-row"><span class="cv-stat-badge sb-call">CALL</span><span class="cv-stat-label">Calls</span><span class="cv-stat-val" id="rrCallsAT">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">MSG</span><span class="cv-stat-label">Messages</span><span class="cv-stat-val" id="rrMsgsAT">—</span></div>
-              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Handle Time</span><span class="cv-stat-val plain" id="rrHandleAT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-cpd">CPD</span><span class="cv-stat-label">Avg/Day</span><span class="cv-stat-val plain" id="rrCpdAT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-con">CON</span><span class="cv-stat-label">Connects</span><span class="cv-stat-val" id="rrConAT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-aht">AHT</span><span class="cv-stat-label">Avg Handle</span><span class="cv-stat-val plain" id="rrHandleAT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-pch">PCH</span><span class="cv-stat-label">Pitch (&gt;45s)</span><span class="cv-stat-val" id="rrPitchAT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-txt">TXT</span><span class="cv-stat-label">Total Texts</span><span class="cv-stat-val" id="rrTotMsgAT">—</span></div>
+              <div class="cv-stat-row"><span class="cv-stat-badge sb-msg">OUT</span><span class="cv-stat-label">Outbound Texts</span><span class="cv-stat-val" id="rrMsgsAT">—</span></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- All-Time Full Tables (hidden until Load All Time) -->
+      <!-- All-Time Full Table (hidden until Load All Time) -->
       <div class="cv-card" id="atCallersCard" style="display:none">
         <div class="cv-card-head">
-          <span class="cv-card-title">All-Time Callers — Full Leaderboard</span>
+          <span class="cv-card-title">All-Time Full Leaderboard — sorted by Calls</span>
           <span class="cv-card-ts" id="atCallersStatus"></span>
         </div>
         <div style="overflow-x:auto">
@@ -604,37 +709,15 @@
                 <th class="at-rank">#</th>
                 <th>Rep</th>
                 <th class="r">Calls</th>
-                <th class="r">Messages</th>
+                <th class="r">Connects</th>
+                <th class="r">Pitch</th>
                 <th class="r">Avg Handle</th>
-                <th class="r">Total Activity</th>
+                <th class="r">Outbound Texts</th>
+                <th class="r">Total Texts</th>
               </tr>
             </thead>
             <tbody id="atCallersBody">
-              <tr><td colspan="6" class="cv-placeholder">—</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="cv-card" id="atMsgersCard" style="display:none">
-        <div class="cv-card-head">
-          <span class="cv-card-title">All-Time Messagers — Full Leaderboard</span>
-          <span class="cv-card-ts" id="atMsgersStatus"></span>
-        </div>
-        <div style="overflow-x:auto">
-          <table class="rc-table">
-            <thead>
-              <tr>
-                <th class="at-rank">#</th>
-                <th>Rep</th>
-                <th class="r">Messages</th>
-                <th class="r">Calls</th>
-                <th class="r">Avg Handle</th>
-                <th class="r">Total Activity</th>
-              </tr>
-            </thead>
-            <tbody id="atMsgersBody">
-              <tr><td colspan="6" class="cv-placeholder">—</td></tr>
+              <tr><td colspan="8" class="cv-placeholder">—</td></tr>
             </tbody>
           </table>
         </div>
@@ -817,7 +900,7 @@ function renderCol(id, data, metric){
 }
 
 function setColError(key, msg){
-  ['callers-'+key,'msgers-'+key].forEach(function(id){
+  ['callers-'+key,'connects-'+key,'pitch-'+key,'msgers-'+key].forEach(function(id){
     let el=document.getElementById(id);
     if(el) el.innerHTML='<div class="cv-placeholder err">'+msg+'</div>';
   });
@@ -826,23 +909,23 @@ function setColError(key, msg){
 /* ── hero updates ── */
 function updateHero(key, data){
   if(key!=='today' || !data || !data.length) return;
-  let totalCalls = data.reduce(function(s,d){ return s+(d.outbound_calls||0); }, 0);
-  let totalMsgs  = data.reduce(function(s,d){ return s+(d.outbound_messages||0); }, 0);
-  setText('rcHeroCalls', totalCalls.toLocaleString());
-  setText('rcHeroMsgs',  totalMsgs.toLocaleString());
+  let totalCalls    = data.reduce(function(s,d){ return s+(d.outbound_calls||0); }, 0);
+  let totalMsgs     = data.reduce(function(s,d){ return s+(d.outbound_messages||0); }, 0);
+  let totalConnects = data.reduce(function(s,d){ return s+(d.connects||0); }, 0);
+  let totalPitch    = data.reduce(function(s,d){ return s+(d.pitch||0); }, 0);
+  setText('rcHeroCalls',    totalCalls.toLocaleString());
+  setText('rcHeroMsgs',     totalMsgs.toLocaleString());
+  setText('rcHeroConnects', totalConnects.toLocaleString());
+  setText('rcHeroPitch',    totalPitch.toLocaleString());
   let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   setText('rcHeroSub', 'Updated '+ts+' · '+data.length+' reps active');
 }
 
-/* ── all-time full tables ── */
+/* ── all-time full table ── */
 function renderATTables(data){
   if(!data || !data.length) return;
   let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   setText('atCallersStatus', 'Updated '+ts);
-  setText('atMsgersStatus',  'Updated '+ts);
-
-  let atTotal = data.reduce(function(s,d){ return s+(d.outbound_calls||0); }, 0);
-  setText('rcHeroCalls', atTotal.toLocaleString()); // optional: keep hero as total calls
 
   let byCalls = data.slice().sort(function(a,b){ return (b.outbound_calls||0)-(a.outbound_calls||0); });
   document.getElementById('atCallersBody').innerHTML = byCalls.map(function(d,i){
@@ -850,30 +933,17 @@ function renderATTables(data){
     return '<tr class="'+rc+'">'
       +'<td class="at-rank">'+(i+1)+'</td>'
       +'<td>'+d.user+'</td>'
-      +'<td class="r at-num" style="color:#2563EB">'+fmtN(d.outbound_calls)+'</td>'
-      +'<td class="r at-num" style="color:#10B981">'+fmtN(d.outbound_messages)+'</td>'
+      +'<td class="r at-num" style="color:#60A5FA">'+fmtN(d.outbound_calls)+'</td>'
+      +'<td class="r at-num" style="color:#10B981">'+fmtN(d.connects)+'</td>'
+      +'<td class="r at-num" style="color:#F59E0B">'+fmtN(d.pitch)+'</td>'
       +'<td class="r">'+fmtT(d.avg_handle_time_seconds)+'</td>'
-      +'<td class="r at-num">'+fmtN(d.total_outbound_activity)+'</td>'
+      +'<td class="r at-num" style="color:#10B981">'+fmtN(d.outbound_messages)+'</td>'
+      +'<td class="r at-num" style="color:#8B5CF6">'+fmtN(d.total_messages)+'</td>'
       +'</tr>';
   }).join('');
 
-  let byMsgs = data.slice().sort(function(a,b){ return (b.outbound_messages||0)-(a.outbound_messages||0); });
-  document.getElementById('atMsgersBody').innerHTML = byMsgs.map(function(d,i){
-    let rc = i===0?'row-gold':i===1?'row-silver':i===2?'row-bronze':'';
-    return '<tr class="'+rc+'">'
-      +'<td class="at-rank">'+(i+1)+'</td>'
-      +'<td>'+d.user+'</td>'
-      +'<td class="r at-num" style="color:#10B981">'+fmtN(d.outbound_messages)+'</td>'
-      +'<td class="r at-num" style="color:#2563EB">'+fmtN(d.outbound_calls)+'</td>'
-      +'<td class="r">'+fmtT(d.avg_handle_time_seconds)+'</td>'
-      +'<td class="r at-num">'+fmtN(d.total_outbound_activity)+'</td>'
-      +'</tr>';
-  }).join('');
-
-  let atCard1 = document.getElementById('atCallersCard');
-  let atCard2 = document.getElementById('atMsgersCard');
-  if(atCard1) atCard1.style.display='';
-  if(atCard2) atCard2.style.display='';
+  let atCard = document.getElementById('atCallersCard');
+  if(atCard) atCard.style.display='';
 }
 
 /* ── rep stats dropdown ── */
@@ -916,13 +986,21 @@ function renderRepStats(){
   let m  = find(cache.month);
   let at = find(cache.alltime);
 
-  setText('rrCallsT',  fmtN(t.outbound_calls));   setText('rrMsgsT',  fmtN(t.outbound_messages));  setText('rrHandleT',  fmtT(t.avg_handle_time_seconds));
-  setText('rrCallsW',  fmtN(w.outbound_calls));   setText('rrMsgsW',  fmtN(w.outbound_messages));  setText('rrHandleW',  fmtT(w.avg_handle_time_seconds));
-  setText('rrCallsLW', fmtN(lw.outbound_calls));  setText('rrMsgsLW', fmtN(lw.outbound_messages)); setText('rrHandleLW', fmtT(lw.avg_handle_time_seconds));
-  setText('rrCallsM',  fmtN(m.outbound_calls));   setText('rrMsgsM',  fmtN(m.outbound_messages));  setText('rrHandleM',  fmtT(m.avg_handle_time_seconds));
-  setText('rrCallsAT', AT_LOADED ? fmtN(at.outbound_calls) : '—');
-  setText('rrMsgsAT',  AT_LOADED ? fmtN(at.outbound_messages) : '—');
-  setText('rrHandleAT',AT_LOADED ? fmtT(at.avg_handle_time_seconds) : '—');
+  function setRow(sfx, d, loaded) {
+    var v = loaded === false ? function(x){ return '—'; } : function(x){ return x; };
+    setText('rrCalls'+sfx,  v(fmtN(d.outbound_calls)));
+    setText('rrCpd'+sfx,    v(d.avg_calls_per_day != null ? d.avg_calls_per_day : '—'));
+    setText('rrCon'+sfx,    v(fmtN(d.connects)));
+    setText('rrHandle'+sfx, v(fmtT(d.avg_handle_time_seconds)));
+    setText('rrPitch'+sfx,  v(fmtN(d.pitch)));
+    setText('rrTotMsg'+sfx, v(fmtN(d.total_messages)));
+    setText('rrMsgs'+sfx,   v(fmtN(d.outbound_messages)));
+  }
+  setRow('T',  t);
+  setRow('W',  w);
+  setRow('LW', lw);
+  setRow('M',  m);
+  setRow('AT', at, AT_LOADED);
 
   /* Photo */
   let photoEl    = document.getElementById('rcRepPhoto');
@@ -946,7 +1024,7 @@ function renderRepStats(){
 /* ── load period ── */
 function loadPeriod(key, force){
   if(!cache[key]){
-    ['callers-'+key,'msgers-'+key].forEach(function(id){
+    ['callers-'+key,'connects-'+key,'pitch-'+key,'msgers-'+key].forEach(function(id){
       let el=document.getElementById(id);
       if(el) el.innerHTML='<div class="cv-placeholder">Loading…</div>';
     });
@@ -954,9 +1032,12 @@ function loadPeriod(key, force){
   return fetchPeriod(key, force)
     .then(function(data){
       cache[key] = data;
-      renderCol('callers-'+key, data, 'outbound_calls');
-      renderCol('msgers-'+key,  data, 'outbound_messages');
+      renderCol('callers-'+key,  data, 'outbound_calls');
+      renderCol('connects-'+key, data, 'connects');
+      renderCol('pitch-'+key,    data, 'pitch');
+      renderCol('msgers-'+key,   data, 'outbound_messages');
       updateHero(key, data);
+      buildDropdown();
       if(key==='alltime') renderATTables(data);
       renderRepStats();
     })
@@ -993,8 +1074,10 @@ function loadSequential(keys, force){
     nextRefreshAt = Date.now()+REFRESH_MS;
     let ts = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     setText('rcStatus', '');
-    setText('callersUpdated', 'Updated '+ts);
-    setText('msgersUpdated',  'Updated '+ts);
+    setText('callersUpdated',  'Updated '+ts);
+    setText('connectsUpdated', 'Updated '+ts);
+    setText('pitchUpdated',    'Updated '+ts);
+    setText('msgersUpdated',   'Updated '+ts);
   })
   .catch(function(){
     isRunning = false;
@@ -1034,8 +1117,10 @@ document.addEventListener('DOMContentLoaded', function(){
     AT_LOADED = true;
     btnAT.disabled = true;
     btnAT.textContent = 'Loading…';
-    document.getElementById('callers-alltime').innerHTML = '<div class="cv-placeholder">Fetching 14 reps since 2020…</div>';
-    document.getElementById('msgers-alltime').innerHTML  = '<div class="cv-placeholder">Fetching…</div>';
+    ['callers-alltime','connects-alltime','pitch-alltime','msgers-alltime'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.innerHTML = '<div class="cv-placeholder">Fetching…</div>';
+    });
     loadPeriod('alltime');
   });
 
