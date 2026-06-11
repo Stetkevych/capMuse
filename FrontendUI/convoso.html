@@ -502,7 +502,7 @@
                 <th class="cv-sort-th" data-sort="handle_pct">Handle % <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="wait_per_con">Wait / Connected <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="wrap_per_con">Wrap / Connected <span class="cv-sort-ind">↕</span></th>
-                <th class="cv-sort-th" data-sort="wait_per_int_con">Wait / INT Connected <span class="cv-sort-ind">↕</span></th>
+                <th class="cv-sort-th" data-sort="wait_per_inst">Wait / Interested <span class="cv-sort-ind">↕</span></th>
               </tr>
             </thead>
             <tbody id="cvTableBody">
@@ -819,30 +819,32 @@
 
   function sortedUsers(users) {
     return users.map(function(u){
-      var totalCalls=(u.inst||0)+(u.ni||0)+(u.nc||0);
-      var tt=(u.inst_tt||0)+(u.ni_tt||0)+(u.nc_tt||0);
-      var pt=(u.inst_pt||0)+(u.ni_pt||0)+(u.nc_pt||0);
-      var wt=(u.inst_wt||0)+(u.ni_wt||0)+(u.nc_wt||0);
-      var wr=(u.inst_wr||0)+(u.ni_wr||0)+(u.nc_wr||0);
-      var tot=u.total_time||0;
-      var handle=tt+wt+wr;
-      var non_pause=Math.max(0,tot-pt);
+      var inst=u.inst||0;
+      var totalCalls=inst+(u.ni||0)+(u.nc||0);
+      // inst + ni only for time columns
+      var tt=(u.inst_tt||0)+(u.ni_tt||0);
+      var wt=(u.inst_wt||0)+(u.ni_wt||0);
+      var pt=(u.inst_pt||0)+(u.ni_pt||0);
+      var wr=(u.inst_wr||0)+(u.ni_wr||0);
+      // handle = inst + nc (talk+wait+wrap)
+      var handle=(u.inst_tt||0)+(u.inst_wt||0)+(u.inst_wr||0)
+                +(u.nc_tt||0) +(u.nc_wt||0) +(u.nc_wr||0);
+      var tot=tt+wt+wr+pt;
+      var non_pause=tt+wt+wr; // tot - pt
       var pct=function(v){ return tot>0?v/tot*100:0; };
       var con=u.outbound_con||0;
-      var inst_con=u.inst_con||0;
-      var inst_wt=u.inst_wt||0;
       return {name:u.user,
-              inst:u.inst||0,
+              inst:inst,
               con:con,
               tt:tt, pt:pt, wt:wt, wr:wr,
               handle:handle, non_pause:non_pause,
               total_calls:totalCalls, total_time:tot,
-              calls_per_int:(u.inst>0?totalCalls/u.inst:0),
+              calls_per_int:(inst>0?totalCalls/inst:0),
               talk_pct:pct(tt), wait_pct:pct(wt), pause_pct:pct(pt),
               wrap_pct:pct(wr), handle_pct:pct(handle),
-              wait_per_con:  con>0 ? Math.round(wt/con)  : 0,
-              wrap_per_con:  con>0 ? Math.round(wr/con)  : 0,
-              wait_per_int_con: inst_con>0 ? Math.round(inst_wt/inst_con) : 0};
+              wait_per_con:  con>0  ? Math.round(wt/con)  : 0,
+              wrap_per_con:  con>0  ? Math.round(wr/con)  : 0,
+              wait_per_inst: inst>0 ? Math.round(wt/inst) : 0};
     }).filter(function(r){ return r.inst>0; }).sort(function(a,b){
       var av=a[sortColumn]||0, bv=b[sortColumn]||0;
       if(sortColumn==='calls_per_int'){
@@ -990,7 +992,7 @@
         +'<td>'+fpct(r.handle_pct)+'</td>'
         +'<td class="cv-tt">'+frat(r.wait_per_con)+'</td>'
         +'<td class="cv-tt">'+frat(r.wrap_per_con)+'</td>'
-        +'<td class="cv-tt">'+frat(r.wait_per_int_con)+'</td>'
+        +'<td class="cv-tt">'+frat(r.wait_per_inst)+'</td>'
         +'</tr>';
     }).join('');
     /* Update sort header indicators */
