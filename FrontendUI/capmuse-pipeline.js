@@ -449,7 +449,7 @@
     let byRep = {};
     rows.forEach(function (m) {
       let r = rowData(m);
-      let rep = r['Packages in Process Owner'] || r['Puller'] || '';
+      let rep = r['Puller'] || r['Packages in Process Owner'] || '';
       if (!rep || rep === 'House .' || rep === 'House') return;
 
       if (!byRep[rep]) {
@@ -475,7 +475,7 @@
       let amt = parseFloat(String(r['Amount'] || '0').replace(/[$,]/g, '')) || 0;
       let isRenewal = r['Position'] && r['Position'] !== '0' && r['Position'] !== '1';
 
-      if (!isRenewal) byRep[rep].apps++;
+      byRep[rep].apps++;
 
       if (stage.indexOf('funded') > -1 || stage === 'future funding' || stage === 'dd - default') {
         byRep[rep].approvals++;
