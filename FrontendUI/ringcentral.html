@@ -453,7 +453,7 @@
                 <th>Rep</th>
                 <th class="cv-sort-th sorted" data-sort="outbound_calls">Outbound Calls <span class="cv-sort-ind">↓</span></th>
                 <th class="cv-sort-th" data-sort="avg_calls_per_day">Avg / Day <span class="cv-sort-ind">↕</span></th>
-                <th class="cv-sort-th" data-sort="connects">Contacts <span class="cv-sort-ind">↕</span></th>
+                <th class="cv-sort-th" data-sort="total_calls">Contacts <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="avg_handle_time_seconds">Avg Handle <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="pitch">Pitch &gt;45s <span class="cv-sort-ind">↕</span></th>
                 <th class="cv-sort-th" data-sort="outbound_messages">Outbound Msgs <span class="cv-sort-ind">↕</span></th>
@@ -682,7 +682,7 @@ function renderTable(users){
       +'<td><div class="cv-rep-cell">'+av+'<span class="fb-rep-name">'+escHtml(r.user)+'</span></div></td>'
       +'<td class="rc-num">'+(r.outbound_calls||'—')+'</td>'
       +'<td>'+(r.avg_calls_per_day!=null?(+r.avg_calls_per_day).toFixed(1):'—')+'</td>'
-      +'<td class="rc-num">'+(r.connects||'—')+'</td>'
+      +'<td class="rc-num">'+(r.total_calls||'—')+'</td>'
       +'<td class="rc-aht">'+(r.avg_handle_time||'—')+'</td>'
       +'<td class="rc-num">'+(r.pitch||'—')+'</td>'
       +'<td>'+(r.outbound_messages||'—')+'</td>'

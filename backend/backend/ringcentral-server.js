@@ -176,8 +176,8 @@ const inFlightPromises = new Map();
 
 async function processAllExtensions(extensions, start_date, end_date, days) {
   // One account-level call gets ALL reps' calls — replaces 43 individual calls
-  console.log(`[RC] bulk fetching all outbound calls for ${start_date}→${end_date}`);
-  const allCallsByExt = await fetchAllOutboundCalls(start_date, end_date);
+  console.log(`[RC] bulk fetching all calls for ${start_date}→${end_date}`);
+  const { outboundByExt, totalByExt } = await fetchAllCalls(start_date, end_date);
 
   const users = [];
   const totalBatches = Math.ceil(extensions.length / BATCH_SIZE);
@@ -187,11 +187,12 @@ async function processAllExtensions(extensions, start_date, end_date, days) {
     console.log(`[RC] batch ${batchNum}/${totalBatches}: ${batch.map(u => getDisplayName(u)).join(', ')}`);
 
     const results = await Promise.all(batch.map(async u => {
-      const prefetchedCalls = allCallsByExt.get(String(u.id)) || [];
+      const prefetchedCalls = outboundByExt.get(String(u.id)) || [];
+      const totalCalls      = totalByExt.get(String(u.id)) || 0;
       const backoffs = [20000, 40000, 60000];
       for (let attempt = 1; attempt <= 4; attempt++) {
         try {
-          return await processExt(u, start_date, end_date, days, prefetchedCalls);
+          return await processExt(u, start_date, end_date, days, prefetchedCalls, totalCalls);
         } catch (err) {
           if (isRateLimited(err) && attempt <= 3) {
             const wait = backoffs[attempt - 1];
@@ -229,9 +230,11 @@ async function findRingCentralUser(user) {
   });
 }
 
-/* Fetch ALL reps' outbound calls in one account-level API call, grouped by extensionId */
-async function fetchAllOutboundCalls(start_date, end_date) {
-  const callsByExt = new Map();
+/* Fetch ALL calls (inbound + outbound) in one account-level API call.
+   Returns outboundByExt (calls array per rep) and totalByExt (count per rep). */
+async function fetchAllCalls(start_date, end_date) {
+  const outboundByExt = new Map(); // extensionId → outbound call records[]
+  const totalByExt    = new Map(); // extensionId → total call count (in + out)
   let page = 1;
   let total = 0;
 
@@ -239,18 +242,24 @@ async function fetchAllOutboundCalls(start_date, end_date) {
     const response = await rcGet('/restapi/v1.0/account/~/call-log', {
       dateFrom: rcDateStart(start_date),
       dateTo:   rcDateEnd(end_date),
-      direction: 'Outbound',
-      type:      'Voice',
-      perPage:   1000,
+      type:     'Voice',
+      perPage:  1000,
       page,
     });
 
     const data = await response.json();
     for (const record of (data.records || [])) {
-      const extId = String(record.from?.extensionId || '');
-      if (!extId) continue;
-      if (!callsByExt.has(extId)) callsByExt.set(extId, []);
-      callsByExt.get(extId).push(record);
+      if (record.direction === 'Outbound') {
+        const extId = String(record.from?.extensionId || '');
+        if (extId) {
+          if (!outboundByExt.has(extId)) outboundByExt.set(extId, []);
+          outboundByExt.get(extId).push(record);
+          totalByExt.set(extId, (totalByExt.get(extId) || 0) + 1);
+        }
+      } else if (record.direction === 'Inbound') {
+        const extId = String(record.to?.extensionId || '');
+        if (extId) totalByExt.set(extId, (totalByExt.get(extId) || 0) + 1);
+      }
       total++;
     }
 
@@ -258,8 +267,8 @@ async function fetchAllOutboundCalls(start_date, end_date) {
     page++;
   }
 
-  console.log(`[RC] bulk call-log: ${page} page(s), ${total} calls across all reps`);
-  return callsByExt;
+  console.log(`[RC] bulk call-log: ${page} page(s), ${total} total calls`);
+  return { outboundByExt, totalByExt };
 }
 
 async function fetchOutboundMessages(extensionId, start_date, end_date) {
@@ -407,6 +416,7 @@ app.post("/ringcentral/analytics-summary", async (req, res) => {
 function zeroRow(user) {
   return {
     user: getDisplayName(user), extension: user.extensionNumber,
+    total_calls: 0,
     outbound_calls: 0, avg_calls_per_day: 0,
     connects: 0, pitch: 0,
     outbound_messages: 0, avg_messages_per_day: 0,
@@ -416,7 +426,7 @@ function zeroRow(user) {
 }
 
 /* Compute stats for one extension — re-throws rate-limit errors; returns zeros on other errors */
-async function processExt(user, start_date, end_date, days, prefetchedCalls = null) {
+async function processExt(user, start_date, end_date, days, prefetchedCalls = null, totalCalls = 0) {
   const name = getDisplayName(user);
   try {
     const calls        = prefetchedCalls ?? await fetchOutboundCalls(user.id, start_date, end_date);
@@ -432,6 +442,7 @@ async function processExt(user, start_date, end_date, days, prefetchedCalls = nu
     return {
       user:                       name,
       extension:                  user.extensionNumber,
+      total_calls:                totalCalls,
       outbound_calls:             outboundCalls,
       avg_calls_per_day:          Number((outboundCalls    / days).toFixed(1)),
       connects:                   connects,
