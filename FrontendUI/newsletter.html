@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Newsletter — CapMuse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html[data-theme="dark"]{--page-bg:#0C0F14;--sidebar-bg:#111720;--sidebar-border:#1A2435;--surface:#141C28;--surface-2:#1A2435;--text-primary:#F1F5F9;--text-secondary:#7A8FA8;--text-muted:#4A5F78;--nav-item-color:#8A9EBB;--nav-active:#60A5FA;--nav-hover-bg:rgba(255,255,255,0.04);--border:#1A2435;--blue:#60A5FA;--green:#34D399;--red:#F87171;--amber:#FCD34D;--card-shadow:0 1px 3px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.4);--tag-bg:rgba(96,165,250,0.12);--tag-color:#60A5FA}
+    html[data-theme="light"]{--page-bg:#EBEBEB;--sidebar-bg:#FFFFFF;--sidebar-border:#E8E8E8;--surface:#FFFFFF;--surface-2:#F4F4F4;--text-primary:#111111;--text-secondary:#555555;--text-muted:#999999;--nav-item-color:#333333;--nav-active:#2563EB;--nav-hover-bg:rgba(0,0,0,0.04);--border:#E8E8E8;--blue:#2563EB;--green:#10B981;--red:#EF4444;--amber:#F59E0B;--card-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07);--tag-bg:rgba(37,99,235,0.08);--tag-color:#2563EB}
+    :root{--sidebar-w:215px;--sidebar-gap:16px}
+    html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--page-bg);color:var(--text-primary)}
+    .layout{display:flex;min-height:100vh}
+
+    /* Sidebar */
+    .sidebar{width:var(--sidebar-w);position:fixed;left:var(--sidebar-gap);top:var(--sidebar-gap);bottom:var(--sidebar-gap);background:var(--sidebar-bg);border:1px solid var(--sidebar-border);border-radius:18px;box-shadow:0 18px 45px rgba(15,23,42,.12);display:flex;flex-direction:column;z-index:300;overflow-y:auto;scrollbar-width:none}
+    .sidebar::-webkit-scrollbar{display:none}
+    .sidebar-logo{display:flex;align-items:center;gap:9px;padding:18px 18px 14px}
+    .sidebar-logo img{width:30px;height:30px;object-fit:contain}
+    .sidebar-wordmark{font-family:'Orbitron',sans-serif;font-size:14.5px;font-weight:700;letter-spacing:.04em;background:linear-gradient(135deg,#2563EB,#10B981);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sidebar-nav{flex:1;padding:6px 0 8px;display:flex;flex-direction:column}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:8px 18px;color:var(--nav-item-color);font-size:14px;font-weight:400;cursor:pointer;text-decoration:none;transition:color .12s ease,background-color .12s ease}
+    .nav-item:hover{background:var(--nav-hover-bg);color:var(--text-primary)}
+    .nav-item.active{color:var(--nav-active);font-weight:600}
+    .nav-icon,.sub-icon{width:16px;height:16px;flex-shrink:0;display:block}
+    .sidebar-footer{padding:10px;border-top:1px solid var(--sidebar-border)}
+    .sidebar-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px}
+    .user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0F4C81,#10B981);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+    .user-name{font-size:12px;font-weight:600;color:var(--text-primary)}
+    .user-role{font-size:10.5px;color:var(--text-muted)}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:250}
+    .main-wrapper{margin-left:calc(var(--sidebar-w) + 32px);flex:1;min-height:100vh;display:flex;flex-direction:column}
+    .page-content{flex:1;padding:24px 28px 32px;display:flex;flex-direction:column;gap:20px;max-width:900px}
+
+    /* Page header */
+    .page-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+    .page-title{font-size:22px;font-weight:800;letter-spacing:-.02em}
+    .page-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+    .refresh-btn{display:flex;align-items:center;gap:7px;padding:8px 16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-secondary);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+    .refresh-btn:hover{border-color:var(--blue);color:var(--blue)}
+    .refresh-btn svg{width:14px;height:14px;flex-shrink:0}
+
+    /* Filter bar */
+    .filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .filter-chip{padding:6px 14px;border:1px solid var(--border);border-radius:100px;font-size:12px;font-weight:600;color:var(--text-muted);background:var(--surface);cursor:pointer;transition:all .15s;white-space:nowrap}
+    .filter-chip:hover{border-color:var(--blue);color:var(--blue)}
+    .filter-chip.active{background:var(--blue);border-color:var(--blue);color:#fff}
+    .search-input-wrap{flex:1;min-width:180px;max-width:320px;position:relative}
+    .search-input-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-muted);pointer-events:none}
+    .nl-search{width:100%;height:34px;border:1px solid var(--border);border-radius:100px;padding:0 12px 0 32px;font-size:12.5px;background:var(--surface);color:var(--text-primary);font-family:inherit;outline:none}
+    .nl-search:focus{border-color:var(--blue)}
+
+    /* Feed */
+    .feed{display:flex;flex-direction:column;gap:12px}
+
+    /* Email card */
+    .email-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--card-shadow);cursor:pointer;transition:border-color .15s,box-shadow .15s}
+    .email-card:hover{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.07),var(--card-shadow)}
+    .email-card.unread .ec-subject{font-weight:700;color:var(--text-primary)}
+    .ec-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .ec-sender-wrap{display:flex;align-items:center;gap:9px;min-width:0}
+    .ec-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+    .ec-sender{font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ec-email{font-size:11px;color:var(--text-muted)}
+    .ec-meta{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .ec-date{font-size:11.5px;color:var(--text-muted);white-space:nowrap}
+    .ec-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0}
+    .ec-subject{font-size:13.5px;font-weight:500;color:var(--text-secondary);margin-bottom:6px;line-height:1.4}
+    .ec-preview{font-size:12px;color:var(--text-muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .ec-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .ec-tag{padding:3px 9px;background:var(--tag-bg);color:var(--tag-color);border-radius:100px;font-size:10.5px;font-weight:600}
+
+    /* Expanded email detail */
+    .email-detail{background:var(--surface);border:1px solid var(--blue);border-radius:14px;padding:20px;box-shadow:0 0 0 3px rgba(37,99,235,.07),var(--card-shadow);display:none}
+    .email-detail.open{display:block}
+    .ed-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+    .ed-close{width:28px;height:28px;border:none;border-radius:6px;background:var(--surface-2);color:var(--text-muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+    .ed-close:hover{background:var(--red);color:#fff}
+    .ed-subject{font-size:16px;font-weight:700;line-height:1.4;margin-bottom:4px}
+    .ed-sender{font-size:12px;color:var(--text-muted)}
+    .ed-body{font-size:13px;line-height:1.75;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word}
+
+    /* State: loading / empty */
+    .state-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;background:var(--surface);border:1px solid var(--border);border-radius:14px;text-align:center;gap:12px}
+    .state-box svg{width:36px;height:36px;color:var(--text-muted)}
+    .state-title{font-size:15px;font-weight:700;color:var(--text-primary)}
+    .state-sub{font-size:12.5px;color:var(--text-muted);max-width:340px;line-height:1.6}
+    .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Coming-soon banner */
+    .coming-soon-banner{background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(16,185,129,.06));border:1px solid rgba(37,99,235,.18);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px}
+    .csb-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--green));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .csb-icon svg{width:18px;height:18px;color:#fff}
+    .csb-title{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:2px}
+    .csb-text{font-size:12px;color:var(--text-muted);line-height:1.5}
+  </style>
+</head>
+<body class="newsletter-page">
+<div class="layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="Assets/LogoUpdates.png" alt="CapMuse" />
+      <span class="sidebar-wordmark">CapMuse</span>
+    </div>
+    <nav class="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebarAvatar">NL</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">Newsletter</div>
+          <div class="user-role" id="sidebarRole">Lender Inbox</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-wrapper">
+    <main class="page-content">
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Newsletter</h1>
+          <p class="page-sub">Lender emails and updates from capmuse@capital-infusion.com</p>
+        </div>
+        <button class="refresh-btn" id="refreshBtn">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 10a6 6 0 0 1 10.93-3.36M3.07 13.36A6 6 0 0 0 16 10" stroke-linecap="round"/><path d="M16 6.5V10h-3.5M4 13.5V10h3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <div class="coming-soon-banner" id="setupBanner">
+        <div class="csb-icon">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7l8 5 8-5" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <div class="csb-title">Gmail Integration — Setup Required</div>
+          <div class="csb-text">To pull live emails from capmuse@capital-infusion.com, a backend connection needs to be configured. Once connected, lender emails will appear here automatically as news cards.</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-chip active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="offers">Offers</button>
+        <button class="filter-chip" data-filter="approvals">Approvals</button>
+        <button class="filter-chip" data-filter="declines">Declines</button>
+        <button class="filter-chip" data-filter="updates">Updates</button>
+        <div class="search-input-wrap">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="9" r="5.5"/><path d="m13.5 13.5 3 3" stroke-linecap="round"/></svg>
+          <input class="nl-search" type="search" placeholder="Search lender, subject…" id="nlSearch" />
+        </div>
+      </div>
+
+      <div class="feed" id="emailFeed"></div>
+
+    </main>
+  </div>
+</div>
+
+<script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-auth.js"></script>
+<script src="Assets/capmuse-search.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  let API_BASE = 'https://capmuse-kyll.onrender.com';
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let _emails      = [];
+  let activeFilter = 'all';
+  let searchQuery  = '';
+  let expandedId   = null;
+  let _loading     = false;
+
+  // ── Keyword auto-tagging (applied to emails from the real inbox) ───────────
+  let TAG_RULES = [
+    { tag: 'Offer',    keywords: ['offer', 'factor rate', 'mca offer', 'advance offer'] },
+    { tag: 'Approval', keywords: ['approved', 'approval', 'congratulations', 'funded'] },
+    { tag: 'Decline',  keywords: ['decline', 'unable to move forward', 'not approved', 'denied'] },
+    { tag: 'Update',   keywords: ['update', 'revised', 'change', 'new terms', 'stacking'] },
+    { tag: 'Renewal',  keywords: ['renewal', 'renew', 'refinance'] },
+    { tag: 'Rate Sheet', keywords: ['rate sheet', 'pricing update', 'program update'] },
+  ];
+
+  function autoTag(subject, preview) {
+    let text = ((subject || '') + ' ' + (preview || '')).toLowerCase();
+    let tags = [];
+    TAG_RULES.forEach(function (rule) {
+      if (rule.keywords.some(function (k) { return text.indexOf(k) > -1; })) {
+        tags.push(rule.tag);
+      }
+    });
+    return tags.length ? tags : ['General'];
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function initials(name) {
+    return (name || '?').split(' ').map(function (w) { return w[0] || ''; }).slice(0, 2).join('').toUpperCase() || '?';
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    let d   = new Date(iso);
+    let now = new Date();
+    let diffMs  = now - d;
+    let diffMin = Math.floor(diffMs / 60000);
+    let diffH   = Math.floor(diffMin / 60);
+    let diffD   = Math.floor(diffH / 24);
+    if (diffMin < 60)  return diffMin <= 1 ? 'Just now' : diffMin + 'm ago';
+    if (diffH   < 24)  return diffH + 'h ago';
+    if (diffD   === 1) return 'Yesterday';
+    if (diffD   < 7)   return diffD + 'd ago';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Filter logic ───────────────────────────────────────────────────────────
+  let FILTER_MAP = { offers: ['offer'], approvals: ['approval'], declines: ['decline'], updates: ['update','rate sheet','renewal'] };
+
+  function tagMatchesFilter(tags, filter) {
+    if (filter === 'all') return true;
+    let kws = FILTER_MAP[filter] || [];
+    return tags.some(function (t) { return kws.some(function (k) { return t.toLowerCase().indexOf(k) > -1; }); });
+  }
+
+  function visibleEmails() {
+    return _emails.filter(function (e) {
+      if (!tagMatchesFilter(e.tags, activeFilter)) return false;
+      if (searchQuery) {
+        let q = searchQuery.toLowerCase();
+        return (e.sender  || '').toLowerCase().indexOf(q) > -1 ||
+               (e.subject || '').toLowerCase().indexOf(q) > -1 ||
+               (e.preview || '').toLowerCase().indexOf(q) > -1;
+      }
+      return true;
+    });
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function renderFeed() {
+    let feed   = document.getElementById('emailFeed');
+    let emails = visibleEmails();
+
+    if (_loading) {
+      feed.innerHTML = '<div class="state-box"><div class="spinner"></div><div class="state-title">Loading emails…</div></div>';
+      return;
+    }
+
+    if (!emails.length) {
+      feed.innerHTML =
+        '<div class="state-box">' +
+          '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7l8 5 8-5" stroke-linecap="round"/></svg>' +
+          '<div class="state-title">No emails found</div>' +
+          '<div class="state-sub">Try a different filter or clear your search.</div>' +
+        '</div>';
+      return;
+    }
+
+    feed.innerHTML = emails.map(function (e) {
+      let isExpanded = expandedId === e.id;
+      let bodyHtml   = '';
+      if (isExpanded) {
+        if (e.bodyType === 'html') {
+          bodyHtml = '<iframe class="ed-iframe" srcdoc="' + esc(e.body) + '" sandbox="allow-same-origin" style="width:100%;min-height:400px;border:none;border-radius:6px"></iframe>';
+        } else {
+          bodyHtml = '<div class="ed-body">' + esc(e.body || e.preview) + '</div>';
+        }
+      }
+      return (
+        '<div class="email-card' + (e.unread ? ' unread' : '') + '" data-id="' + esc(e.id) + '">' +
+          '<div class="ec-top">' +
+            '<div class="ec-sender-wrap">' +
+              '<div class="ec-avatar">' + initials(e.sender) + '</div>' +
+              '<div>' +
+                '<div class="ec-sender">' + esc(e.sender) + '</div>' +
+                '<div class="ec-email">'  + esc(e.email)  + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ec-meta">' +
+              (e.unread ? '<div class="ec-unread-dot"></div>' : '') +
+              '<div class="ec-date">' + fmtDate(e.date) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="ec-subject">' + esc(e.subject) + '</div>' +
+          '<div class="ec-preview">' + esc(e.preview) + '</div>' +
+          '<div class="ec-tags">' + e.tags.map(function (t) { return '<span class="ec-tag">' + esc(t) + '</span>'; }).join('') + '</div>' +
+        '</div>' +
+        (isExpanded ?
+          '<div class="email-detail open">' +
+            '<div class="ed-header">' +
+              '<div>' +
+                '<div class="ed-subject">' + esc(e.subject) + '</div>' +
+                '<div class="ed-sender">' + esc(e.sender) + ' &lt;' + esc(e.email) + '&gt; · ' + fmtDate(e.date) + '</div>' +
+              '</div>' +
+              '<button class="ed-close" data-close="' + esc(e.id) + '">✕</button>' +
+            '</div>' +
+            bodyHtml +
+          '</div>'
+          : '')
+      );
+    }).join('');
+
+    feed.querySelectorAll('.email-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        let id  = card.getAttribute('data-id');
+        let email = _emails.find(function (e) { return String(e.id) === id; });
+        if (email && email.unread) {
+          email.unread = false;
+          markRead(id);
+        }
+        expandedId = expandedId === id ? null : id;
+        renderFeed();
+      });
+    });
+    feed.querySelectorAll('.ed-close').forEach(function (btn) {
+      btn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        expandedId = null;
+        renderFeed();
+      });
+    });
+  }
+
+  // ── API calls ──────────────────────────────────────────────────────────────
+  function loadEmails() {
+    _loading = true;
+    renderFeed();
+    fetch(API_BASE + '/newsletter/emails?limit=50')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error) throw new Error(data.error);
+        _emails = (data.emails || []).map(function (e) {
+          e.tags = autoTag(e.subject, e.preview);
+          return e;
+        });
+        _loading = false;
+        renderFeed();
+        updateBanner(true);
+      })
+      .catch(function (err) {
+        console.warn('[Newsletter] API unavailable:', err.message);
+        _loading = false;
+        renderFeed();
+      });
+  }
+
+  function markRead(id) {
+    fetch(API_BASE + '/newsletter/emails/' + encodeURIComponent(id) + '/read', { method: 'PATCH' })
+      .catch(function () {});
+  }
+
+  function updateBanner(connected) {
+    let banner = document.getElementById('setupBanner');
+    if (!banner) return;
+    if (connected && _emails.length) {
+      banner.style.display = 'none';
+    }
+  }
+
+  // ── Events ─────────────────────────────────────────────────────────────────
+  document.querySelectorAll('.filter-chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      document.querySelectorAll('.filter-chip').forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      activeFilter = chip.getAttribute('data-filter');
+      expandedId   = null;
+      renderFeed();
+    });
+  });
+
+  document.getElementById('nlSearch').addEventListener('input', function (e) {
+    searchQuery = e.target.value.trim();
+    expandedId  = null;
+    renderFeed();
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', function () {
+    _emails = [];
+    loadEmails();
+  });
+
+  loadEmails();
+})();
+</script>
+</body>
+</html>

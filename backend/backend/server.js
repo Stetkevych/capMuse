@@ -684,6 +684,97 @@ app.post("/convoso/rep-history", async (req, res) => {
   }
 });
 
+// ── Microsoft Graph / Newsletter ───────────────────────────────────────────
+
+const OUTLOOK_TENANT_ID     = process.env.OUTLOOK_TENANT_ID;
+const OUTLOOK_CLIENT_ID     = process.env.OUTLOOK_CLIENT_ID;
+const OUTLOOK_CLIENT_SECRET = process.env.OUTLOOK_CLIENT_SECRET;
+const OUTLOOK_USER_EMAIL    = process.env.OUTLOOK_USER_EMAIL || 'capmuse@capital-infusion.com';
+const GRAPH_BASE            = 'https://graph.microsoft.com/v1.0';
+
+let _graphTokenCache = null;
+
+async function getGraphToken() {
+  if (_graphTokenCache && _graphTokenCache.expiresAt > Date.now() + 60000) {
+    return _graphTokenCache.token;
+  }
+  if (!OUTLOOK_TENANT_ID || !OUTLOOK_CLIENT_ID || !OUTLOOK_CLIENT_SECRET) {
+    throw new Error('Microsoft Graph credentials not configured (OUTLOOK_TENANT_ID, OUTLOOK_CLIENT_ID, OUTLOOK_CLIENT_SECRET)');
+  }
+  const url = `https://login.microsoftonline.com/${OUTLOOK_TENANT_ID}/oauth2/v2.0/token`;
+  const body = new URLSearchParams({
+    client_id:     OUTLOOK_CLIENT_ID,
+    client_secret: OUTLOOK_CLIENT_SECRET,
+    scope:         'https://graph.microsoft.com/.default',
+    grant_type:    'client_credentials',
+  });
+  const res  = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+  const data = await res.json();
+  if (!data.access_token) throw new Error('Graph token error: ' + JSON.stringify(data));
+  _graphTokenCache = { token: data.access_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000 };
+  return data.access_token;
+}
+
+// GET /newsletter/emails?limit=50&folder=inbox&skip=0&search=lender+name
+app.get('/newsletter/emails', async (req, res) => {
+  try {
+    const token  = await getGraphToken();
+    const limit  = Math.min(parseInt(req.query.limit)  || 30, 100);
+    const skip   = Math.max(parseInt(req.query.skip)   || 0,  0);
+    const folder = req.query.folder || 'inbox';
+    const search = (req.query.search || '').trim();
+
+    const select = 'id,subject,from,receivedDateTime,bodyPreview,body,isRead';
+    let url = `${GRAPH_BASE}/users/${OUTLOOK_USER_EMAIL}/mailFolders/${folder}/messages` +
+              `?$top=${limit}&$skip=${skip}&$orderby=receivedDateTime desc&$select=${select}`;
+    if (search) url += `&$search="${encodeURIComponent(search)}"`;
+
+    const emailRes = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const data     = await emailRes.json();
+
+    if (!emailRes.ok) {
+      console.error('[newsletter] Graph error:', data);
+      return res.status(emailRes.status).json({ error: (data.error && data.error.message) || 'Graph API error' });
+    }
+
+    const emails = (data.value || []).map(function (e) {
+      return {
+        id:       e.id,
+        subject:  e.subject  || '(No subject)',
+        sender:   (e.from && e.from.emailAddress && e.from.emailAddress.name)    || '',
+        email:    (e.from && e.from.emailAddress && e.from.emailAddress.address) || '',
+        date:     e.receivedDateTime,
+        preview:  e.bodyPreview || '',
+        body:     (e.body && e.body.content) || '',
+        bodyType: (e.body && e.body.contentType) || 'text',
+        unread:   !e.isRead,
+      };
+    });
+
+    res.json({ emails, total: data['@odata.count'] || emails.length });
+  } catch (err) {
+    console.error('[newsletter]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /newsletter/emails/:id/read — mark as read
+app.patch('/newsletter/emails/:id/read', async (req, res) => {
+  try {
+    const token = await getGraphToken();
+    const url   = `${GRAPH_BASE}/users/${OUTLOOK_USER_EMAIL}/messages/${req.params.id}`;
+    await fetch(url, {
+      method:  'PATCH',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ isRead: true }),
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[newsletter/read]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Convoso server running on port ${PORT}`);
 });
