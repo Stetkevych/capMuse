@@ -772,17 +772,19 @@ function mapGraphEmail(e, bodyHtml) {
 app.get('/newsletter/emails', async (req, res) => {
   try {
     const token  = await getGraphToken();
-    const limit  = Math.min(parseInt(req.query.limit)  || 30, 100);
+    const limit  = Math.min(parseInt(req.query.limit)  || 50, 100);
     const skip   = Math.max(parseInt(req.query.skip)   || 0,  0);
     const folder = req.query.folder || 'inbox';
-    const search = (req.query.search || '').trim();
+    const subject = (req.query.subject || req.query.search || '').trim();
 
     // Fetch extra to cover thread deduplication loss
-    const fetchTop = Math.min(limit * 5, 100);
+    const fetchTop = Math.min(Math.max(limit * 3, 50), 100);
     const select = 'id,subject,from,receivedDateTime,bodyPreview,body,isRead,conversationId';
     let url = `${GRAPH_BASE}/users/${OUTLOOK_USER_EMAIL}/mailFolders/${folder}/messages` +
               `?$top=${fetchTop}&$skip=${skip}&$orderby=receivedDateTime desc&$select=${select}`;
-    if (search) url += `&$search="${encodeURIComponent(search)}"`;
+    if (subject) {
+      url += '&$filter=' + encodeURIComponent('contains(subject,\'' + subject.replace(/'/g, "''") + '\')');
+    }
 
     const emailRes = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     const data     = await emailRes.json();
@@ -803,7 +805,14 @@ app.get('/newsletter/emails', async (req, res) => {
       if (emails.length >= limit) break;
     }
 
-    res.json({ emails, total: emails.length });
+    const rawCount = (data.value || []).length;
+    res.json({
+      emails,
+      total: emails.length,
+      skip,
+      nextSkip: skip + rawCount,
+      hasMore: !!(data['@odata.nextLink']) || rawCount >= fetchTop,
+    });
   } catch (err) {
     console.error('[newsletter]', err.message);
     res.status(500).json({ error: err.message });
