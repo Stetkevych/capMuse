@@ -129,6 +129,7 @@
       <!-- Dashboard -->
       <div class="coaching-section active" id="sec-dashboard">
         <div class="stat-grid" id="dashStats"></div>
+        <div class="report-card"><div class="report-card-head"><span class="report-card-title">Marketing Assist — Funded Amount by Source</span></div><div style="padding:16px;position:relative;height:280px"><canvas id="mktChart"></canvas></div></div>
         <div class="report-card"><div class="report-card-head"><span class="report-card-title">Team Funded — New vs Renewals</span></div><table class="report-table"><thead><tr><th>Rep</th><th>New</th><th>Renewals</th><th>Total</th><th>Volume</th></tr></thead><tbody id="dashTable"></tbody></table></div>
       </div>
 
@@ -256,6 +257,26 @@
       '<div class="stat-card"><div class="stat-card-label">Conversion</div><div class="stat-card-value">'+(totalApps>0?((totalDeals/totalApps)*100).toFixed(1):0)+'%</div></div>';
 
     document.getElementById('dashTable').innerHTML=reps.slice(0,25).map(function(r){return '<tr><td>'+r.name+'</td><td>'+r.newDeals+'</td><td>'+r.renewals+'</td><td>'+r.funded+'</td><td>'+fmt(r.fundedAmt)+'</td></tr>'}).join('');
+
+    // Marketing Assist chart from funding book
+    var byMkt={};
+    FUNDING_DATA.forEach(function(r){
+      var src=(r.marketing_master||'').trim();
+      if(!src||src==='-')return;
+      if(!byMkt[src])byMkt[src]={name:src,volume:0,count:0};
+      byMkt[src].volume+=parseFloat((r.funding||'0').replace(/[$,]/g,''))||0;
+      byMkt[src].count++;
+    });
+    var mktSorted=Object.values(byMkt).sort(function(a,b){return b.volume-a.volume}).slice(0,12);
+    var mktCtx=document.getElementById('mktChart');
+    if(mktCtx&&mktSorted.length){
+      if(window._mktChart)window._mktChart.destroy();
+      window._mktChart=new Chart(mktCtx,{
+        type:'bar',
+        data:{labels:mktSorted.map(function(m){return m.name}),datasets:[{label:'Funded Amount',data:mktSorted.map(function(m){return m.volume}),backgroundColor:'rgba(37,99,235,0.7)',borderRadius:6}]},
+        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:function(v){return v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+(v/1e3).toFixed(0)+'K'}}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
+      });
+    }
     document.getElementById('reportPipeline').innerHTML=reps.slice(0,25).map(function(r){return '<tr><td>'+r.name+'</td><td>'+r.apps+'</td><td>'+r.approvals+'</td><td>'+r.funded+'</td><td>'+(r.apps>0?((r.funded/r.apps)*100).toFixed(1):0)+'%</td></tr>'}).join('');
     document.getElementById('reportFunded').innerHTML=reps.filter(function(r){return r.funded>0}).slice(0,25).map(function(r){return '<tr><td>'+r.name+'</td><td>'+r.funded+'</td><td>'+fmt(r.fundedAmt)+'</td><td>'+fmt(r.funded>0?Math.round(r.fundedAmt/r.funded):0)+'</td><td>'+fmt(r.revenue)+'</td></tr>'}).join('');
     var renewalReps=reps.filter(function(r){return r.renewals>0}).sort(function(a,b){return b.renewalAmt-a.renewalAmt});
