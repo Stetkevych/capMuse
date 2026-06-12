@@ -3,6 +3,17 @@ require("dotenv").config();
 const express = require("express");
 const RingCentral = require("@ringcentral/sdk").SDK;
 
+/* ── Upstash Redis (optional — falls back to in-memory if not configured) ── */
+let redis = null;
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  const { Redis } = require('@upstash/redis');
+  redis = new Redis({
+    url:   process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+  console.log('[Redis] Upstash connected');
+}
+
 const app = express();
 app.use(express.json());
 app.use((req, res, next) => {
@@ -90,8 +101,9 @@ function isRateLimited(err) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 /* ── Global RC API serial queue ─────────────────────────────────────
-   ALL calls to platform.get() go through here — one at a time, 2.5s apart.
-   This means concurrent date-range fetches share one lane and never pile up. */
+   ALL calls to platform.get() go through here — one at a time, 4.5s apart.
+   Gap is 4.5s (not 2.5s) so that Render's rolling deploy (2 overlapping
+   processes) still stays well under RC's 10 calls/10s heavy-group limit. */
 let _rcQueue = Promise.resolve();
 function rcGet(path, params) {
   let resolve, reject;
@@ -99,30 +111,74 @@ function rcGet(path, params) {
   _rcQueue = _rcQueue.then(async () => {
     try   { resolve(await platform.get(path, params)); }
     catch (e) { reject(e); }
-    await sleep(2500);
+    await sleep(4500);
   });
   return result;
 }
 
-/* ── Server-side cache (5-min TTL) ─────────────────────────────── */
-const summaryCache = new Map();
-const CACHE_TTL_MS = 5 * 60 * 1000;
+/* ── Server-side cache ───────────────────────────────────────────── */
+const summaryCache   = new Map();
+const CACHE_TTL_MS   = 5  * 60 * 1000;  // trigger background refresh after 5 min
+const CACHE_STALE_MS = 30 * 60 * 1000;  // serve stale for up to 30 min
 
-function getCached(key) {
-  const e = summaryCache.get(key);
-  if (!e || Date.now() - e.ts > CACHE_TTL_MS) { summaryCache.delete(key); return null; }
-  return e.data;
+function isPastRange(key) {
+  const today = new Date().toISOString().split('T')[0];
+  return key.split('_')[1] < today; // end_date is before today → historical, never changes
 }
-function setCached(key, data) { summaryCache.set(key, { ts: Date.now(), data }); }
+
+async function getCacheEntry(key) {
+  if (redis) {
+    try {
+      const e = await redis.get(`rc:${key}`);
+      if (e) { summaryCache.set(key, e); return e; } // warm in-memory
+    } catch (err) { console.error('[Redis] get error:', err.message); }
+  }
+  const e = summaryCache.get(key);
+  if (!e) return null;
+  if (Date.now() - e.ts > CACHE_STALE_MS) { summaryCache.delete(key); return null; }
+  return e;
+}
+
+async function setCached(key, data) {
+  const entry = { ts: Date.now(), data };
+  summaryCache.set(key, entry);
+  if (redis) {
+    try {
+      if (isPastRange(key)) {
+        await redis.set(`rc:${key}`, entry);            // historical — store permanently
+      } else {
+        await redis.set(`rc:${key}`, entry, { ex: 7200 }); // rolling — expire after 2h
+      }
+    } catch (err) { console.error('[Redis] set error:', err.message); }
+  }
+}
+
+async function loadCacheFromRedis() {
+  if (!redis) return;
+  try {
+    const keys = await redis.keys('rc:*');
+    if (!keys.length) { console.log('[Redis] no cached data found'); return; }
+    for (const key of keys) {
+      const entry = await redis.get(key);
+      if (entry) summaryCache.set(key.replace('rc:', ''), entry);
+    }
+    console.log(`[Redis] loaded ${keys.length} cache entries on startup`);
+  } catch (err) { console.error('[Redis] load error:', err.message); }
+}
 
 /* ── Batch processing ────────────────────────────────────────────── */
 const BATCH_SIZE    = 1;  // one user at a time
-const BATCH_POST_MS = 0;  // no extra gap — rcGet's 2.5s covers rate limiting globally
+const BATCH_POST_MS = 0;  // no extra gap — rcGet's 4.5s covers rate limiting globally
 
 /* If the same cache key is already being fetched, queue this request to wait for it */
 const inFlightPromises = new Map();
 
+
 async function processAllExtensions(extensions, start_date, end_date, days) {
+  // One account-level call gets ALL reps' calls — replaces 43 individual calls
+  console.log(`[RC] bulk fetching all calls for ${start_date}→${end_date}`);
+  const { outboundByExt, totalByExt } = await fetchAllCalls(start_date, end_date);
+
   const users = [];
   const totalBatches = Math.ceil(extensions.length / BATCH_SIZE);
   for (let i = 0; i < extensions.length; i += BATCH_SIZE) {
@@ -131,13 +187,17 @@ async function processAllExtensions(extensions, start_date, end_date, days) {
     console.log(`[RC] batch ${batchNum}/${totalBatches}: ${batch.map(u => getDisplayName(u)).join(', ')}`);
 
     const results = await Promise.all(batch.map(async u => {
-      for (let attempt = 1; attempt <= 2; attempt++) {
+      const prefetchedCalls = outboundByExt.get(String(u.id)) || [];
+      const totalCalls      = totalByExt.get(String(u.id)) || 0;
+      const backoffs = [20000, 40000, 60000];
+      for (let attempt = 1; attempt <= 4; attempt++) {
         try {
-          return await processExt(u, start_date, end_date, days);
+          return await processExt(u, start_date, end_date, days, prefetchedCalls, totalCalls);
         } catch (err) {
-          if (isRateLimited(err) && attempt === 1) {
-            console.warn(`[RC] rate-limited for "${getDisplayName(u)}", retry in 20s`);
-            await sleep(20000);
+          if (isRateLimited(err) && attempt <= 3) {
+            const wait = backoffs[attempt - 1];
+            console.warn(`[RC] rate-limited for "${getDisplayName(u)}", retry ${attempt}/3 in ${wait/1000}s`);
+            await sleep(wait);
           } else {
             console.error(`[RC] error for "${getDisplayName(u)}":`, err.message);
             return zeroRow(u);
@@ -170,30 +230,45 @@ async function findRingCentralUser(user) {
   });
 }
 
-async function fetchOutboundCalls(extensionId, start_date, end_date) {
-  let allCalls = [];
+/* Fetch ALL calls (inbound + outbound) in one account-level API call.
+   Returns outboundByExt (calls array per rep) and totalByExt (count per rep). */
+async function fetchAllCalls(start_date, end_date) {
+  const outboundByExt = new Map(); // extensionId → outbound call records[]
+  const totalByExt    = new Map(); // extensionId → total call count (in + out)
   let page = 1;
+  let total = 0;
 
   while (true) {
-    const response = await rcGet(
-      `/restapi/v1.0/account/~/extension/${extensionId}/call-log`,
-      {
-        dateFrom: rcDateStart(start_date),
-        dateTo: rcDateEnd(end_date),
-        direction: "Outbound",
-        perPage: 1000,
-        page,
-      }
-    );
+    const response = await rcGet('/restapi/v1.0/account/~/call-log', {
+      dateFrom: rcDateStart(start_date),
+      dateTo:   rcDateEnd(end_date),
+      type:     'Voice',
+      perPage:  1000,
+      page,
+    });
 
     const data = await response.json();
-    allCalls.push(...(data.records || []));
+    for (const record of (data.records || [])) {
+      if (record.direction === 'Outbound') {
+        const extId = String(record.from?.extensionId || '');
+        if (extId) {
+          if (!outboundByExt.has(extId)) outboundByExt.set(extId, []);
+          outboundByExt.get(extId).push(record);
+          totalByExt.set(extId, (totalByExt.get(extId) || 0) + 1);
+        }
+      } else if (record.direction === 'Inbound') {
+        const extId = String(record.to?.extensionId || '');
+        if (extId) totalByExt.set(extId, (totalByExt.get(extId) || 0) + 1);
+      }
+      total++;
+    }
 
     if (!data.navigation?.nextPage) break;
     page++;
   }
 
-  return allCalls;
+  console.log(`[RC] bulk call-log: ${page} page(s), ${total} total calls`);
+  return { outboundByExt, totalByExt };
 }
 
 async function fetchOutboundMessages(extensionId, start_date, end_date) {
@@ -341,6 +416,7 @@ app.post("/ringcentral/analytics-summary", async (req, res) => {
 function zeroRow(user) {
   return {
     user: getDisplayName(user), extension: user.extensionNumber,
+    total_calls: 0,
     outbound_calls: 0, avg_calls_per_day: 0,
     connects: 0, pitch: 0,
     outbound_messages: 0, avg_messages_per_day: 0,
@@ -350,10 +426,10 @@ function zeroRow(user) {
 }
 
 /* Compute stats for one extension — re-throws rate-limit errors; returns zeros on other errors */
-async function processExt(user, start_date, end_date, days) {
+async function processExt(user, start_date, end_date, days, prefetchedCalls = null, totalCalls = 0) {
   const name = getDisplayName(user);
   try {
-    const calls        = await fetchOutboundCalls(user.id, start_date, end_date);
+    const calls        = prefetchedCalls ?? await fetchOutboundCalls(user.id, start_date, end_date);
     const outboundMsgs = await fetchOutboundMessages(user.id, start_date, end_date);
 
     const outboundCalls    = calls.length;
@@ -366,6 +442,7 @@ async function processExt(user, start_date, end_date, days) {
     return {
       user:                       name,
       extension:                  user.extensionNumber,
+      total_calls:                totalCalls,
       outbound_calls:             outboundCalls,
       avg_calls_per_day:          Number((outboundCalls    / days).toFixed(1)),
       connects:                   connects,
@@ -384,12 +461,9 @@ async function processExt(user, start_date, end_date, days) {
   }
 }
 
-/* ── Shared fetch logic (used by endpoint AND startup pre-fetch) ─── */
-async function fetchAndCachePeriod(start_date, end_date) {
+/* ── Core fetch (deduplicates concurrent requests via inFlightPromises) ── */
+async function doFetch(start_date, end_date) {
   const cacheKey = `${start_date}_${end_date}`;
-
-  const cached = getCached(cacheKey);
-  if (cached) return cached;
 
   if (inFlightPromises.has(cacheKey)) {
     console.log(`[RC] coalescing onto in-flight: ${cacheKey}`);
@@ -397,42 +471,149 @@ async function fetchAndCachePeriod(start_date, end_date) {
   }
 
   const fetchPromise = (async () => {
-    await login();
+    try {
+      await login();
+      const extResp = await platform.get("/restapi/v1.0/account/~/extension", {
+        perPage: 1000, type: "User", status: "Enabled",
+      });
+      const extData = await extResp.json();
+      const extensions = (extData.records || []).filter(u =>
+        SALES_REP_NAMES.has(getFullName(u).toLowerCase())
+      );
+      const days =
+        (new Date(`${end_date}T00:00:00`) - new Date(`${start_date}T00:00:00`)) /
+        (1000 * 60 * 60 * 24) + 1;
 
-    const extResp = await platform.get("/restapi/v1.0/account/~/extension", {
-      perPage: 1000, type: "User", status: "Enabled",
-    });
-    const extData = await extResp.json();
-    const extensions = (extData.records || []).filter(u =>
-      SALES_REP_NAMES.has(getFullName(u).toLowerCase())
-    );
+      console.log(`[RC] fetching ${start_date} → ${end_date} · ${extensions.length} users`);
 
-    const days =
-      (new Date(`${end_date}T00:00:00`) - new Date(`${start_date}T00:00:00`)) /
-      (1000 * 60 * 60 * 24) + 1;
+      const allUsers = await processAllExtensions(extensions, start_date, end_date, days);
+      const sorted   = allUsers.sort((a, b) => a.user.localeCompare(b.user));
+      const result   = { start_date, end_date, count: sorted.length, users: sorted };
 
-    console.log(`[RC] fetching ${start_date} → ${end_date} · ${extensions.length} users`);
-
-    const allUsers = await processAllExtensions(extensions, start_date, end_date, days);
-    const sorted   = allUsers.sort((a, b) => a.user.localeCompare(b.user));
-    const result   = { start_date, end_date, count: sorted.length, users: sorted };
-
-    setCached(cacheKey, result);
-    inFlightPromises.delete(cacheKey);
-    return result;
+      await setCached(cacheKey, result);
+      return result;
+    } finally {
+      inFlightPromises.delete(cacheKey);
+    }
   })();
 
   inFlightPromises.set(cacheKey, fetchPromise);
-
-  try {
-    return await fetchPromise;
-  } catch (err) {
-    inFlightPromises.delete(cacheKey);
-    throw err;
-  }
+  return fetchPromise;
 }
 
-/* ── Endpoint ────────────────────────────────────────────────────── */
+/* ── Stale-while-revalidate: serve cached data immediately (up to 30 min
+   old), kick off background refresh when older than 5 min ─────────── */
+async function fetchAndCachePeriod(start_date, end_date) {
+  const cacheKey = `${start_date}_${end_date}`;
+  const entry    = await getCacheEntry(cacheKey);
+
+  if (entry) {
+    // If cached data is missing total_calls (old schema), clear and re-fetch
+    const firstUser = entry.data?.users?.[0];
+    if (firstUser && !('total_calls' in firstUser)) {
+      console.log(`[RC] old schema cache for ${cacheKey}, clearing and re-fetching`);
+      summaryCache.delete(cacheKey);
+      if (redis) redis.del(`rc:${cacheKey}`).catch(() => {});
+      return doFetch(start_date, end_date);
+    }
+
+    const age = Date.now() - entry.ts;
+    if (age > CACHE_TTL_MS && !inFlightPromises.has(cacheKey)) {
+      console.log(`[RC] SWR: ${Math.round(age / 60000)}min-old cache for ${cacheKey}, refreshing in background`);
+      doFetch(start_date, end_date).catch(err =>
+        console.error(`[RC] SWR background refresh failed ${cacheKey}:`, err.message)
+      );
+    }
+    return entry.data;  // serve immediately (fresh or stale)
+  }
+
+  return doFetch(start_date, end_date);  // no cache at all — must wait
+}
+
+/* ── Scheduled pre-fetch (warms cache for common date ranges) ─────── */
+function getPreFetchRanges() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const today = fmt(now);
+
+  const d7 = new Date(now); d7.setDate(d7.getDate() - 6);
+
+  const dow = now.getDay();
+  const mon = new Date(now); mon.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+
+  const monthStart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
+
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+
+  return [
+    [today,          today],        // today
+    [fmt(yesterday), fmt(yesterday)], // yesterday
+    [fmt(d7),        today],        // last 7 days
+    [fmt(mon),       today],        // this week (Mon–today)
+    [monthStart,     today],        // this month
+  ];
+}
+
+/* ── Historical months pre-fetch (run once, stored permanently in Redis) ── */
+function getCompletedMonths() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const months = [];
+  for (let m = 0; m < now.getMonth(); m++) {
+    const start = `${now.getFullYear()}-${pad(m + 1)}-01`;
+    const lastDay = new Date(now.getFullYear(), m + 1, 0).getDate();
+    const end = `${now.getFullYear()}-${pad(m + 1)}-${pad(lastDay)}`;
+    months.push([start, end]);
+  }
+  return months;
+}
+
+async function preloadHistoricalMonths() {
+  const months = getCompletedMonths();
+  if (!months.length) return;
+  console.log(`[RC] checking ${months.length} historical months`);
+  for (const [start, end] of months) {
+    const key = `${start}_${end}`;
+    const cached = await getCacheEntry(key);
+    if (cached) { console.log(`[RC] historical ${start}→${end} already cached`); continue; }
+    console.log(`[RC] pre-loading historical month ${start}→${end}`);
+    try {
+      await doFetch(start, end);
+    } catch (err) {
+      console.error(`[RC] historical month error ${start}→${end}:`, err.message);
+    }
+  }
+  console.log('[RC] historical months complete');
+}
+
+async function runScheduledPreFetch() {
+  console.log('[RC] scheduled pre-fetch starting');
+  for (const [start_date, end_date] of getPreFetchRanges()) {
+    const cacheKey = `${start_date}_${end_date}`;
+    if (inFlightPromises.has(cacheKey)) {
+      console.log(`[RC] pre-fetch skipping ${cacheKey} (already in-flight)`);
+      continue;
+    }
+    const entry = summaryCache.get(cacheKey);
+    if (entry && Date.now() - entry.ts < CACHE_TTL_MS) {
+      console.log(`[RC] pre-fetch skipping ${cacheKey} (still fresh)`);
+      continue;
+    }
+    try {
+      console.log(`[RC] pre-fetching ${start_date} → ${end_date}`);
+      await doFetch(start_date, end_date);
+    } catch (err) {
+      console.error(`[RC] pre-fetch error ${start_date}→${end_date}:`, err.message);
+    }
+  }
+  console.log('[RC] scheduled pre-fetch complete');
+}
+
+
+/* ── Endpoints ───────────────────────────────────────────────────── */
+app.get("/health", (req, res) => res.json({ status: "ok", cached: summaryCache.size }));
+
 app.post("/ringcentral/all-users-summary", async (req, res) => {
   try {
     const { start_date, end_date, force } = req.body;
@@ -453,6 +634,18 @@ app.post("/ringcentral/all-users-summary", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`RingCentral server running on port ${PORT}`);
+
+  // Load Redis cache into memory immediately — instant page loads right away
+  await loadCacheFromRedis();
+
+  // Start RC API fetches 30s after startup
+  setTimeout(() => {
+    runScheduledPreFetch().catch(err => console.error('[RC] pre-fetch crash:', err));
+    preloadHistoricalMonths().catch(err => console.error('[RC] historical months crash:', err));
+    setInterval(() => {
+      runScheduledPreFetch().catch(err => console.error('[RC] scheduled pre-fetch crash:', err));
+    }, 25 * 60 * 1000);
+  }, 30_000);
 });
