@@ -13,12 +13,10 @@
   let DEMO_MODE = true;
   let DEMO_HOME_HREF = 'home.html';
   let DEMO_DISABLED_PAGES = [
-    'dashboard.html',
     'lead.html',
     'lender_recommendation.html'
   ];
   let DEMO_HIDDEN_NAV = [
-    { href: 'dashboard.html', label: 'Dashboard' },
     { href: 'lead.html', label: 'Leads' },
     { href: 'lender_recommendation.html', label: 'Lender Match' }
   ];
@@ -162,6 +160,10 @@
         (page === 'home.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('home.html') +
         'Home</a>' +
+      '<a class="nav-item' + (page === 'dashboard.html' ? ' active' : '') + '" href="dashboard.html"' +
+        (page === 'dashboard.html' ? ' aria-current="page"' : '') + '>' +
+        linkIconHtml('dashboard.html') +
+        'Landing Page</a>' +
       '<a class="nav-item' + (page === 'analytics.html' ? ' active' : '') + '" href="analytics.html"' +
         (page === 'analytics.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('analytics.html') +
