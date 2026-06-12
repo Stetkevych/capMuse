@@ -132,7 +132,7 @@ function isPastRange(key) {
 async function getCacheEntry(key) {
   if (redis) {
     try {
-      const e = await redis.get(`rc2:${key}`);
+      const e = await redis.get(`rc3:${key}`);
       if (e) { summaryCache.set(key, e); return e; } // warm in-memory
     } catch (err) { console.error('[Redis] get error:', err.message); }
   }
@@ -148,9 +148,9 @@ async function setCached(key, data) {
   if (redis) {
     try {
       if (isPastRange(key)) {
-        await redis.set(`rc2:${key}`, entry);            // historical — store permanently
+        await redis.set(`rc3:${key}`, entry);            // historical — store permanently
       } else {
-        await redis.set(`rc2:${key}`, entry, { ex: 7200 }); // rolling — expire after 2h
+        await redis.set(`rc3:${key}`, entry, { ex: 7200 }); // rolling — expire after 2h
       }
     } catch (err) { console.error('[Redis] set error:', err.message); }
   }
@@ -159,11 +159,11 @@ async function setCached(key, data) {
 async function loadCacheFromRedis() {
   if (!redis) return;
   try {
-    const keys = await redis.keys('rc2:*');
+    const keys = await redis.keys('rc3:*');
     if (!keys.length) { console.log('[Redis] no cached data found'); return; }
     for (const key of keys) {
       const entry = await redis.get(key);
-      if (entry) summaryCache.set(key.replace('rc2:', ''), entry);
+      if (entry) summaryCache.set(key.replace('rc3:', ''), entry);
     }
     console.log(`[Redis] loaded ${keys.length} cache entries on startup`);
   } catch (err) { console.error('[Redis] load error:', err.message); }
@@ -180,7 +180,8 @@ const inFlightPromises = new Map();
 async function processAllExtensions(extensions, start_date, end_date, days) {
   // One account-level call gets ALL reps' calls — replaces 43 individual calls
   console.log(`[RC] bulk fetching all calls for ${start_date}→${end_date}`);
-  const { outboundByExt, totalByExt } = await fetchAllCalls(start_date, end_date);
+  const repExtIds = new Set(extensions.map(u => String(u.id)));
+  const { outboundByExt, totalByExt } = await fetchAllCalls(start_date, end_date, repExtIds);
 
   const users = [];
   const totalBatches = Math.ceil(extensions.length / BATCH_SIZE);
@@ -235,7 +236,15 @@ async function findRingCentralUser(user) {
 
 /* Fetch ALL calls (inbound + outbound) in one account-level API call.
    Returns outboundByExt (calls array per rep) and totalByExt (count per rep). */
-async function fetchAllCalls(start_date, end_date) {
+function findRepInLegs(legs, repExtIds) {
+  for (let i = legs.length - 1; i >= 0; i--) {
+    const extId = String(legs[i].extension?.id || '');
+    if (extId && repExtIds.has(extId)) return extId;
+  }
+  return null;
+}
+
+async function fetchAllCalls(start_date, end_date, repExtIds = new Set()) {
   const outboundByExt = new Map(); // extensionId → outbound call records[]
   const totalByExt    = new Map(); // extensionId → total call count (in + out)
   let page = 1;
@@ -253,9 +262,9 @@ async function fetchAllCalls(start_date, end_date) {
     const data = await response.json();
     for (const record of (data.records || [])) {
       if (record.direction === 'Outbound') {
-        const extId     = String(record.from?.extensionId || '');
-        const isExternal = !record.to?.extensionId; // no internal ext = external call
-        if (extId) {
+        const extId      = String(record.from?.extensionId || '');
+        const isExternal = !record.to?.extensionId;
+        if (extId && repExtIds.has(extId)) {
           totalByExt.set(extId, (totalByExt.get(extId) || 0) + 1);
           if (isExternal) {
             if (!outboundByExt.has(extId)) outboundByExt.set(extId, []);
@@ -263,7 +272,8 @@ async function fetchAllCalls(start_date, end_date) {
           }
         }
       } else if (record.direction === 'Inbound') {
-        const extId = String(record.to?.extensionId || '');
+        // Walk legs in reverse to find which rep actually answered
+        const extId = findRepInLegs(record.legs || [], repExtIds);
         if (extId) totalByExt.set(extId, (totalByExt.get(extId) || 0) + 1);
       }
       total++;
@@ -457,7 +467,7 @@ async function processExt(user, start_date, end_date, days, prefetchedCalls = nu
       extension:                  user.extensionNumber,
       total_calls:                totalCalls,
       outbound_calls:             outboundCalls,
-      avg_calls_per_day:          Number((outboundCalls    / days).toFixed(1)),
+      avg_calls_per_day:          outboundCalls > 0 ? Number((totalCalls / outboundCalls).toFixed(1)) : 0,
       connects:                   connects,
       pitch:                      pitch,
       avg_handle_time_seconds:    avgHandleSecs,
@@ -526,7 +536,7 @@ async function fetchAndCachePeriod(start_date, end_date) {
     if (firstUser && !('total_calls' in firstUser)) {
       console.log(`[RC] old schema cache for ${cacheKey}, clearing and re-fetching`);
       summaryCache.delete(cacheKey);
-      if (redis) redis.del(`rc2:${cacheKey}`).catch(() => {});
+      if (redis) redis.del(`rc3:${cacheKey}`).catch(() => {});
       return doFetch(start_date, end_date);
     }
 
