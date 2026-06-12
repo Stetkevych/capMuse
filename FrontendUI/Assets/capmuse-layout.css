@@ -137,7 +137,11 @@
 
 .funding-book-page .fb-chart-row .fb-rep-table th:first-child {
   width: 40px;
-  padding-left: 14px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-table th,
+.funding-book-page .fb-chart-row .fb-rep-table td {
+  text-align: center;
 }
 
 .funding-book-page .fb-chart-row .fb-rep-table td {
@@ -147,12 +151,12 @@
 
 .funding-book-page .fb-chart-row .fb-rep-table td:first-child {
   font-size: 11px;
-  padding-left: 14px;
 }
 
 .funding-book-page .fb-chart-row .fb-rep-table th.fb-col-name,
 .funding-book-page .fb-chart-row .fb-rep-table td.fb-col-name {
   min-width: 130px;
+  text-align: left;
   padding-left: 10px;
 }
 
@@ -165,6 +169,7 @@
 
 .funding-book-page .fb-chart-row .fb-rep-cell {
   gap: 9px;
+  justify-content: flex-start;
 }
 
 .funding-book-page .fb-chart-row .fb-rep-name {
@@ -177,8 +182,17 @@
 }
 
 .funding-book-page .fb-chart-row .fb-money-total {
-  font-size: 11.5px;
-  padding: 3px 7px;
+  font-size: 9.5px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-table th.fb-col-sorted,
+.funding-book-page .fb-chart-row .fb-rep-table td.fb-col-sorted {
+  padding: 4px 5px;
+  font-size: 9.5px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-table td.fb-col-sorted .fb-money-total {
+  font-size: 9.5px;
 }
 
 .funding-book-page .fb-filters-rail {
@@ -234,6 +248,12 @@
   z-index: 40;
   background: var(--table-head);
   box-shadow: 0 1px 0 var(--table-border);
+}
+
+.funding-book-page .fb-rep-table thead th.fb-col-sorted {
+  background: #2563EB;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.14);
+  z-index: 41;
 }
 
 @media (max-width: 1100px) {

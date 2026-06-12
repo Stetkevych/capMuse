@@ -24,6 +24,16 @@
     avgRev: 'Avg. Rev'
   };
 
+  let SORT_COL_INDEX = {
+    name: 2,
+    volume: 3,
+    revenue: 4,
+    points: 5,
+    count: 7,
+    avg: 8,
+    avgRev: 9
+  };
+
   let GROUP_BY = 'packageOwner';
 
   let FILTERS = {
@@ -1050,6 +1060,25 @@
     }
   }
 
+  function applySortedColumnHighlight() {
+    let table = document.getElementById('fbRepTable');
+    if (!table) return;
+
+    table.querySelectorAll('.fb-col-sorted').forEach(function (el) {
+      el.classList.remove('fb-col-sorted');
+    });
+
+    let colIndex = SORT_COL_INDEX[SORT_KEY];
+    if (!colIndex) return;
+
+    let th = table.querySelector('thead th:nth-child(' + colIndex + ')');
+    if (th) th.classList.add('fb-col-sorted');
+
+    table.querySelectorAll('tbody td:nth-child(' + colIndex + ')').forEach(function (td) {
+      td.classList.add('fb-col-sorted');
+    });
+  }
+
   function renderSortHeaders() {
     let thead = document.querySelector('#fbRepTable thead tr');
     if (!thead) return;
@@ -1065,6 +1094,7 @@
         th.classList.remove('sorted');
       }
     });
+    applySortedColumnHighlight();
   }
 
   function renderTable(rows) {
