@@ -598,21 +598,9 @@
           <div class="cv-rmod-kpi-val" id="cvRmodContacts">—</div>
           <div class="cv-rmod-kpi-lbl">Contacts</div>
         </div>
-        <div class="cv-rmod-kpi cv-rmod-kpi--inst">
-          <div class="cv-rmod-kpi-val" id="cvRmodInst">—</div>
-          <div class="cv-rmod-kpi-lbl">Interested</div>
-        </div>
         <div class="cv-rmod-kpi">
           <div class="cv-rmod-kpi-val" id="cvRmodCallsPerInt">—</div>
           <div class="cv-rmod-kpi-lbl">Calls / INT</div>
-        </div>
-        <div class="cv-rmod-kpi cv-rmod-kpi--contact">
-          <div class="cv-rmod-kpi-val" id="cvRmodContactRate">—</div>
-          <div class="cv-rmod-kpi-lbl">Contact Rate</div>
-        </div>
-        <div class="cv-rmod-kpi cv-rmod-kpi--intrate">
-          <div class="cv-rmod-kpi-val" id="cvRmodIntRate">—</div>
-          <div class="cv-rmod-kpi-lbl">INT Rate</div>
         </div>
         <div class="cv-rmod-kpi cv-rmod-kpi--wrap">
           <div class="cv-rmod-kpi-val" id="cvRmodWrapPerInt">—</div>
@@ -670,13 +658,13 @@
           <canvas id="cvRmodChart"></canvas>
         </div>
       </div>
-      <!-- CONTACT RATE TREND -->
+      <!-- AVG HANDLE TIME TREND -->
       <div class="cv-rmod-chart-section">
         <div class="cv-rmod-chart-head">
-          <span class="cv-rmod-chart-title">Contact Rate Trend</span>
+          <span class="cv-rmod-chart-title">Avg Handle Time Trend</span>
         </div>
         <div class="cv-rmod-chart-wrap">
-          <canvas id="cvRmodContactRateCanvas"></canvas>
+          <canvas id="cvRmodHandleTimeCanvas"></canvas>
         </div>
       </div>
       <!-- INT RATE TREND -->
@@ -1433,31 +1421,38 @@
       }
     });
 
-    /* Contact Rate Trend */
-    var crCanvas=document.getElementById('cvRmodContactRateCanvas');
-    if(crCanvas && typeof Chart!=='undefined' && periods.length) {
+    /* Avg Handle Time Trend */
+    var htCanvas=document.getElementById('cvRmodHandleTimeCanvas');
+    if(htCanvas && typeof Chart!=='undefined' && periods.length) {
       if(repContactRateChart){ repContactRateChart.destroy(); repContactRateChart=null; }
-      var crData=periods.map(function(p){
-        var tc=p.total_calls!=null ? p.total_calls : (p.inst+p.ni+p.nc);
-        var con=p.contacts!=null ? p.contacts : (p.inst+p.ni);
-        return tc>0 ? Math.round(con/tc*100) : null;
+      var htData=periods.map(function(p){
+        var ht=p.handle_time!=null ? p.handle_time : 0;
+        var hc=p.handle_calls!=null ? p.handle_calls : (p.inst+p.nc);
+        return hc>0 && ht>0 ? Math.round(ht/hc) : null;
       });
-      repContactRateChart=new Chart(crCanvas,{
+      repContactRateChart=new Chart(htCanvas,{
         type:'line',
         data:{ labels:labels, datasets:[{
-          label:'Contact Rate', data:crData,
+          label:'Avg Handle Time', data:htData,
           borderColor:'rgba(59,130,246,1)', backgroundColor:'rgba(59,130,246,0.1)',
           fill:true, tension:0.35, spanGaps:true, pointRadius:4, pointHoverRadius:6, borderWidth:2
         }]},
         options:{
           responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{display:false}, tooltip:{mode:'index',intersect:false,
-            callbacks:{label:function(ctx){ return ctx.raw!==null?' '+ctx.raw+'% contact rate':''; }}
+            callbacks:{label:function(ctx){
+              if(ctx.raw===null) return '';
+              var m=Math.floor(ctx.raw/60), s=ctx.raw%60;
+              return ' '+m+'m '+(s<10?'0':'')+s+'s handle time';
+            }}
           }},
           scales:{
             x:{grid:{display:false}, ticks:{color:tickCR, font:{size:9}, maxRotation:0}},
-            y:{beginAtZero:true, min:0, max:100, grid:{color:gridCR},
-              ticks:{color:tickCR, font:{size:9}, callback:function(v){ return v+'%'; }}
+            y:{beginAtZero:true, grid:{color:gridCR},
+              ticks:{color:tickCR, font:{size:9}, callback:function(v){
+                var m=Math.floor(v/60), s=v%60;
+                return m+'m'+(s>0?(s<10?'0':'')+s+'s':'');
+              }}
             }
           }
         }
@@ -1528,7 +1523,7 @@
   async function loadRepModalData() {
     var tbody=document.getElementById('cvRmodTableBody');
     if(tbody) tbody.innerHTML='<tr><td colspan="6" class="cv-rmod-loading">Loading…</td></tr>';
-    ['cvRmodTotalTime','cvRmodTalkTime','cvRmodContacts','cvRmodInst','cvRmodCallsPerInt','cvRmodContactRate','cvRmodIntRate','cvRmodWrapPerInt'].forEach(function(id){ setText(id,'—'); });
+    ['cvRmodTotalTime','cvRmodTalkTime','cvRmodContacts','cvRmodCallsPerInt','cvRmodWrapPerInt'].forEach(function(id){ setText(id,'—'); });
     if(repDonutChart){       repDonutChart.destroy();       repDonutChart=null; }
     if(repSparkChart){       repSparkChart.destroy();       repSparkChart=null; }
     if(repTimePerIntChart){  repTimePerIntChart.destroy();  repTimePerIntChart=null; }
@@ -1696,7 +1691,7 @@
       'cvRmodSparkCanvas':       { get:function(){ return repSparkChart; },       key:'spark' },
       'cvRmodTimePerIntCanvas':  { get:function(){ return repTimePerIntChart; },  key:'tpi'   },
       'cvRmodChart':             { get:function(){ return repChart; },            key:'perf'  },
-      'cvRmodContactRateCanvas': { get:function(){ return repContactRateChart; }, key:'cr'    },
+      'cvRmodHandleTimeCanvas':  { get:function(){ return repContactRateChart; }, key:'ht'    },
       'cvRmodIntRateCanvas':     { get:function(){ return repIntRateChart; },     key:'ir'    },
       'cvRmodCallVolumeCanvas':  { get:function(){ return repCallVolumeChart; },  key:'vol'   },
     };
@@ -1718,10 +1713,13 @@
       } else if(key==='tpi'){
         base.scales.y.ticks.callback=function(v){ var m=Math.floor(v/60),s=v%60; return m+':'+(s<10?'0':'')+s; };
         base.plugins.tooltip.callbacks={ label:function(ctx){ if(ctx.raw===null) return ''; var m=Math.floor(ctx.raw/60),s=ctx.raw%60; return ' '+m+':'+(s<10?'0':'')+s+' avg talk/INT'; }};
-      } else if(key==='cr'||key==='ir'){
+      } else if(key==='ir'){
         base.scales.y.max=100;
         base.scales.y.ticks.callback=function(v){ return v+'%'; };
         base.plugins.tooltip.callbacks={ label:function(ctx){ return ctx.raw!==null?' '+ctx.raw+'%':''; }};
+      } else if(key==='ht'){
+        base.scales.y.ticks.callback=function(v){ var m=Math.floor(v/60),s=v%60; return m+'m'+(s>0?(s<10?'0':'')+s+'s':''); };
+        base.plugins.tooltip.callbacks={ label:function(ctx){ if(ctx.raw===null) return ''; var m=Math.floor(ctx.raw/60),s=ctx.raw%60; return ' '+m+'m '+(s<10?'0':'')+s+'s handle time'; }};
       } else if(key==='vol'){
         base.scales.y.ticks.precision=0;
         base.plugins.tooltip.callbacks={ label:function(ctx){ return ' '+ctx.raw+' calls'; }};
