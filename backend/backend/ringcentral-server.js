@@ -250,11 +250,14 @@ async function fetchAllCalls(start_date, end_date) {
     const data = await response.json();
     for (const record of (data.records || [])) {
       if (record.direction === 'Outbound') {
-        const extId = String(record.from?.extensionId || '');
+        const extId     = String(record.from?.extensionId || '');
+        const isExternal = !record.to?.extensionId; // no internal ext = external call
         if (extId) {
-          if (!outboundByExt.has(extId)) outboundByExt.set(extId, []);
-          outboundByExt.get(extId).push(record);
           totalByExt.set(extId, (totalByExt.get(extId) || 0) + 1);
+          if (isExternal) {
+            if (!outboundByExt.has(extId)) outboundByExt.set(extId, []);
+            outboundByExt.get(extId).push(record);
+          }
         }
       } else if (record.direction === 'Inbound') {
         const extId = String(record.to?.extensionId || '');
