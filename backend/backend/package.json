@@ -14,6 +14,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
     "@ringcentral/sdk": "^5.0.11",
+    "@upstash/redis": "^1.34.9",
     "csv-parser": "^3.2.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"

@@ -3,6 +3,17 @@ require("dotenv").config();
 const express = require("express");
 const RingCentral = require("@ringcentral/sdk").SDK;
 
+/* ── Upstash Redis (optional — falls back to in-memory if not configured) ── */
+let redis = null;
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  const { Redis } = require('@upstash/redis');
+  redis = new Redis({
+    url:   process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+  console.log('[Redis] Upstash connected');
+}
+
 const app = express();
 app.use(express.json());
 app.use((req, res, next) => {
@@ -110,13 +121,50 @@ const summaryCache   = new Map();
 const CACHE_TTL_MS   = 5  * 60 * 1000;  // trigger background refresh after 5 min
 const CACHE_STALE_MS = 30 * 60 * 1000;  // serve stale for up to 30 min
 
-function getCacheEntry(key) {
+function isPastRange(key) {
+  const today = new Date().toISOString().split('T')[0];
+  return key.split('_')[1] < today; // end_date is before today → historical, never changes
+}
+
+async function getCacheEntry(key) {
+  if (redis) {
+    try {
+      const e = await redis.get(`rc:${key}`);
+      if (e) { summaryCache.set(key, e); return e; } // warm in-memory
+    } catch (err) { console.error('[Redis] get error:', err.message); }
+  }
   const e = summaryCache.get(key);
   if (!e) return null;
   if (Date.now() - e.ts > CACHE_STALE_MS) { summaryCache.delete(key); return null; }
-  return e; // { ts, data }
+  return e;
 }
-function setCached(key, data) { summaryCache.set(key, { ts: Date.now(), data }); }
+
+async function setCached(key, data) {
+  const entry = { ts: Date.now(), data };
+  summaryCache.set(key, entry);
+  if (redis) {
+    try {
+      if (isPastRange(key)) {
+        await redis.set(`rc:${key}`, entry);            // historical — store permanently
+      } else {
+        await redis.set(`rc:${key}`, entry, { ex: 7200 }); // rolling — expire after 2h
+      }
+    } catch (err) { console.error('[Redis] set error:', err.message); }
+  }
+}
+
+async function loadCacheFromRedis() {
+  if (!redis) return;
+  try {
+    const keys = await redis.keys('rc:*');
+    if (!keys.length) { console.log('[Redis] no cached data found'); return; }
+    for (const key of keys) {
+      const entry = await redis.get(key);
+      if (entry) summaryCache.set(key.replace('rc:', ''), entry);
+    }
+    console.log(`[Redis] loaded ${keys.length} cache entries on startup`);
+  } catch (err) { console.error('[Redis] load error:', err.message); }
+}
 
 /* ── Batch processing ────────────────────────────────────────────── */
 const BATCH_SIZE    = 1;  // one user at a time
@@ -419,7 +467,7 @@ async function doFetch(start_date, end_date) {
       const sorted   = allUsers.sort((a, b) => a.user.localeCompare(b.user));
       const result   = { start_date, end_date, count: sorted.length, users: sorted };
 
-      setCached(cacheKey, result);
+      await setCached(cacheKey, result);
       return result;
     } finally {
       inFlightPromises.delete(cacheKey);
@@ -434,7 +482,7 @@ async function doFetch(start_date, end_date) {
    old), kick off background refresh when older than 5 min ─────────── */
 async function fetchAndCachePeriod(start_date, end_date) {
   const cacheKey = `${start_date}_${end_date}`;
-  const entry    = getCacheEntry(cacheKey);
+  const entry    = await getCacheEntry(cacheKey);
 
   if (entry) {
     const age = Date.now() - entry.ts;
@@ -473,6 +521,38 @@ function getPreFetchRanges() {
     [fmt(mon),       today],        // this week (Mon–today)
     [monthStart,     today],        // this month
   ];
+}
+
+/* ── Historical months pre-fetch (run once, stored permanently in Redis) ── */
+function getCompletedMonths() {
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const months = [];
+  for (let m = 0; m < now.getMonth(); m++) {
+    const start = `${now.getFullYear()}-${pad(m + 1)}-01`;
+    const lastDay = new Date(now.getFullYear(), m + 1, 0).getDate();
+    const end = `${now.getFullYear()}-${pad(m + 1)}-${pad(lastDay)}`;
+    months.push([start, end]);
+  }
+  return months;
+}
+
+async function preloadHistoricalMonths() {
+  const months = getCompletedMonths();
+  if (!months.length) return;
+  console.log(`[RC] checking ${months.length} historical months`);
+  for (const [start, end] of months) {
+    const key = `${start}_${end}`;
+    const cached = await getCacheEntry(key);
+    if (cached) { console.log(`[RC] historical ${start}→${end} already cached`); continue; }
+    console.log(`[RC] pre-loading historical month ${start}→${end}`);
+    try {
+      await doFetch(start, end);
+    } catch (err) {
+      console.error(`[RC] historical month error ${start}→${end}:`, err.message);
+    }
+  }
+  console.log('[RC] historical months complete');
 }
 
 async function runScheduledPreFetch() {
@@ -522,11 +602,16 @@ app.post("/ringcentral/all-users-summary", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`RingCentral server running on port ${PORT}`);
-  // Warm cache + register webhook 30s after startup
+
+  // Load Redis cache into memory immediately — instant page loads right away
+  await loadCacheFromRedis();
+
+  // Start RC API fetches 30s after startup
   setTimeout(() => {
-    runScheduledPreFetch().catch(err => console.error('[RC] initial pre-fetch crash:', err));
+    runScheduledPreFetch().catch(err => console.error('[RC] pre-fetch crash:', err));
+    preloadHistoricalMonths().catch(err => console.error('[RC] historical months crash:', err));
     setInterval(() => {
       runScheduledPreFetch().catch(err => console.error('[RC] scheduled pre-fetch crash:', err));
     }, 25 * 60 * 1000);
