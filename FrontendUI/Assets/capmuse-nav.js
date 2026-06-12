@@ -170,6 +170,21 @@
 
 
 
+  function restructureSidebarColumn() {
+    let sidebar = document.getElementById('sidebar');
+    if (!sidebar || document.getElementById('sidebarColumn')) return;
+    let logo = sidebar.querySelector('.sidebar-logo');
+    if (!logo) return;
+
+    let column = document.createElement('div');
+    column.className = 'sidebar-column';
+    column.id = 'sidebarColumn';
+    sidebar.parentNode.insertBefore(column, sidebar);
+    logo.classList.add('sidebar-brand');
+    column.appendChild(logo);
+    column.appendChild(sidebar);
+  }
+
   function createSidebarControls() {
 
     let sidebar = document.getElementById('sidebar');
@@ -261,6 +276,7 @@
   function init() {
     if (initialized || !document.getElementById('sidebar')) return;
     initialized = true;
+    restructureSidebarColumn();
     loadStylesheet().then(function () {
       createSidebarControls();
       markControlsReady();

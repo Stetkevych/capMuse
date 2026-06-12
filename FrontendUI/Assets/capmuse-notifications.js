@@ -4,11 +4,12 @@
 (function () {
   'use strict';
 
-  let panelEl, panelListEl, panelCountEl, bellBtn, pipEl;
+  let panelEl, panelListEl, panelCountEl, claimAllBtn, bellBtn, pipEl;
   let presentOverlay, presentGift, presentReveal, presentMsg, presentSub, presentClaimBtn, presentCloseBtn, presentStage;
   let presentAchievement = null;
   let presentQueue = [];
   let presentShowing = false;
+  let presentCloseTimer = null;
   let presentUiReady = false;
   let deferredLoginPresentAchievements = null;
   let SESSION_KEY = 'capmuse-ach-present-session';
@@ -124,8 +125,11 @@
   function showClaimToast(achievement) {
     let toast = document.createElement('div');
     toast.className = 'cm-claim-toast';
+    let gemHtml = window.CapMuseAchievements && window.CapMuseAchievements.renderGemIcon
+      ? window.CapMuseAchievements.renderGemIcon(achievement.rarity)
+      : '';
     toast.innerHTML =
-      '<span class="cm-claim-toast-icon">' + esc(achievement.icon) + '</span>' +
+      '<span class="cm-claim-toast-icon">' + gemHtml + '</span>' +
       '<span>Achievement claimed: <strong>' + esc(achievement.name) + '</strong></span>';
     document.body.appendChild(toast);
     window.requestAnimationFrame(function () { toast.classList.add('show'); });
@@ -159,6 +163,7 @@
     if (!uid) {
       panelListEl.innerHTML = '<div class="cm-notif-empty">Sign in to see your notifications.</div>';
       if (panelCountEl) panelCountEl.textContent = '';
+      if (claimAllBtn) claimAllBtn.hidden = true;
       return;
     }
     let all = window.CapMuseAchievements.getAllForRep(uid);
@@ -168,6 +173,7 @@
         ? unclaimed.length + ' to claim'
         : (all.length ? all.length + ' total' : '');
     }
+    if (claimAllBtn) claimAllBtn.hidden = unclaimed.length < 1;
     if (!all.length) {
       panelListEl.innerHTML = '<div class="cm-notif-empty">No achievement notifications yet.</div>';
       updatePip();
@@ -178,8 +184,11 @@
       let actions = unread
         ? '<div class="cm-notif-actions"><button type="button" class="cm-notif-claim-btn" data-claim-id="' + esc(ach.id) + '">Claim</button></div>'
         : '<div class="cm-notif-actions"><span class="cm-notif-claimed-tag">Claimed</span></div>';
+      let gemHtml = window.CapMuseAchievements.renderGemIcon
+        ? window.CapMuseAchievements.renderGemIcon(ach.rarity)
+        : '';
       return '<div class="cm-notif-item' + (unread ? ' unread' : '') + '" data-ach-id="' + esc(ach.id) + '">' +
-        '<div class="cm-notif-icon rarity-' + esc(ach.rarity) + '"><span class="pmc-ach-icon" aria-hidden="true">' + esc(ach.icon) + '</span></div>' +
+        '<div class="cm-notif-icon rarity-' + esc(ach.rarity) + '">' + gemHtml + '</div>' +
         '<div class="cm-notif-body">' +
           '<div class="cm-notif-name">' + esc(ach.name) + '</div>' +
           '<div class="cm-notif-desc">' + esc(ach.description) + '</div>' +
@@ -226,6 +235,37 @@
       refreshProfileAchievements();
     }
     return result;
+  }
+
+  function showClaimAllToast(count) {
+    let toast = document.createElement('div');
+    toast.className = 'cm-claim-toast';
+    toast.innerHTML =
+      '<span class="cm-claim-toast-icon">🎉</span>' +
+      '<span>Claimed <strong>' + count + '</strong> achievements</span>';
+    document.body.appendChild(toast);
+    window.requestAnimationFrame(function () { toast.classList.add('show'); });
+    window.setTimeout(function () {
+      toast.classList.remove('show');
+      window.setTimeout(function () { toast.remove(); }, 350);
+    }, 3200);
+  }
+
+  function claimAllAchievements() {
+    let uid = getUserId();
+    if (!uid || !window.CapMuseAchievements) return;
+    let unclaimed = window.CapMuseAchievements.getUnclaimedForRep(uid);
+    if (!unclaimed.length) return;
+    let claimed = [];
+    unclaimed.forEach(function (ach) {
+      let result = window.CapMuseAchievements.claim(uid, ach.id);
+      if (result) claimed.push(result);
+    });
+    if (!claimed.length) return;
+    if (claimed.length === 1) showClaimToast(claimed[0]);
+    else showClaimAllToast(claimed.length);
+    renderPanel();
+    refreshProfileAchievements();
   }
 
   function buildPresentModal() {
@@ -304,11 +344,17 @@
 
   function showPresentModal(achievement) {
     if (!achievement || !presentOverlay) return;
+    if (presentCloseTimer) {
+      window.clearTimeout(presentCloseTimer);
+      presentCloseTimer = null;
+    }
     presentAchievement = achievement;
     resetPresentVisual();
     let trophyEl = document.getElementById('cmPresentTrophy');
     trophyEl.className = 'cm-present-trophy' + (achievement.rarity ? ' rarity-' + achievement.rarity : '');
-    trophyEl.innerHTML = '<span class="pmc-ach-icon" aria-hidden="true">' + esc(achievement.icon) + '</span>';
+    trophyEl.innerHTML = window.CapMuseAchievements && window.CapMuseAchievements.renderGemIcon
+      ? window.CapMuseAchievements.renderGemIcon(achievement.rarity)
+      : '';
     presentMsg.textContent = 'Congratulations! New achievement unlocked: ' + achievement.name;
     presentSub.textContent = achievement.description;
     presentOverlay.hidden = false;
@@ -342,9 +388,14 @@
     presentOverlay.classList.remove('open');
     presentShowing = false;
     presentAchievement = null;
-    window.setTimeout(function () {
-      presentOverlay.hidden = true;
-      resetPresentVisual();
+    if (presentCloseTimer) window.clearTimeout(presentCloseTimer);
+    presentCloseTimer = window.setTimeout(function () {
+      presentCloseTimer = null;
+      // Only hide if another present did not take over in the meantime.
+      if (!presentShowing) {
+        presentOverlay.hidden = true;
+        resetPresentVisual();
+      }
     }, 260);
   }
 
@@ -503,15 +554,25 @@
       panel.innerHTML =
         '<div class="cm-notif-panel-head">' +
           '<div class="cm-notif-panel-title">Notifications</div>' +
-          '<div class="cm-notif-panel-count" id="cmNotifCount"></div>' +
+          '<div class="cm-notif-panel-head-right">' +
+            '<button type="button" class="cm-notif-claim-all" id="cmNotifClaimAll" hidden>Claim all</button>' +
+            '<div class="cm-notif-panel-count" id="cmNotifCount"></div>' +
+          '</div>' +
         '</div>' +
         '<div class="cm-notif-list" id="cmNotifList"></div>';
       wrap.appendChild(panel);
       panelEl = panel;
       panelListEl = document.getElementById('cmNotifList');
       panelCountEl = document.getElementById('cmNotifCount');
+      claimAllBtn = document.getElementById('cmNotifClaimAll');
 
       panel.addEventListener('click', function (e) {
+        let allBtn = e.target.closest('#cmNotifClaimAll');
+        if (allBtn) {
+          e.stopPropagation();
+          claimAllAchievements();
+          return;
+        }
         let btn = e.target.closest('[data-claim-id]');
         if (btn) {
           e.stopPropagation();
@@ -581,6 +642,7 @@
     scanAndNotify: scanAndNotify,
     renderPanel: renderPanel,
     claimAchievement: claimAchievement,
+    claimAllAchievements: claimAllAchievements,
     showClaimToast: showClaimToast
   };
 

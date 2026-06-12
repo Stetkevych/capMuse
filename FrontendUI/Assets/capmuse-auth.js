@@ -36,7 +36,7 @@
     style.id = 'capmuse-nav-critical';
     style.textContent =
       '@media(min-width:769px){' +
-      'html.capmuse-nav-hidden .sidebar{transform:translateX(calc(-1*(var(--sidebar-w,215px) + var(--sidebar-gap,16px) + 16px)));pointer-events:none;visibility:hidden}' +
+      'html.capmuse-nav-hidden .sidebar-column{transform:translateX(calc(-1*(var(--sidebar-w,215px) + var(--sidebar-gap,16px) + 16px)));pointer-events:none;visibility:hidden}' +
       'html.capmuse-nav-hidden .main-wrapper{margin-left:0!important}' +
       '}' +
       '.nav-sidebar-collapse-wrap{opacity:0;visibility:hidden;pointer-events:none}' +
@@ -473,8 +473,23 @@
   injectNavCriticalGuard();
   injectDemoCriticalGuard();
 
+  function restructureSidebarColumn() {
+    let sidebar = document.getElementById('sidebar');
+    if (!sidebar || document.getElementById('sidebarColumn')) return;
+    let logo = sidebar.querySelector('.sidebar-logo');
+    if (!logo) return;
+    let column = document.createElement('div');
+    column.className = 'sidebar-column';
+    column.id = 'sidebarColumn';
+    sidebar.parentNode.insertBefore(column, sidebar);
+    logo.classList.add('sidebar-brand');
+    column.appendChild(logo);
+    column.appendChild(sidebar);
+  }
+
   function bootPageChrome() {
     injectLayoutStyles();
+    restructureSidebarColumn();
     initNav();
   }
   if (document.readyState === 'loading') {

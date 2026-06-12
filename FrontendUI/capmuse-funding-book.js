@@ -432,6 +432,22 @@
         });
         return;
       }
+      if (field === 'state' && val === STATE_GROUP_US) {
+        DEALS.forEach(function (d) {
+          let s = d.state;
+          if (!s || isCanadianState(s)) return;
+          expanded[normState(s)] = normState(s);
+        });
+        return;
+      }
+      if (field === 'state' && val === STATE_GROUP_CA) {
+        DEALS.forEach(function (d) {
+          let s = d.state;
+          if (!s || !isCanadianState(s)) return;
+          expanded[normState(s)] = normState(s);
+        });
+        return;
+      }
       if (val.indexOf('__parent:') === 0) {
         let parent = val.slice(9);
         DEALS.forEach(function (d) {
@@ -619,6 +635,10 @@
         if (arr[0].indexOf('__parent:') === 0) return arr[0].slice(9);
       }
     }
+    if (key === 'state' && arr.length === 1) {
+      if (arr[0] === STATE_GROUP_US) return 'United States';
+      if (arr[0] === STATE_GROUP_CA) return 'Canada Provinces';
+    }
     if (arr.length === 1) return arr[0].indexOf('__parent:') === 0 ? arr[0].slice(9) : arr[0];
     return arr.length + ' selected';
   }
@@ -659,6 +679,92 @@
     return sorted;
   }
 
+  let STATE_GROUP_US = '__state:us';
+  let STATE_GROUP_CA = '__state:ca';
+
+  let CANADIAN_STATE_CODES = {
+    AB: 1, BC: 1, MB: 1, NB: 1, NL: 1, NS: 1, NT: 1, NU: 1, ON: 1, PE: 1, QC: 1, PQ: 1, SK: 1, YT: 1
+  };
+
+  let CANADIAN_STATE_NAMES = {
+    alberta: 1,
+    'british columbia': 1,
+    manitoba: 1,
+    'new brunswick': 1,
+    'newfoundland and labrador': 1,
+    newfoundland: 1,
+    'nova scotia': 1,
+    'northwest territories': 1,
+    nunavut: 1,
+    ontario: 1,
+    'prince edward island': 1,
+    quebec: 1,
+    saskatchewan: 1,
+    yukon: 1,
+    'yukon territory': 1
+  };
+
+  function isCanadianState(val) {
+    let raw = String(val || '').trim();
+    if (!raw) return false;
+    let code = normState(raw);
+    if (code === 'CANADA') return true;
+    if (CANADIAN_STATE_CODES[code]) return true;
+    let name = normStr(raw);
+    if (name === 'canada' || name.indexOf('canada') > -1) return true;
+    if (CANADIAN_STATE_NAMES[name]) return true;
+    let beforeComma = name.split(',')[0].trim();
+    return !!CANADIAN_STATE_NAMES[beforeComma];
+  }
+
+  function partitionStateFacets(values) {
+    let us = [];
+    let canada = [];
+    values.forEach(function (v) {
+      if (isCanadianState(v)) canada.push(v);
+      else us.push(v);
+    });
+    function byLabel(a, b) {
+      return String(a).localeCompare(String(b));
+    }
+    us.sort(byLabel);
+    canada.sort(byLabel);
+    return { us: us, canada: canada };
+  }
+
+  function sortStateFacets(values) {
+    let parts = partitionStateFacets(values);
+    return parts.us.concat(parts.canada);
+  }
+
+  function buildStateGroupedTree(values) {
+    let parts = partitionStateFacets(values);
+    let tree = [];
+    if (parts.us.length) {
+      tree.push({
+        type: 'parent',
+        value: STATE_GROUP_US,
+        label: 'United States',
+        sectionClass: 'fb-filter-state-section--us',
+        children: parts.us.map(function (v) {
+          return { type: 'child', value: v, label: v };
+        })
+      });
+    }
+    if (parts.canada.length) {
+      tree.push({
+        type: 'parent',
+        value: STATE_GROUP_CA,
+        label: 'Canada Provinces',
+        sectionClass: 'fb-filter-state-section--ca',
+        children: parts.canada.map(function (v) {
+          return { type: 'child', value: v, label: v };
+        })
+      });
+    }
+    return tree;
+  }
+
   function buildFacetValues(deals, field) {
     let seen = {};
     deals.forEach(function (d) {
@@ -667,7 +773,9 @@
       let key = field === 'state' ? normState(val) : val;
       if (!seen[key]) seen[key] = field === 'state' ? normState(val) : val;
     });
-    return Object.values(seen).sort(function (a, b) {
+    let values = Object.values(seen);
+    if (field === 'state') return sortStateFacets(values);
+    return values.sort(function (a, b) {
       return String(a).localeCompare(String(b));
     });
   }
@@ -1221,12 +1329,19 @@
     }
     if (def.key === 'productType') {
       facetValues = sortProductTypeFacets(facetValues);
-    } else {
+    } else if (def.key !== 'state') {
       facetValues.sort(function (a, b) { return String(a).localeCompare(String(b)); });
     }
-    let tree = def.grouped ? buildGroupedTree(facetDeals, def.field) : facetValues.map(function (v) {
-      return { type: 'leaf', value: v, label: v };
-    });
+    let tree;
+    if (def.key === 'state') {
+      tree = buildStateGroupedTree(facetValues);
+    } else if (def.grouped) {
+      tree = buildGroupedTree(facetDeals, def.field);
+    } else {
+      tree = facetValues.map(function (v) {
+        return { type: 'leaf', value: v, label: v };
+      });
+    }
 
     let q = normStr(query);
     if (q) {
@@ -1247,7 +1362,8 @@
     tree.slice(0, 250).forEach(function (node) {
       if (node.type === 'parent') {
         let pChecked = draftHas(node.value);
-        html += '<label class="fb-filter-check fb-filter-check-parent">' +
+        let sectionCls = node.sectionClass ? ' ' + node.sectionClass : '';
+        html += '<label class="fb-filter-check fb-filter-check-parent' + sectionCls + '">' +
           '<input type="checkbox" data-opt="' + esc(node.value) + '"' + (pChecked ? ' checked' : '') + ' />' +
           '<span>' + esc(node.label) + '</span></label>';
         node.children.forEach(function (c) {

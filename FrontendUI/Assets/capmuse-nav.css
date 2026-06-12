@@ -4,7 +4,7 @@
 
 @media (min-width: 769px) {
 
-  html.capmuse-nav-hidden .sidebar {
+  html.capmuse-nav-hidden .sidebar-column {
 
     transform: translateX(calc(-1 * (var(--sidebar-w, 215px) + var(--sidebar-gap, 16px) + 16px)));
 

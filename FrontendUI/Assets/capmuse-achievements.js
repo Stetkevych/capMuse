@@ -7,12 +7,51 @@
   let STORAGE_PREFIX = 'capmuse-ach-v1:';
 
   let RARITY = {
-    bronze: { label: 'Bronze', icon: '🥉', order: 1 },
-    silver: { label: 'Silver', icon: '🥈', order: 2 },
-    gold: { label: 'Gold', icon: '🥇', order: 3 },
-    platinum: { label: 'Platinum', icon: '🏆', order: 4 },
-    ceo: { label: 'CEO', icon: '👑', order: 5 }
+    iron: { label: 'Iron', order: 1 },
+    bronze: { label: 'Bronze', order: 2 },
+    silver: { label: 'Silver', order: 3 },
+    gold: { label: 'Gold', order: 4 },
+    platinum: { label: 'Platinum', order: 5 },
+    diamond: { label: 'Diamond', order: 6 },
+    black_diamond: { label: 'Black Diamond', order: 7 },
+    red_diamond: { label: 'Red Diamond', order: 8 },
+    blue_diamond: { label: 'Blue Diamond', order: 9 }
   };
+
+  let RARITY_ALIASES = {
+    ultimate: 'red_diamond',
+    ceo: 'blue_diamond'
+  };
+
+  function normalizeRarity(rarity) {
+    return RARITY_ALIASES[rarity] || rarity || 'bronze';
+  }
+
+  function renderGemIcon(rarity, extraClass) {
+    let r = normalizeRarity(rarity);
+    let cls = 'pmc-ach-gem rarity-' + r + (extraClass ? ' ' + extraClass : '');
+    return '<span class="' + cls + '" aria-hidden="true"></span>';
+  }
+
+  function achievementAssetBase() {
+    let scripts = document.getElementsByTagName('script');
+    let i;
+    for (i = 0; i < scripts.length; i++) {
+      if (scripts[i].src && scripts[i].src.indexOf('capmuse-achievements.js') > -1) {
+        return scripts[i].src.replace(/capmuse-achievements\.js.*$/, '');
+      }
+    }
+    return 'Assets/';
+  }
+
+  function injectAchievementStyles() {
+    if (document.getElementById('capmuse-achievements-css')) return;
+    let link = document.createElement('link');
+    link.id = 'capmuse-achievements-css';
+    link.rel = 'stylesheet';
+    link.href = achievementAssetBase() + 'capmuse-achievements.css';
+    document.head.appendChild(link);
+  }
 
   function hasRankOne(ctx, key) {
     if (!ctx.rankOnes || !ctx.rankOnes.ones) return false;
@@ -91,7 +130,7 @@
       id: 'first_deal',
       name: 'First Deal Funded',
       description: 'Funded your first deal — welcome to the board.',
-      rarity: 'bronze',
+      rarity: 'iron',
       check: function (ctx) { return totalDeals(ctx) >= 1; }
     },
     {
@@ -117,10 +156,9 @@
     },
     {
       id: 'ceo_badge',
-      name: 'CEO',
+      name: 'Mr. Capital Infusion',
       description: 'Exclusve Capital Infusion CEO recognition badge -- awarded only to Matthew Birnholz.',
-      rarity: 'ceo',
-      icon: '👑',
+      rarity: 'blue_diamond',
       exclusiveRepId: 'matthew',
       check: function () { return true; }
     },
@@ -144,6 +182,20 @@
       description: 'Surpassed $5,000,000 in total career funded volume.',
       rarity: 'platinum',
       check: function (ctx) { return parseMoney(ctx.stats && ctx.stats.volume) >= 5000000; }
+    },
+    {
+      id: 'volume_50m',
+      name: 'Fifty Million Funded',
+      description: 'Surpassed $50,000,000 in total career funded volume.',
+      rarity: 'diamond',
+      check: function (ctx) { return parseMoney(ctx.stats && ctx.stats.volume) >= 50000000; }
+    },
+    {
+      id: 'volume_100m',
+      name: 'Ultimate Funder',
+      description: 'Surpassed $100,000,000 in total career funded volume.',
+      rarity: 'red_diamond',
+      check: function (ctx) { return parseMoney(ctx.stats && ctx.stats.volume) >= 100000000; }
     },
     {
       id: 'ytd_250k',
@@ -263,14 +315,15 @@
   }
 
   function enrichRecord(def, record) {
-    let rarity = RARITY[def.rarity] || RARITY.bronze;
+    let rarityKey = normalizeRarity(def.rarity);
+    let rarity = RARITY[rarityKey] || RARITY.bronze;
     return {
       id: def.id,
       name: def.name,
       description: def.description,
-      rarity: def.rarity,
+      rarity: rarityKey,
       rarityLabel: rarity.label,
-      icon: def.icon || rarity.icon,
+      icon: 'gem',
       unlockedAt: record.unlockedAt,
       claimed: !!record.claimed,
       claimedAt: record.claimedAt || null,
@@ -293,8 +346,8 @@
       list.push(enrichRecord(def, rec));
     });
     list.sort(function (a, b) {
-      let ra = (RARITY[a.rarity] || RARITY.bronze).order;
-      let rb = (RARITY[b.rarity] || RARITY.bronze).order;
+      let ra = (RARITY[normalizeRarity(a.rarity)] || RARITY.bronze).order;
+      let rb = (RARITY[normalizeRarity(b.rarity)] || RARITY.bronze).order;
       if (ra !== rb) return rb - ra;
       return (b.unlockedAt || '').localeCompare(a.unlockedAt || '');
     });
@@ -373,9 +426,14 @@
     return null;
   }
 
+  injectAchievementStyles();
+
   window.CapMuseAchievements = {
     RARITY: RARITY,
+    RARITY_ALIASES: RARITY_ALIASES,
     DEFINITIONS: DEFINITIONS,
+    normalizeRarity: normalizeRarity,
+    renderGemIcon: renderGemIcon,
     getDefinition: getDefinition,
     getAllForRep: getAllForRep,
     getClaimedForRep: getClaimedForRep,
