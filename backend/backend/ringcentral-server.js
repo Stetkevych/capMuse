@@ -121,6 +121,9 @@ const summaryCache   = new Map();
 const CACHE_TTL_MS   = 5  * 60 * 1000;  // trigger background refresh after 5 min
 const CACHE_STALE_MS = 30 * 60 * 1000;  // serve stale for up to 30 min
 
+const msgCache       = new Map();        // extensionId_start_end → { ts, messages[] }
+const MSG_CACHE_MS   = 15 * 60 * 1000;  // 15 min message cache
+
 function isPastRange(key) {
   const today = new Date().toISOString().split('T')[0];
   return key.split('_')[1] < today; // end_date is before today → historical, never changes
@@ -275,6 +278,12 @@ async function fetchAllCalls(start_date, end_date) {
 }
 
 async function fetchOutboundMessages(extensionId, start_date, end_date) {
+  const msgKey = `${extensionId}_${start_date}_${end_date}`;
+  const cached = msgCache.get(msgKey);
+  if (cached && Date.now() - cached.ts < MSG_CACHE_MS) {
+    return cached.messages;
+  }
+
   let allMessages = [];
   let page = 1;
 
@@ -303,6 +312,7 @@ async function fetchOutboundMessages(extensionId, start_date, end_date) {
     page++;
   }
 
+  msgCache.set(msgKey, { ts: Date.now(), messages: allMessages });
   return allMessages;
 }
 
