@@ -724,9 +724,11 @@ app.get('/newsletter/emails', async (req, res) => {
     const folder = req.query.folder || 'inbox';
     const search = (req.query.search || '').trim();
 
-    const select = 'id,subject,from,receivedDateTime,bodyPreview,body,isRead';
+    // Fetch extra to cover thread deduplication loss
+    const fetchTop = Math.min(limit * 5, 100);
+    const select = 'id,subject,from,receivedDateTime,bodyPreview,body,isRead,conversationId';
     let url = `${GRAPH_BASE}/users/${OUTLOOK_USER_EMAIL}/mailFolders/${folder}/messages` +
-              `?$top=${limit}&$skip=${skip}&$orderby=receivedDateTime desc&$select=${select}`;
+              `?$top=${fetchTop}&$skip=${skip}&$orderby=receivedDateTime desc&$select=${select}`;
     if (search) url += `&$search="${encodeURIComponent(search)}"`;
 
     const emailRes = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -737,8 +739,14 @@ app.get('/newsletter/emails', async (req, res) => {
       return res.status(emailRes.status).json({ error: (data.error && data.error.message) || 'Graph API error' });
     }
 
-    const emails = (data.value || []).map(function (e) {
-      return {
+    // Deduplicate by conversationId — one card per thread (newest message in thread wins)
+    const seen = new Set();
+    const emails = [];
+    for (const e of (data.value || [])) {
+      const key = e.conversationId || e.id;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      emails.push({
         id:       e.id,
         subject:  e.subject  || '(No subject)',
         sender:   (e.from && e.from.emailAddress && e.from.emailAddress.name)    || '',
@@ -748,10 +756,11 @@ app.get('/newsletter/emails', async (req, res) => {
         body:     (e.body && e.body.content) || '',
         bodyType: (e.body && e.body.contentType) || 'text',
         unread:   !e.isRead,
-      };
-    });
+      });
+      if (emails.length >= limit) break;
+    }
 
-    res.json({ emails, total: data['@odata.count'] || emails.length });
+    res.json({ emails, total: emails.length });
   } catch (err) {
     console.error('[newsletter]', err.message);
     res.status(500).json({ error: err.message });
