@@ -106,13 +106,26 @@
     });
   }
 
+  let PAGE_ICONS = {
+    'home.html':         '<path d="M3 9.5L10 3l7 6.5V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 18v-5h4v5" stroke-linecap="round"/>',
+    'analytics.html':    '<path d="M2 14l4-6 3 4 3-5 4 7H2z" stroke-linecap="round" stroke-linejoin="round"/>',
+    'funding_book.html': '<path d="M4 3h9l4 4v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M13 3v4h4M7 9h6M7 12h6M7 15h3" stroke-linecap="round"/>',
+    'pipeline.html':     '<path d="M3 5h14M3 9.5h10M3 14h6" stroke-linecap="round"/><circle cx="15" cy="14" r="2.5"/>',
+    'convoso.html':      '<path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/>',
+    'ringcentral.html':  '<path d="M5.5 4h2.2a1 1 0 0 1 1 .7l.8 2.5a1 1 0 0 1-.3 1l-1.2 1.2a9 9 0 0 0 4.1 4.1l1.2-1.2a1 1 0 0 1 1-.3l2.5.8a1 1 0 0 1 .7 1V15a1 1 0 0 1-1 1A10 10 0 0 1 4 5a1 1 0 0 1 1-1z" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 2a5 5 0 0 1 0 8" stroke-linecap="round"/>',
+    'coaching.html':     '<circle cx="10" cy="6.5" r="3"/><path d="M3.5 17c0-3 2.9-5.5 6.5-5.5S16.5 14 16.5 17" stroke-linecap="round"/>',
+    'call-scoring.html': '<path d="M10 2l2.4 5 5.6.8-4 3.9.9 5.5L10 14.5l-4.9 2.7.9-5.5L2 7.8l5.6-.8L10 2z" stroke-linecap="round" stroke-linejoin="round"/>',
+    'newsletter.html':   '<rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7l8 5 8-5" stroke-linecap="round"/>',
+  };
+
   function linkIconHtml(href) {
     let existing = document.querySelector(
       '.sidebar-nav a[href="' + href + '"] .sub-icon, .sidebar-nav a[href="' + href + '"] .nav-icon,' +
       '.sidebar-nav a[data-page="dashboard"] .sub-icon'
     );
     if (existing) return existing.outerHTML;
-    return '<svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="7"/></svg>';
+    let inner = PAGE_ICONS[href] || '<circle cx="10" cy="10" r="7"/>';
+    return '<svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">' + inner + '</svg>';
   }
 
   function wireDemoMoreToggle(toggle) {
@@ -143,11 +156,25 @@
     });
   }
 
+  function makeLogoLink() {
+    let logo = document.querySelector('.sidebar-logo');
+    if (!logo || logo.closest('a')) return;
+    let page = currentPage();
+    if (page === 'home.html') return;
+    let a = document.createElement('a');
+    a.href = 'home.html';
+    a.style.cssText = 'text-decoration:none;display:flex;align-items:center;gap:9px;padding:18px 18px 14px';
+    logo.style.padding = '0';
+    logo.parentNode.insertBefore(a, logo);
+    a.appendChild(logo);
+  }
+
   function restructureDemoNav() {
     let nav = document.querySelector('.sidebar-nav');
     if (!nav || nav.getAttribute('data-demo-nav') === 'true') return;
 
     nav.setAttribute('data-demo-nav', 'true');
+    makeLogoLink();
 
     nav.querySelectorAll('#overviewToggle, #overviewSub, #crmToggle, #crmSub, #dialerToggle, #dialerSub').forEach(function (el) {
       if (el) el.classList.add('nav-demo-legacy');
@@ -204,11 +231,11 @@
       '<div class="nav-demo-more-wrap">' +
         '<div class="nav-section-toggle" id="demoMoreToggle" role="button" tabindex="0" aria-expanded="false">' +
           '<div class="toggle-left">' +
-            '<svg class="toggle-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">' +
+            '<svg class="toggle-icon" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">' +
               '<path d="M4 7h12M4 12h12M4 17h8" stroke-linecap="round"/>' +
             '</svg>More' +
           '</div>' +
-          '<svg class="toggle-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' +
+          '<svg class="toggle-chevron" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' +
             '<path d="M5 8l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>' +
           '</svg>' +
         '</div>' +
