@@ -129,7 +129,7 @@ function isPastRange(key) {
 async function getCacheEntry(key) {
   if (redis) {
     try {
-      const e = await redis.get(`rc:${key}`);
+      const e = await redis.get(`rc2:${key}`);
       if (e) { summaryCache.set(key, e); return e; } // warm in-memory
     } catch (err) { console.error('[Redis] get error:', err.message); }
   }
@@ -145,9 +145,9 @@ async function setCached(key, data) {
   if (redis) {
     try {
       if (isPastRange(key)) {
-        await redis.set(`rc:${key}`, entry);            // historical — store permanently
+        await redis.set(`rc2:${key}`, entry);            // historical — store permanently
       } else {
-        await redis.set(`rc:${key}`, entry, { ex: 7200 }); // rolling — expire after 2h
+        await redis.set(`rc2:${key}`, entry, { ex: 7200 }); // rolling — expire after 2h
       }
     } catch (err) { console.error('[Redis] set error:', err.message); }
   }
@@ -156,11 +156,11 @@ async function setCached(key, data) {
 async function loadCacheFromRedis() {
   if (!redis) return;
   try {
-    const keys = await redis.keys('rc:*');
+    const keys = await redis.keys('rc2:*');
     if (!keys.length) { console.log('[Redis] no cached data found'); return; }
     for (const key of keys) {
       const entry = await redis.get(key);
-      if (entry) summaryCache.set(key.replace('rc:', ''), entry);
+      if (entry) summaryCache.set(key.replace('rc2:', ''), entry);
     }
     console.log(`[Redis] loaded ${keys.length} cache entries on startup`);
   } catch (err) { console.error('[Redis] load error:', err.message); }
@@ -516,7 +516,7 @@ async function fetchAndCachePeriod(start_date, end_date) {
     if (firstUser && !('total_calls' in firstUser)) {
       console.log(`[RC] old schema cache for ${cacheKey}, clearing and re-fetching`);
       summaryCache.delete(cacheKey);
-      if (redis) redis.del(`rc:${cacheKey}`).catch(() => {});
+      if (redis) redis.del(`rc2:${cacheKey}`).catch(() => {});
       return doFetch(start_date, end_date);
     }
 
