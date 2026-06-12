@@ -715,6 +715,59 @@ async function getGraphToken() {
   return data.access_token;
 }
 
+function normalizeContentId(cid) {
+  return String(cid || '').replace(/^<|>$/g, '').trim();
+}
+
+function embedInlineImages(html, attachments) {
+  if (!html || !attachments || !attachments.length) return html;
+  let out = html;
+  attachments.forEach(function (att) {
+    if (!att || !att.contentBytes) return;
+    let cid = normalizeContentId(att.contentId);
+    if (!cid) return;
+    let mime = att.contentType || 'image/png';
+    let dataUri = 'data:' + mime + ';base64,' + att.contentBytes;
+    let escaped = cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    out = out.replace(new RegExp('cid:' + escaped, 'gi'), dataUri);
+    out = out.replace(new RegExp('cid:&lt;' + escaped + '&gt;', 'gi'), dataUri);
+    let cidBase = cid.split('@')[0];
+    if (cidBase && cidBase !== cid) {
+      let baseEsc = cidBase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      out = out.replace(new RegExp('cid:' + baseEsc + '(?:@[^"\'\\s>]*)?', 'gi'), dataUri);
+    }
+  });
+  return out;
+}
+
+async function fetchMessageAttachments(token, messageId) {
+  let url = GRAPH_BASE + '/users/' + OUTLOOK_USER_EMAIL + '/messages/' + messageId + '/attachments?$top=40';
+  let res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+  let data = await res.json();
+  if (!res.ok) {
+    console.warn('[newsletter] attachments error for', messageId, data);
+    return [];
+  }
+  return (data.value || []).filter(function (att) {
+    return att && att.contentBytes && (att.isInline || att.contentId);
+  });
+}
+
+function mapGraphEmail(e, bodyHtml) {
+  let bodyType = e.body && String(e.body.contentType || '').toLowerCase() === 'html' ? 'html' : 'text';
+  return {
+    id:       e.id,
+    subject:  e.subject || '(No subject)',
+    sender:   (e.from && e.from.emailAddress && e.from.emailAddress.name) || '',
+    email:    (e.from && e.from.emailAddress && e.from.emailAddress.address) || '',
+    date:     e.receivedDateTime,
+    preview:  e.bodyPreview || '',
+    body:     bodyHtml != null ? bodyHtml : ((e.body && e.body.content) || ''),
+    bodyType: bodyType,
+    unread:   !e.isRead,
+  };
+}
+
 // GET /newsletter/emails?limit=50&folder=inbox&skip=0&search=lender+name
 app.get('/newsletter/emails', async (req, res) => {
   try {
@@ -746,23 +799,35 @@ app.get('/newsletter/emails', async (req, res) => {
       const key = e.conversationId || e.id;
       if (seen.has(key)) continue;
       seen.add(key);
-      emails.push({
-        id:       e.id,
-        subject:  e.subject  || '(No subject)',
-        sender:   (e.from && e.from.emailAddress && e.from.emailAddress.name)    || '',
-        email:    (e.from && e.from.emailAddress && e.from.emailAddress.address) || '',
-        date:     e.receivedDateTime,
-        preview:  e.bodyPreview || '',
-        body:     (e.body && e.body.content) || '',
-        bodyType: (e.body && e.body.contentType) || 'text',
-        unread:   !e.isRead,
-      });
+      emails.push(mapGraphEmail(e));
       if (emails.length >= limit) break;
     }
 
     res.json({ emails, total: emails.length });
   } catch (err) {
     console.error('[newsletter]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /newsletter/emails/:id — full message with inline images resolved
+app.get('/newsletter/emails/:id', async (req, res) => {
+  try {
+    let token = await getGraphToken();
+    let messageId = req.params.id;
+    let select = 'id,subject,from,receivedDateTime,bodyPreview,body,isRead';
+    let msgUrl = GRAPH_BASE + '/users/' + OUTLOOK_USER_EMAIL + '/messages/' + messageId + '?$select=' + select;
+    let msgRes = await fetch(msgUrl, { headers: { Authorization: 'Bearer ' + token } });
+    let msgData = await msgRes.json();
+    if (!msgRes.ok) {
+      return res.status(msgRes.status).json({ error: (msgData.error && msgData.error.message) || 'Message not found' });
+    }
+    let rawBody = (msgData.body && msgData.body.content) || '';
+    let attachments = await fetchMessageAttachments(token, messageId);
+    let resolvedBody = embedInlineImages(rawBody, attachments);
+    res.json({ email: mapGraphEmail(msgData, resolvedBody) });
+  } catch (err) {
+    console.error('[newsletter/detail]', err.message);
     res.status(500).json({ error: err.message });
   }
 });

@@ -944,7 +944,7 @@
       gap: 12px;
     }
 
-    /* ── Latest News (right column) ── */
+    /* ── Lender Inbox / News card (right column) ── */
     .news-card {
       background: var(--right-card-bg);
       border: 1px solid var(--border);
@@ -955,68 +955,487 @@
       display: flex;
       flex-direction: column;
       min-height: 0;
+      transition: background-color 0.2s ease;
     }
 
+    /* ─ Header ─ */
     .news-header {
-      padding: 14px 16px 12px;
+      padding: 12px 14px 11px;
       border-bottom: 1px solid var(--table-border);
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: var(--surface-2);
     }
+
+    .news-header-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .news-header-icon-wrap {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(37,99,235,0.14), rgba(37,99,235,0.06));
+      border: 1px solid rgba(37,99,235,0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--blue);
+    }
+
+    .news-header-icon-wrap svg { width: 14px; height: 14px; }
+
+    .news-header-info { display: flex; flex-direction: column; gap: 2px; }
 
     .news-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-primary);
-      letter-spacing: -0.01em;
-    }
-
-    .news-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 6px 0;
-    }
-
-    .news-item {
-      display: grid;
-      grid-template-columns: 52px 1fr;
-      gap: 10px;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--table-border);
-      transition: background 0.12s ease;
-    }
-
-    .news-item:last-child { border-bottom: none; }
-    .news-item:hover { background: var(--table-hover); }
-
-    .news-date {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      line-height: 1.35;
-      padding-top: 2px;
-    }
-
-    .news-copy { min-width: 0; }
-
-    .news-headline {
       font-size: 13px;
       font-weight: 700;
       color: var(--text-primary);
-      line-height: 1.35;
-      margin: 0 0 4px;
+      letter-spacing: -0.01em;
+      line-height: 1;
     }
 
-    .news-summary {
+    .news-live-row { display: flex; align-items: center; gap: 4px; }
+
+    .news-live-pip {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: news-live-pulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes news-live-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+      55%       { box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+    }
+
+    .news-live-label {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .news-unread-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--blue);
+      border-radius: 100px;
+      padding: 2px 7px;
+      flex-shrink: 0;
+    }
+
+    /* ─ List ─ */
+    .news-list {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .news-list::-webkit-scrollbar { width: 3px; }
+    .news-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ─ Item ─ */
+    .news-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 12px 14px 11px;
+      border-bottom: 1px solid var(--table-border);
+      border-left: 3px solid transparent;
+      position: relative;
+      transition: background 0.12s ease, border-left-color 0.15s ease;
+    }
+
+    .news-item:last-child { border-bottom: none; }
+
+    .news-item[role="button"] {
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      font: inherit;
+    }
+
+    .news-item[role="button"]:hover,
+    .news-item[role="button"]:focus-visible {
+      background: var(--table-hover);
+      border-left-color: rgba(37,99,235,0.38);
+      outline: none;
+    }
+
+    .news-item--unread {
+      border-left-color: var(--blue);
+    }
+
+    html[data-theme="dark"] .news-item--unread { border-left-color: #60A5FA; }
+
+    /* ─ Empty / error state ─ */
+    .news-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .news-empty-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .news-empty-sub {
       font-size: 12px;
-      line-height: 1.45;
-      color: var(--text-secondary);
-      margin: 0;
+      line-height: 1.55;
+      color: var(--text-muted);
+      max-width: 210px;
+    }
+
+    /* ─ Date chip (absolute top-right) ─ */
+    .news-date {
+      position: absolute;
+      top: 12px;
+      right: 13px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 5px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.4;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .news-item--unread .news-date {
+      color: var(--blue);
+      background: rgba(37,99,235,0.08);
+      border-color: rgba(37,99,235,0.22);
+    }
+
+    html[data-theme="dark"] .news-item--unread .news-date {
+      color: #60A5FA;
+      background: rgba(96,165,250,0.1);
+      border-color: rgba(96,165,250,0.25);
+    }
+
+    /* ─ Tag badge ─ */
+    .news-meta-row { display: flex; align-items: center; gap: 5px; margin-bottom: 1px; }
+
+    .news-tag {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(37,99,235,0.2);
+      color: var(--blue);
+      background: rgba(37,99,235,0.08);
+    }
+
+    .news-tag[data-tag="offer"]      { color: #7C3AED; background: rgba(124,58,237,0.08);  border-color: rgba(124,58,237,0.2); }
+    .news-tag[data-tag="approval"]   { color: #059669; background: rgba(5,150,105,0.08);   border-color: rgba(5,150,105,0.2); }
+    .news-tag[data-tag="decline"]    { color: #DC2626; background: rgba(220,38,38,0.08);   border-color: rgba(220,38,38,0.2); }
+    .news-tag[data-tag="update"]     { color: #D97706; background: rgba(217,119,6,0.08);   border-color: rgba(217,119,6,0.2); }
+    .news-tag[data-tag="renewal"]    { color: #0891B2; background: rgba(8,145,178,0.08);   border-color: rgba(8,145,178,0.2); }
+    .news-tag[data-tag="rate-sheet"] { color: #DB2777; background: rgba(219,39,119,0.08);  border-color: rgba(219,39,119,0.2); }
+    .news-tag[data-tag="general"]    { color: var(--text-muted); background: var(--surface-2); border-color: var(--border); }
+
+    /* ─ Copy area (right-pad clears the date chip) ─ */
+    .news-copy { min-width: 0; padding-right: 48px; }
+
+    .news-headline {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.35;
+      margin: 0 0 3px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+
+    .news-item--unread .news-headline { font-weight: 700; }
+
+    .news-summary {
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* ─ Shimmer skeleton ─ */
+    .news-item--empty {
+      pointer-events: none;
+      border-left-color: transparent !important;
+    }
+
+    .news-item--empty .news-date,
+    .news-item--empty .news-headline,
+    .news-item--empty .news-summary {
+      background: linear-gradient(90deg, var(--surface-2) 0%, var(--border) 40%, var(--surface-2) 80%);
+      background-size: 250% 100%;
+      animation: news-shimmer 1.6s ease-in-out infinite;
+      border-radius: 4px;
+      color: transparent !important;
+      border-color: transparent !important;
+    }
+
+    .news-item--empty .news-date {
+      position: static;
+      display: block;
+      width: 36px;
+      height: 16px;
+      margin-bottom: 6px;
+      padding: 0;
+    }
+
+    .news-item--empty .news-headline { min-height: 13px; width: 80%; margin-bottom: 5px; }
+    .news-item--empty .news-summary  { min-height: 11px; width: 58%; }
+
+    @keyframes news-shimmer {
+      0%   { background-position: 250% 0; }
+      100% { background-position: -250% 0; }
+    }
+
+    /* ─ Footer ─ */
+    .news-footer {
+      padding: 9px 14px;
+      border-top: 1px solid var(--table-border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-2);
+    }
+
+    .news-footer-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.14s ease;
+    }
+
+    .news-footer-link:hover { color: var(--blue); }
+    .news-footer-link svg { width: 12px; height: 12px; transition: transform 0.14s ease; }
+    .news-footer-link:hover svg { transform: translateX(2px); }
+
+    /* ─ Email detail modal ─ */
+    .news-email-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px;
+      background: rgba(4,8,18,0.58);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    html[data-theme="light"] .news-email-overlay { background: rgba(15,23,42,0.42); }
+
+    .news-email-overlay.open { opacity: 1; pointer-events: auto; }
+
+    .news-email-card {
+      width: min(92vw, 1080px);
+      height: min(94vh, 960px);
+      max-height: 94vh;
+      background: var(--right-card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 28px 70px rgba(0,0,0,0.35), 0 4px 16px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(12px) scale(0.97);
+      transition: transform 0.22s cubic-bezier(0.34,1.28,0.64,1);
+    }
+
+    .news-email-overlay.open .news-email-card { transform: translateY(0) scale(1); }
+
+    .news-email-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--table-border);
+      flex-shrink: 0;
+      background: var(--surface-2);
+    }
+
+    .news-email-sender-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .news-email-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(37,99,235,0.3);
+    }
+
+    .news-email-meta { min-width: 0; flex: 1; }
+
+    .news-email-subject {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.35;
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
+    .news-email-from {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .news-email-close {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 8px;
+      background: var(--nav-hover-bg);
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .news-email-close:hover { background: rgba(239,68,68,0.12); color: #EF4444; }
+
+    .news-email-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 8px 22px;
+      border-bottom: 1px solid var(--table-border);
+      flex-shrink: 0;
+      min-height: 34px;
+    }
+
+    .news-email-tag {
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: 1px solid rgba(37,99,235,0.2);
+      color: var(--blue);
+      background: rgba(37,99,235,0.08);
+    }
+
+    .news-email-tag[data-tag="offer"]      { color: #7C3AED; background: rgba(124,58,237,0.08);  border-color: rgba(124,58,237,0.2); }
+    .news-email-tag[data-tag="approval"]   { color: #059669; background: rgba(5,150,105,0.08);   border-color: rgba(5,150,105,0.2); }
+    .news-email-tag[data-tag="decline"]    { color: #DC2626; background: rgba(220,38,38,0.08);   border-color: rgba(220,38,38,0.2); }
+    .news-email-tag[data-tag="update"]     { color: #D97706; background: rgba(217,119,6,0.08);   border-color: rgba(217,119,6,0.2); }
+    .news-email-tag[data-tag="renewal"]    { color: #0891B2; background: rgba(8,145,178,0.08);   border-color: rgba(8,145,178,0.2); }
+    .news-email-tag[data-tag="rate-sheet"] { color: #DB2777; background: rgba(219,39,119,0.08);  border-color: rgba(219,39,119,0.2); }
+    .news-email-tag[data-tag="general"]    { color: var(--text-muted); background: var(--surface-2); border-color: var(--border); }
+
+    .news-email-body {
+      flex: 1;
+      overflow: auto;
+      padding: 18px 22px 24px;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .news-email-text {
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .news-email-loading {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding: 24px 0;
+      text-align: center;
+    }
+
+    .news-email-iframe {
+      width: 100%;
+      flex: 1;
+      min-height: calc(94vh - 220px);
+      border: none;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    @media (max-width: 700px) {
+      .news-email-overlay { padding: 10px; }
+      .news-email-card {
+        width: 100%;
+        height: 96vh;
+        max-height: 96vh;
+        border-radius: 14px;
+      }
+      .news-email-card-header,
+      .news-email-body { padding-left: 16px; padding-right: 16px; }
+      .news-email-iframe { min-height: calc(96vh - 200px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .news-live-pip { animation: none !important; }
+      .news-item--empty .news-date,
+      .news-item--empty .news-headline,
+      .news-item--empty .news-summary { animation: none !important; background: var(--surface-2); }
     }
 
     .news-item--empty .news-headline,
@@ -1487,6 +1906,12 @@
           </svg>
           Live Data
         </a>
+        <a class="nav-sub-item" href="newsletter.html">
+          <svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+            <path d="M2 6l8 5 8-5" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="4" width="16" height="12" rx="2"/>
+          </svg>
+          Lender Inbox
+        </a>
       </div>
 
       <!-- CRM Section -->
@@ -1747,17 +2172,38 @@
         <!-- ── Right column ── -->
         <div class="right-col">
 
-          <div class="news-card" role="region" aria-label="Latest news">
+          <div class="news-card" role="region" aria-label="Lender inbox">
             <div class="news-header">
-              <span class="news-title">Latest News</span>
+              <div class="news-header-left">
+                <div class="news-header-icon-wrap" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                    <path d="M2 6l8 5 8-5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="2" y="4" width="16" height="12" rx="2"/>
+                  </svg>
+                </div>
+                <div class="news-header-info">
+                  <span class="news-title">Latest News</span>
+                  <div class="news-live-row">
+                  </div>
+                </div>
+              </div>
+              <span class="news-unread-badge" id="newsUnreadBadge" style="display:none"></span>
             </div>
-            <div class="news-list" id="dashNewsList">
-              <article class="news-item news-item--empty"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
-              <article class="news-item news-item--empty"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
-              <article class="news-item news-item--empty"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
-              <article class="news-item news-item--empty"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
-              <article class="news-item news-item--empty"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
-              <article class="news-item news-item--empty"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
+            <div class="news-list" id="dashNewsList" aria-live="polite">
+              <article class="news-item news-item--empty" aria-hidden="true"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
+              <article class="news-item news-item--empty" aria-hidden="true"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
+              <article class="news-item news-item--empty" aria-hidden="true"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
+              <article class="news-item news-item--empty" aria-hidden="true"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
+              <article class="news-item news-item--empty" aria-hidden="true"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
+              <article class="news-item news-item--empty" aria-hidden="true"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
+            </div>
+            <div class="news-footer">
+              <a class="news-footer-link" href="newsletter.html" aria-label="View all emails">
+                View all emails
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
             </div>
           </div>
 
@@ -1827,6 +2273,7 @@
 <script src="Assets/capmuse-dashboard-monthly-leader.js"></script>
 <script src="Assets/capmuse-dashboard-yesterday-top.js"></script>
 <script src="Assets/capmuse-dashboard-rep-vs.js"></script>
+<script src="Assets/capmuse-dashboard-news.js"></script>
 <script>
   (function () {
     if (window.CapMuseAuth) window.CapMuseAuth.initPage({ requireLogin: true });
