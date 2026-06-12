@@ -219,6 +219,10 @@
         (page === 'call-scoring.html' ? ' aria-current="page"' : '') + '>' +
         linkIconHtml('call-scoring.html') +
         'Call Scoring</a>' +
+      '<a class="nav-item' + (page === 'projections.html' ? ' active' : '') + '" href="projections.html"' +
+        (page === 'projections.html' ? ' aria-current="page"' : '') + '>' +
+        linkIconHtml('projections.html') +
+        'Projections</a>' +
       '<a class="nav-item' + (page === 'newsletter.html' ? ' active' : '') + '" href="newsletter.html"' +
         (page === 'newsletter.html' ? ' aria-current="page"' : '') + '>' +
         '<svg class="sub-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="2" y="4" width="16" height="13" rx="2"/><path d="M2 7l8 5 8-5" stroke-linecap="round"/></svg>' +
