@@ -283,7 +283,7 @@
     sectionItems[sec].forEach(function(item){
       var btns='';
       for(var i=1;i<=5;i++)btns+='<button class="score-btn" data-item="'+item.id+'" data-val="'+i+'">'+i+'</button>';
-      scoringDiv.innerHTML+='<div class="scoring-item"><span class="scoring-label">'+item.label+' <span style="color:var(--red);font-size:10px">*</span></span><div class="scoring-input">'+btns+'</div><span class="scoring-weight">25%</span><span class="scoring-weighted" id="ws_'+item.id+'">—</span></div>';
+      scoringDiv.innerHTML+='<div class="scoring-item"><span class="scoring-label">'+item.label+' <span style="color:var(--red);font-size:10px">*</span></span><div class="scoring-input">'+btns+'</div><span class="scoring-weight">20%</span><span class="scoring-weighted" id="ws_'+item.id+'">—</span></div>';
     });
     scoringDiv.innerHTML+='<div class="section-score-bar" id="bar_'+sec+'"><span class="bar-label">'+sec+' Score:</span><span class="bar-value">—</span><div class="bar-fill-wrap"><div class="bar-fill" id="fill_'+sec+'"></div></div></div>';
   });
@@ -523,7 +523,7 @@
     if(!tbody)return;
     var h='';
     ITEMS.forEach(function(item,i){
-      h+='<tr><td>'+(i+1)+'</td><td>'+item.label+'</td><td>'+item.section+'</td><td>w'+item.weight+'</td><td>25%</td></tr>';
+      h+='<tr><td>'+(i+1)+'</td><td>'+item.label+'</td><td>'+item.section+'</td><td>w'+item.weight+'</td><td>20%</td></tr>';
     });
     tbody.innerHTML=h;
     // Weight total
