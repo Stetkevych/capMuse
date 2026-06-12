@@ -132,7 +132,7 @@ function isPastRange(key) {
 async function getCacheEntry(key) {
   if (redis) {
     try {
-      const e = await redis.get(`rc3:${key}`);
+      const e = await redis.get(`rc5:${key}`);
       if (e) { summaryCache.set(key, e); return e; } // warm in-memory
     } catch (err) { console.error('[Redis] get error:', err.message); }
   }
@@ -148,9 +148,9 @@ async function setCached(key, data) {
   if (redis) {
     try {
       if (isPastRange(key)) {
-        await redis.set(`rc3:${key}`, entry);            // historical — store permanently
+        await redis.set(`rc5:${key}`, entry);            // historical — store permanently
       } else {
-        await redis.set(`rc3:${key}`, entry, { ex: 7200 }); // rolling — expire after 2h
+        await redis.set(`rc5:${key}`, entry, { ex: 7200 }); // rolling — expire after 2h
       }
     } catch (err) { console.error('[Redis] set error:', err.message); }
   }
@@ -159,11 +159,11 @@ async function setCached(key, data) {
 async function loadCacheFromRedis() {
   if (!redis) return;
   try {
-    const keys = await redis.keys('rc3:*');
+    const keys = await redis.keys('rc5:*');
     if (!keys.length) { console.log('[Redis] no cached data found'); return; }
     for (const key of keys) {
       const entry = await redis.get(key);
-      if (entry) summaryCache.set(key.replace('rc3:', ''), entry);
+      if (entry) summaryCache.set(key.replace('rc5:', ''), entry);
     }
     console.log(`[Redis] loaded ${keys.length} cache entries on startup`);
   } catch (err) { console.error('[Redis] load error:', err.message); }
@@ -255,6 +255,7 @@ async function fetchAllCalls(start_date, end_date, repExtIds = new Set()) {
       dateFrom: rcDateStart(start_date),
       dateTo:   rcDateEnd(end_date),
       type:     'Voice',
+      view:     'Detailed',
       perPage:  1000,
       page,
     });
@@ -262,17 +263,13 @@ async function fetchAllCalls(start_date, end_date, repExtIds = new Set()) {
     const data = await response.json();
     for (const record of (data.records || [])) {
       if (record.direction === 'Outbound') {
-        const extId      = String(record.from?.extensionId || '');
-        const isExternal = !record.to?.extensionId;
+        const extId = String(record.from?.extensionId || '');
         if (extId && repExtIds.has(extId)) {
+          if (!outboundByExt.has(extId)) outboundByExt.set(extId, []);
+          outboundByExt.get(extId).push(record);
           totalByExt.set(extId, (totalByExt.get(extId) || 0) + 1);
-          if (isExternal) {
-            if (!outboundByExt.has(extId)) outboundByExt.set(extId, []);
-            outboundByExt.get(extId).push(record);
-          }
         }
       } else if (record.direction === 'Inbound') {
-        // Walk legs in reverse to find which rep actually answered
         const extId = findRepInLegs(record.legs || [], repExtIds);
         if (extId) totalByExt.set(extId, (totalByExt.get(extId) || 0) + 1);
       }
@@ -536,7 +533,7 @@ async function fetchAndCachePeriod(start_date, end_date) {
     if (firstUser && !('total_calls' in firstUser)) {
       console.log(`[RC] old schema cache for ${cacheKey}, clearing and re-fetching`);
       summaryCache.delete(cacheKey);
-      if (redis) redis.del(`rc3:${cacheKey}`).catch(() => {});
+      if (redis) redis.del(`rc5:${cacheKey}`).catch(() => {});
       return doFetch(start_date, end_date);
     }
 
