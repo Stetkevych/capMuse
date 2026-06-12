@@ -125,6 +125,12 @@ const BATCH_POST_MS = 0;  // no extra gap — rcGet's 4.5s covers rate limiting 
 /* If the same cache key is already being fetched, queue this request to wait for it */
 const inFlightPromises = new Map();
 
+/* ── Webhook state ───────────────────────────────────────────────── */
+const extensionIdToName    = new Map(); // RC internal ID → display name
+const activeSessions       = new Map(); // sessionKey → { extensionId, startTime }
+const processedDisconnects = new Set(); // deduplicate disconnect events
+let   _webhookSubId        = null;
+
 async function processAllExtensions(extensions, start_date, end_date, days) {
   const users = [];
   const totalBatches = Math.ceil(extensions.length / BATCH_SIZE);
@@ -408,6 +414,7 @@ async function doFetch(start_date, end_date) {
       const extensions = (extData.records || []).filter(u =>
         SALES_REP_NAMES.has(getFullName(u).toLowerCase())
       );
+      extensions.forEach(u => extensionIdToName.set(String(u.id), getDisplayName(u)));
       const days =
         (new Date(`${end_date}T00:00:00`) - new Date(`${start_date}T00:00:00`)) /
         (1000 * 60 * 60 * 24) + 1;
@@ -497,6 +504,118 @@ async function runScheduledPreFetch() {
   console.log('[RC] scheduled pre-fetch complete');
 }
 
+/* ── Incremental cache update from webhook ───────────────────────── */
+function updateRepInCache(rcExtensionId, duration) {
+  const repName = extensionIdToName.get(String(rcExtensionId));
+  if (!repName) return;
+
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const todayStr = fmt(new Date());
+
+  for (const [key, entry] of summaryCache) {
+    const [start, end] = key.split('_');
+    if (start > todayStr || end < todayStr) continue; // range doesn't include today
+
+    const rep = entry.data.users.find(u => u.user === repName);
+    if (!rep) continue;
+
+    const days = (new Date(`${end}T00:00:00`) - new Date(`${start}T00:00:00`)) / 86400000 + 1;
+    const oldCalls = rep.outbound_calls;
+
+    rep.outbound_calls++;
+    if (duration > 0)  rep.connects++;
+    if (duration > 45) rep.pitch++;
+
+    // Recalculate avg handle time (avg over all calls including 0-duration)
+    rep.avg_handle_time_seconds = Math.round((rep.avg_handle_time_seconds * oldCalls + duration) / rep.outbound_calls);
+    rep.avg_handle_time = formatSeconds(rep.avg_handle_time_seconds);
+
+    rep.avg_calls_per_day          = Number((rep.outbound_calls / days).toFixed(1));
+    rep.total_outbound_activity    = rep.outbound_calls + rep.outbound_messages;
+    rep.avg_total_activity_per_day = Number((rep.total_outbound_activity / days).toFixed(1));
+
+    console.log(`[RC webhook] ${repName}: calls=${rep.outbound_calls} pitch=${rep.pitch} [${key}]`);
+  }
+}
+
+/* ── RC webhook receiver ─────────────────────────────────────────── */
+app.post('/rc-webhook', (req, res) => {
+  // RC validation handshake when subscription is first created
+  const validationToken = req.headers['validation-token'];
+  if (validationToken) {
+    res.set('Validation-Token', validationToken);
+    return res.status(200).send();
+  }
+
+  res.status(200).send(); // ACK immediately so RC doesn't retry
+
+  try {
+    const body = req.body;
+    if (!body?.body?.parties) return;
+
+    const { telephonySessionId, parties } = body.body;
+
+    for (const party of parties) {
+      const { direction, status, extensionId, owner } = party;
+      const rcExtId = extensionId || owner?.extensionId;
+      if (!rcExtId || direction !== 'Outbound') continue;
+
+      const sessionKey = `${telephonySessionId}_${rcExtId}`;
+
+      if (status?.code === 'Answered') {
+        activeSessions.set(sessionKey, { extensionId: rcExtId, startTime: Date.now() });
+      }
+
+      if (status?.code === 'Disconnected') {
+        if (processedDisconnects.has(sessionKey)) continue;
+        processedDisconnects.add(sessionKey);
+        setTimeout(() => processedDisconnects.delete(sessionKey), 5 * 60 * 1000);
+
+        const session = activeSessions.get(sessionKey);
+        const duration = session ? Math.round((Date.now() - session.startTime) / 1000) : 0;
+        activeSessions.delete(sessionKey);
+
+        console.log(`[RC webhook] outbound ended: ext ${rcExtId} duration ${duration}s`);
+        updateRepInCache(rcExtId, duration);
+      }
+    }
+  } catch (err) {
+    console.error('[RC webhook] processing error:', err.message);
+  }
+});
+
+/* ── Register/renew RC webhook subscription ──────────────────────── */
+async function registerWebhook() {
+  const url = process.env.WEBHOOK_URL || 'https://capmuse-ringcentral.onrender.com/rc-webhook';
+  try {
+    await login();
+
+    if (_webhookSubId) {
+      try {
+        await platform.put(`/restapi/v1.0/subscription/${_webhookSubId}`, {
+          eventFilters: ['/restapi/v1.0/account/~/telephony/sessions']
+        });
+        console.log('[RC webhook] subscription renewed:', _webhookSubId);
+        return;
+      } catch {
+        _webhookSubId = null;
+      }
+    }
+
+    const resp = await platform.post('/restapi/v1.0/subscription', {
+      eventFilters: ['/restapi/v1.0/account/~/telephony/sessions'],
+      deliveryMode: { transportType: 'WebHook', address: url },
+      expiresIn: 86400
+    });
+    const sub = await resp.json();
+    _webhookSubId = sub.id;
+    console.log('[RC webhook] subscription registered:', sub.id);
+  } catch (err) {
+    console.error('[RC webhook] registration failed:', err.message);
+  }
+}
+
 /* ── Endpoints ───────────────────────────────────────────────────── */
 app.get("/health", (req, res) => res.json({ status: "ok", cached: summaryCache.size }));
 
@@ -522,11 +641,19 @@ app.post("/ringcentral/all-users-summary", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`RingCentral server running on port ${PORT}`);
-  // Warm cache 30s after startup, then refresh every 25 min
+  // Warm cache + register webhook 30s after startup
   setTimeout(() => {
     runScheduledPreFetch().catch(err => console.error('[RC] initial pre-fetch crash:', err));
+    registerWebhook().catch(err => console.error('[RC webhook] initial registration crash:', err));
+
+    // Re-fetch cache every 25 min
     setInterval(() => {
       runScheduledPreFetch().catch(err => console.error('[RC] scheduled pre-fetch crash:', err));
     }, 25 * 60 * 1000);
+
+    // Renew webhook subscription every 23h (RC expires them at 24h)
+    setInterval(() => {
+      registerWebhook().catch(err => console.error('[RC webhook] renewal crash:', err));
+    }, 23 * 60 * 60 * 1000);
   }, 30_000);
 });
