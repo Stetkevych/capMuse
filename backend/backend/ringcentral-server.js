@@ -491,7 +491,9 @@ async function runScheduledPreFetch() {
   console.log('[RC] scheduled pre-fetch complete');
 }
 
-/* ── Endpoint ────────────────────────────────────────────────────── */
+/* ── Endpoints ───────────────────────────────────────────────────── */
+app.get("/health", (req, res) => res.json({ status: "ok", cached: summaryCache.size }));
+
 app.post("/ringcentral/all-users-summary", async (req, res) => {
   try {
     const { start_date, end_date, force } = req.body;
