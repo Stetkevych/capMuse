@@ -16,11 +16,11 @@
 .pmc-ach-gem.rarity-gold { background-image: url('achievement-gems/gold.png'); }
 .pmc-ach-gem.rarity-platinum { background-image: url('achievement-gems/platinum.png'); }
 .pmc-ach-gem.rarity-diamond { background-image: url('achievement-gems/diamond.png'); }
-.pmc-ach-gem.rarity-black_diamond,
-.pmc-ach-gem.rarity-blue_diamond,
-.pmc-ach-gem.rarity-ceo { background-image: url('achievement-gems/black_diamond.png'); }
+.pmc-ach-gem.rarity-black_diamond { background-image: url('achievement-gems/black_diamond.png'); }
 .pmc-ach-gem.rarity-red_diamond,
 .pmc-ach-gem.rarity-ultimate { background-image: url('achievement-gems/red_diamond.png'); }
+.pmc-ach-gem.rarity-blue_diamond,
+.pmc-ach-gem.rarity-ceo { background-image: url('achievement-gems/crown.png'); }
 
 .pmc-ach-trophy .pmc-ach-gem {
   width: 52px;

@@ -1,24 +1,62 @@
-/* capmuse-layout.css — App chrome: sidebar logo, topbar, search, sticky FB headers */
+/* capmuse-layout.css — App chrome: sidebar brand, topbar, FB filter rail */
 
 :root {
   --topbar-h: 64px;
+  --sidebar-brand-h: 52px;
+  --sidebar-column-gap: 10px;
+  --fb-filter-rail-w: 220px;
 }
 
-/* Logo band above nav links */
-.sidebar-logo {
+/* ── Sidebar: logo above nav card (StatMuse-style) ── */
+.sidebar-column {
+  position: fixed;
+  left: var(--sidebar-gap, 16px);
+  top: var(--sidebar-gap, 16px);
+  bottom: var(--sidebar-gap, 16px);
+  width: var(--sidebar-w, 215px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sidebar-column-gap);
+  z-index: 300;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-brand,
+.sidebar-column > .sidebar-logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--sidebar-border);
-  margin-bottom: 2px;
+  gap: 10px;
+  padding: 4px 8px 2px;
+  margin: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-bottom: none !important;
 }
 
-.sidebar-logo img {
-  width: 34px;
-  height: 34px;
+.sidebar-brand img,
+.sidebar-column > .sidebar-logo img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
 }
 
-.sidebar-wordmark {
+.sidebar-brand .sidebar-wordmark,
+.sidebar-column > .sidebar-logo .sidebar-wordmark {
   font-size: 15px;
+}
+
+.sidebar-column > .sidebar {
+  position: relative;
+  left: auto;
+  top: auto;
+  bottom: auto;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: auto;
 }
 
 .sidebar-nav {
@@ -27,7 +65,7 @@
   overflow-y: auto;
 }
 
-/* Top chrome at page top — search left by nav, actions flush right; scrolls away (not sticky) */
+/* Top chrome — search left, actions right */
 .topbar {
   position: relative;
   top: auto;
@@ -56,13 +94,139 @@
   flex-shrink: 0;
 }
 
+/* Funding Book — full-width hero; chart + filters share row below */
+.funding-book-page .page-content {
+  overflow-x: clip;
+  min-width: 0;
+}
+
+.funding-book-page .fb-page-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.funding-book-page .fb-chart-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+.funding-book-page .fb-chart-row .fb-table-card {
+  flex: 0 1 76%;
+  min-width: 0;
+  max-width: 76%;
+}
+
+.funding-book-page .fb-chart-row .fb-table-head {
+  padding: 12px 16px;
+}
+
+.funding-book-page .fb-chart-row .fb-table-title {
+  font-size: 14px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-table th {
+  padding: 9px 10px;
+  font-size: 10px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-table th:first-child {
+  width: 40px;
+  padding-left: 14px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-table td {
+  padding: 9px 10px;
+  font-size: 12px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-table td:first-child {
+  font-size: 11px;
+  padding-left: 14px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-table th.fb-col-name,
+.funding-book-page .fb-chart-row .fb-rep-table td.fb-col-name {
+  min-width: 130px;
+  padding-left: 10px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-avatar,
+.funding-book-page .fb-chart-row .fb-rep-initials {
+  width: 36px;
+  height: 36px;
+  font-size: 11px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-cell {
+  gap: 9px;
+}
+
+.funding-book-page .fb-chart-row .fb-rep-name {
+  font-size: 12px;
+}
+
+.funding-book-page .fb-chart-row .fb-money,
+.funding-book-page .fb-chart-row .fb-pts {
+  font-size: 12px;
+}
+
+.funding-book-page .fb-chart-row .fb-money-total {
+  font-size: 11.5px;
+  padding: 3px 7px;
+}
+
+.funding-book-page .fb-filters-rail {
+  flex: 1 1 0;
+  min-width: var(--fb-filter-rail-w);
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+}
+
+.funding-book-page .fb-filters-rail-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 12px;
+  box-shadow: var(--card-shadow);
+  box-sizing: border-box;
+}
+
+.funding-book-page .fb-filters-rail .fb-filter-label {
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+
+.funding-book-page .fb-filters-rail .fb-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.funding-book-page .fb-filters-rail .fb-filter-chip {
+  min-height: 46px;
+  padding: 7px 9px;
+}
+
+.funding-book-page .fb-filters-rail .fb-filter-chip-val {
+  font-size: 11px;
+}
+
 /* Allow sticky thead (overflow:hidden on card breaks position:sticky) */
 .funding-book-page .fb-table-card,
 .convoso-page .fb-table-card {
   overflow: visible;
 }
 
-/* Funding Book / Convoso — sticky column headers while scrolling the page */
 .funding-book-page .fb-rep-table thead th,
 .convoso-page .fb-rep-table thead th {
   position: sticky;
@@ -70,6 +234,28 @@
   z-index: 40;
   background: var(--table-head);
   box-shadow: 0 1px 0 var(--table-border);
+}
+
+@media (max-width: 1100px) {
+  .funding-book-page .fb-chart-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .funding-book-page .fb-chart-row .fb-table-card {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+
+  .funding-book-page .fb-filters-rail {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .funding-book-page .fb-filters-rail .fb-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -83,5 +269,30 @@
     flex: 1 1 auto;
     max-width: none;
     min-width: 0;
+  }
+
+  .sidebar-column {
+    width: min(var(--sidebar-w, 215px), calc(100vw - 32px));
+    transform: translateX(calc(-100% - 24px));
+  }
+
+  .sidebar-column:has(.sidebar.open) {
+    transform: translateX(0);
+  }
+
+  .sidebar-column .sidebar {
+    transform: none !important;
+  }
+
+  .funding-book-page .fb-filters-rail .fb-filter-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 769px) {
+  html.capmuse-nav-hidden .sidebar-column {
+    transform: translateX(calc(-1 * (var(--sidebar-w, 215px) + var(--sidebar-gap, 16px) + 16px)));
+    pointer-events: none;
+    visibility: hidden;
   }
 }

@@ -548,8 +548,8 @@
 
     /* ── Page section entrance animations ── */
     .fb-hero        { animation: fbFadeUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.05s both; }
-    .fb-filter-section { animation: fbFadeUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.12s both; }
-    .fb-table-card  { animation: fbFadeUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.20s both; }
+    .fb-chart-row { animation: fbFadeUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.08s both; }
+    .fb-page-shell > .fb-table-card { animation: fbFadeUp 0.45s cubic-bezier(0.22,1,0.36,1) 0.16s both; }
 
     /* ── Fira Code for all numeric/monetary values ── */
     .fb-kpi-val, .fb-spot-stat, .fb-money, .fb-money-total, .fb-pts,
@@ -902,7 +902,7 @@
        REDUCED MOTION
     ══════════════════════════════════════════ */
     @media (prefers-reduced-motion: reduce) {
-      .fb-hero, .fb-filter-section, .fb-table-card { animation: none !important; }
+      .fb-hero, .fb-chart-row { animation: none !important; }
       .fb-hero::before { animation: none !important; background-position: 0% 50%; }
       .fb-spot-photo-ring { animation: none !important; }
       .fb-filter-chip, .fb-rep-table tbody tr,
@@ -1012,56 +1012,62 @@
 
     <main class="page-content" role="main">
 
-      <section class="fb-hero" aria-label="Funding Book summary">
-        <div class="fb-hero-spotlight" id="fbHeroSpotlight" hidden aria-label="Top rep"></div>
-        <div class="fb-hero-sep" aria-hidden="true"></div>
-        <div class="fb-hero-main">
-          <h1 class="fb-hero-title">Funding Book</h1>
-          <p class="fb-hero-context" id="fbHeroContext"></p>
-          <div class="fb-active-filters" id="fbActiveFilters" aria-label="Active filters"></div>
-        </div>
-        <div class="fb-hero-sep fb-hero-sep--kpis" aria-hidden="true"></div>
-        <div class="fb-hero-kpis-wrap">
-          <div class="fb-kpi-panel-head">
-            <div class="fb-kpi-heading">Company Totals</div>
-            <div class="fb-kpi-scope" id="fbKpiScope">Year to date</div>
+      <div class="fb-page-shell">
+        <section class="fb-hero" aria-label="Funding Book summary">
+          <div class="fb-hero-spotlight" id="fbHeroSpotlight" hidden aria-label="Top rep"></div>
+          <div class="fb-hero-sep" aria-hidden="true"></div>
+          <div class="fb-hero-main">
+            <h1 class="fb-hero-title">Funding Book</h1>
+            <p class="fb-hero-context" id="fbHeroContext"></p>
+            <div class="fb-active-filters" id="fbActiveFilters" aria-label="Active filters"></div>
           </div>
-          <div class="fb-hero-kpis">
-            <div class="fb-kpi fb-kpi--primary"><div class="fb-kpi-val" id="fbKpiVolume">—</div><div class="fb-kpi-lbl">Total funded</div></div>
-            <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiDeals">—</div><div class="fb-kpi-lbl">Deals</div></div>
-            <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiAvg">—</div><div class="fb-kpi-lbl">Avg deal</div></div>
-            <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiReps">—</div><div class="fb-kpi-lbl">Reps</div></div>
+          <div class="fb-hero-sep fb-hero-sep--kpis" aria-hidden="true"></div>
+          <div class="fb-hero-kpis-wrap">
+            <div class="fb-kpi-panel-head">
+              <div class="fb-kpi-heading">Company Totals</div>
+              <div class="fb-kpi-scope" id="fbKpiScope">Year to date</div>
+            </div>
+            <div class="fb-hero-kpis">
+              <div class="fb-kpi fb-kpi--primary"><div class="fb-kpi-val" id="fbKpiVolume">—</div><div class="fb-kpi-lbl">Total funded</div></div>
+              <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiDeals">—</div><div class="fb-kpi-lbl">Deals</div></div>
+              <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiAvg">—</div><div class="fb-kpi-lbl">Avg deal</div></div>
+              <div class="fb-kpi"><div class="fb-kpi-val" id="fbKpiReps">—</div><div class="fb-kpi-lbl">Reps</div></div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="fb-filter-section" aria-label="Filters">
-        <div class="fb-filter-label">Filter funded deals</div>
-        <div class="fb-filter-grid" id="fbFilterGrid" role="group" aria-label="Deal filters"></div>
-      </section>
+        <div class="fb-chart-row">
+          <section class="fb-table-card" aria-label="Rep leaderboard">
+            <div class="fb-table-head">
+              <h2 class="fb-table-title">Rep Leaderboard</h2>
+              <span class="fb-table-meta" id="fbTableMeta">Year to date</span>
+            </div>
+            <table class="fb-rep-table" id="fbRepTable" aria-label="Rep funding leaderboard">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th class="fb-col-name" data-sort="name">Name <span class="fb-sort-arrow"></span></th>
+                  <th data-sort="volume">Total Funding <span class="fb-sort-arrow"></span></th>
+                  <th data-sort="revenue">Total Revenue <span class="fb-sort-arrow"></span></th>
+                  <th data-sort="points">Points <span class="fb-sort-arrow"></span></th>
+                  <th>Team</th>
+                  <th data-sort="count">Count <span class="fb-sort-arrow"></span></th>
+                  <th data-sort="avg">Avg. Funding <span class="fb-sort-arrow"></span></th>
+                  <th data-sort="avgRev">Avg. Rev <span class="fb-sort-arrow"></span></th>
+                </tr>
+              </thead>
+              <tbody id="fbRepTableBody"></tbody>
+            </table>
+          </section>
 
-      <section class="fb-table-card" aria-label="Rep leaderboard">
-        <div class="fb-table-head">
-          <h2 class="fb-table-title">Rep Leaderboard</h2>
-          <span class="fb-table-meta" id="fbTableMeta">Year to date</span>
+          <aside class="fb-filters-rail" aria-label="Filters">
+            <div class="fb-filters-rail-inner">
+              <div class="fb-filter-label">Filter funded deals</div>
+              <div class="fb-filter-grid" id="fbFilterGrid" role="group" aria-label="Deal filters"></div>
+            </div>
+          </aside>
         </div>
-        <table class="fb-rep-table" id="fbRepTable" aria-label="Rep funding leaderboard">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th class="fb-col-name" data-sort="name">Name <span class="fb-sort-arrow"></span></th>
-              <th data-sort="volume">Total Funding <span class="fb-sort-arrow"></span></th>
-              <th data-sort="revenue">Total Revenue <span class="fb-sort-arrow"></span></th>
-              <th data-sort="points">Points <span class="fb-sort-arrow"></span></th>
-              <th>Team</th>
-              <th data-sort="count">Count <span class="fb-sort-arrow"></span></th>
-              <th data-sort="avg">Avg. Funding <span class="fb-sort-arrow"></span></th>
-              <th data-sort="avgRev">Avg. Rev <span class="fb-sort-arrow"></span></th>
-            </tr>
-          </thead>
-          <tbody id="fbRepTableBody"></tbody>
-        </table>
-      </section>
+      </div>
 
       <div class="fb-filter-overlay" id="fbFilterOverlay" hidden>
         <div class="fb-filter-modal" role="dialog" aria-modal="true" aria-labelledby="fbFilterModalTitle">

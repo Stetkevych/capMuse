@@ -156,7 +156,7 @@
     },
     {
       id: 'ceo_badge',
-      name: 'CEO',
+      name: 'Mr. Capital Infusion',
       description: 'Exclusve Capital Infusion CEO recognition badge -- awarded only to Matthew Birnholz.',
       rarity: 'blue_diamond',
       exclusiveRepId: 'matthew',
