@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projections — CapMuse</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Orbitron:wght@700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html[data-theme="dark"]{--page-bg:#0C0F14;--sidebar-bg:#111720;--sidebar-border:#1A2435;--surface:#141C28;--surface-2:#1A2435;--text-primary:#F1F5F9;--text-secondary:#7A8FA8;--text-muted:#4A5F78;--border:#1A2435;--blue:#60A5FA;--green:#34D399;--red:#F87171;--amber:#FCD34D;--card-shadow:0 1px 3px rgba(0,0,0,.5),0 4px 16px rgba(0,0,0,.4)}
+    html[data-theme="light"]{--page-bg:#EBEBEB;--sidebar-bg:#FFFFFF;--sidebar-border:#E8E8E8;--surface:#FFFFFF;--surface-2:#F4F4F4;--text-primary:#111111;--text-secondary:#555555;--text-muted:#999999;--border:#E8E8E8;--blue:#2563EB;--green:#10B981;--red:#EF4444;--amber:#F59E0B;--card-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.07)}
+    :root{--sidebar-w:215px;--sidebar-gap:16px}
+    html,body{height:100%;font-family:'Inter',system-ui,sans-serif;background:var(--page-bg);color:var(--text-primary)}
+    .layout{display:flex;min-height:100vh}
+    .sidebar{width:var(--sidebar-w);position:fixed;left:var(--sidebar-gap);top:var(--sidebar-gap);bottom:var(--sidebar-gap);background:var(--sidebar-bg);border:1px solid var(--sidebar-border);border-radius:18px;box-shadow:0 18px 45px rgba(15,23,42,.12);display:flex;flex-direction:column;z-index:300;overflow-y:auto;scrollbar-width:none}
+    .sidebar::-webkit-scrollbar{display:none}
+    .sidebar-logo{display:flex;align-items:center;gap:9px;padding:18px 18px 14px}
+    .sidebar-logo img{width:30px;height:30px;object-fit:contain}
+    .sidebar-wordmark{font-family:'Orbitron',sans-serif;font-size:14.5px;font-weight:700;letter-spacing:.04em;background:linear-gradient(135deg,#2563EB,#10B981);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .sidebar-nav{flex:1;padding:6px 0 8px;display:flex;flex-direction:column}
+    .sidebar-footer{padding:10px;border-top:1px solid var(--sidebar-border)}
+    .sidebar-user{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px}
+    .user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#0F4C81,#10B981);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+    .user-name{font-size:12px;font-weight:600;color:var(--text-primary)}
+    .user-role{font-size:10.5px;color:var(--text-muted)}
+    .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:250}
+    .main-wrapper{margin-left:calc(var(--sidebar-w) + 32px);flex:1;min-height:100vh;display:flex;flex-direction:column}
+    .page-content{flex:1;padding:20px 28px 32px;display:flex;flex-direction:column;gap:16px;max-width:1100px}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;box-shadow:var(--card-shadow)}
+    .stat-card-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+    .stat-card-value{font-size:22px;font-weight:800;color:var(--text-primary);letter-spacing:-.02em}
+    .stat-card-sub{font-size:10.5px;color:var(--text-muted);margin-top:3px}
+    .stat-card.highlight{border-color:var(--blue)}.stat-card.highlight .stat-card-value{color:var(--blue)}
+    .stat-card.goal{border-color:var(--green)}.stat-card.goal .stat-card-value{color:var(--green)}
+    .stat-card.warn .stat-card-value{color:var(--amber)}
+    .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--card-shadow)}
+    .chart-title{font-size:15px;font-weight:700;margin-bottom:4px}
+    .chart-subtitle{font-size:12px;color:var(--text-muted);margin-bottom:14px}
+    .chart-wrap{position:relative;height:320px}
+    .progress-bar-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--card-shadow)}
+    .progress-label{display:flex;justify-content:space-between;margin-bottom:8px}
+    .progress-label span{font-size:12px;font-weight:600;color:var(--text-secondary)}
+    .progress-label .goal-text{color:var(--green);font-weight:700}
+    .progress-track{height:24px;background:var(--surface-2);border-radius:100px;overflow:hidden;position:relative}
+    .progress-fill{height:100%;border-radius:100px;transition:width .5s ease;background:linear-gradient(90deg,#2563EB,#10B981)}
+    .progress-marker{position:absolute;top:0;bottom:0;width:2px;background:var(--amber)}
+    .progress-pct{font-size:20px;font-weight:800;color:var(--text-primary);margin-top:10px;text-align:center}
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--card-shadow)}
+    .table-card-head{padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700}
+    table{width:100%;border-collapse:collapse}
+    th{padding:9px 14px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;text-align:left;border-bottom:1px solid var(--border);background:var(--surface-2)}
+    td{padding:10px 14px;font-size:12.5px;color:var(--text-secondary);border-bottom:1px solid var(--border)}
+    tr:last-child td{border-bottom:none}
+    td:first-child{font-weight:600;color:var(--text-primary)}
+    @media(max-width:768px){.main-wrapper{margin-left:0}.chart-wrap{height:240px}}
+  </style>
+  <link rel="stylesheet" href="Assets/profile-stats.css" />
+</head>
+<body class="projections-page">
+<div class="layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar"><div class="sidebar-logo"><img src="Assets/LogoUpdates.png" alt="CapMuse" /><span class="sidebar-wordmark">CapMuse</span></div><nav class="sidebar-nav"></nav><div class="sidebar-footer"><div class="sidebar-user"><div class="user-avatar" id="sidebarAvatar">P</div><div class="user-info"><div class="user-name" id="sidebarName">Projections</div><div class="user-role" id="sidebarRole">Admin</div></div></div></div></aside>
+  <div class="main-wrapper">
+    <main class="page-content">
+      <div><h1 style="font-size:22px;font-weight:800;letter-spacing:-.02em">Projections</h1><p style="font-size:12px;color:var(--text-muted);margin-top:2px">Goal: $170M Annual Funded</p></div>
+      <div class="stat-grid" id="projKpis"></div>
+      <div class="progress-bar-wrap">
+        <div class="progress-label"><span>YTD Progress to $170M Goal</span><span class="goal-text" id="goalPct"></span></div>
+        <div class="progress-track"><div class="progress-fill" id="goalFill" style="width:0%"></div><div class="progress-marker" id="goalMarker" style="left:0%"></div></div>
+        <div class="progress-pct" id="goalStatus">Loading...</div>
+      </div>
+      <div class="chart-card"><div class="chart-title">Annual Funded Volume — History + Projection</div><div class="chart-subtitle">Bars = actual, dashed red = $170M goal</div><div class="chart-wrap"><canvas id="annualChart"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">2026 Monthly Pace vs Goal Pace</div><div class="chart-subtitle">Blue = actual cumulative, green = required pace, orange = projected</div><div class="chart-wrap"><canvas id="paceChart"></canvas></div></div>
+      <div class="table-card"><div class="table-card-head">Year-over-Year</div><table><thead><tr><th>Year</th><th>Funded</th><th>Deals</th><th>Avg Deal</th><th>vs Prior</th></tr></thead><tbody id="yoyTable"></tbody></table></div>
+    </main>
+  </div>
+</div>
+<script src="Assets/profile-stats.js"></script>
+<script src="Assets/capmuse-auth.js"></script>
+<script>
+(function(){
+  var GOAL=170000000;
+  var html=document.documentElement;
+  html.setAttribute('data-theme',localStorage.getItem('capmuse-theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+  if(window.CapMuseAuth)window.CapMuseAuth.initPage({requireLogin:true});
+  function fmt(n){if(n>=1e6)return '$'+(n/1e6).toFixed(1)+'M';if(n>=1e3)return '$'+(n/1e3).toFixed(0)+'K';return '$'+Math.round(n).toLocaleString()}
+  fetch('https://capmuse-data-882611632216.s3.amazonaws.com/funding_book_live.json').then(function(r){return r.json()}).then(render).catch(function(e){console.error(e)});
+
+  function render(data){
+    var now=new Date(),yr=now.getFullYear(),dayOfYear=Math.floor((now-new Date(yr,0,1))/864e5)+1,pctYear=dayOfYear/365;
+    var byYear={};
+    data.forEach(function(r){var y=(r.date_funded||'').substring(0,4);if(!y||y<'2019')return;if(!byYear[y])byYear[y]={vol:0,count:0};byYear[y].vol+=parseFloat((r.funding||'0').replace(/[$,]/g,''))||0;byYear[y].count++});
+    var ytdVol=0,ytdCount=0;
+    data.forEach(function(r){if((r.date_funded||'').startsWith(String(yr))){ytdVol+=parseFloat((r.funding||'0').replace(/[$,]/g,''))||0;ytdCount++}});
+    var projected=pctYear>0?ytdVol/pctYear:0;
+    var onPace=projected>=GOAL;
+    var pctToGoal=Math.min((ytdVol/GOAL)*100,100);
+    var expectedPct=pctYear*100;
+
+    document.getElementById('projKpis').innerHTML=
+      '<div class="stat-card highlight"><div class="stat-card-label">YTD Funded</div><div class="stat-card-value">'+fmt(ytdVol)+'</div><div class="stat-card-sub">'+ytdCount+' deals</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Projected Annual</div><div class="stat-card-value">'+fmt(projected)+'</div><div class="stat-card-sub">At current pace</div></div>'+
+      '<div class="stat-card goal"><div class="stat-card-label">Goal</div><div class="stat-card-value">$170M</div></div>'+
+      '<div class="stat-card '+(onPace?'goal':'warn')+'"><div class="stat-card-label">Status</div><div class="stat-card-value">'+(onPace?'On Pace':'Behind')+'</div><div class="stat-card-sub">'+(onPace?'Exceeding goal pace':fmt(GOAL*pctYear-ytdVol)+' behind')+'</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">% of Year</div><div class="stat-card-value">'+(pctYear*100).toFixed(1)+'%</div><div class="stat-card-sub">Day '+dayOfYear+'</div></div>'+
+      '<div class="stat-card"><div class="stat-card-label">Daily Rate</div><div class="stat-card-value">'+fmt(ytdVol/dayOfYear)+'</div><div class="stat-card-sub">Need '+fmt(GOAL/365)+'/day</div></div>';
+
+    document.getElementById('goalPct').textContent=pctToGoal.toFixed(1)+'%';
+    document.getElementById('goalFill').style.width=pctToGoal+'%';
+    document.getElementById('goalMarker').style.left=expectedPct+'%';
+    document.getElementById('goalStatus').innerHTML=fmt(ytdVol)+' of $170M — '+(onPace?'<span style="color:var(--green)">Ahead of pace</span>':'<span style="color:var(--amber)">Behind pace</span>');
+
+    var years=Object.keys(byYear).sort();
+    new Chart(document.getElementById('annualChart'),{type:'bar',data:{labels:years,datasets:[{label:'Funded',data:years.map(function(y){return byYear[y].vol}),backgroundColor:years.map(function(y){return y===String(yr)?'rgba(37,99,235,0.5)':'rgba(37,99,235,0.8)'}),borderRadius:8},{label:'Projected '+yr,data:years.map(function(y){return y===String(yr)?projected:null}),backgroundColor:'rgba(16,185,129,0.3)',borderColor:'#10B981',borderWidth:2,borderDash:[5,5],borderRadius:8}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:11}}},annotation:{annotations:{goal:{type:'line',yMin:GOAL,yMax:GOAL,borderColor:'#EF4444',borderWidth:2,borderDash:[6,4],label:{display:true,content:'$170M Goal',position:'end',font:{size:10},color:'#EF4444'}}}}},scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:function(v){return '$'+(v/1e6).toFixed(0)+'M'}}},x:{grid:{display:false}}}}});
+
+    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var monthlyVol=new Array(12).fill(0);
+    data.forEach(function(r){if(!(r.date_funded||'').startsWith(String(yr)))return;var m=parseInt((r.date_funded||'').substring(5,7))-1;if(m>=0&&m<12)monthlyVol[m]+=parseFloat((r.funding||'0').replace(/[$,]/g,''))||0});
+    var cum=[];var s=0;for(var i=0;i<12;i++){s+=monthlyVol[i];cum.push(s)}
+    var goalPace=months.map(function(m,i){return GOAL*((i+1)/12)});
+    var cm=now.getMonth();
+    new Chart(document.getElementById('paceChart'),{type:'line',data:{labels:months,datasets:[{label:'Actual Cumulative',data:cum.map(function(v,i){return i<=cm?v:null}),borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,.06)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#2563EB',borderWidth:2.5},{label:'$170M Pace',data:goalPace,borderColor:'#10B981',borderDash:[6,4],borderWidth:2,pointRadius:0,fill:false},{label:'Projected',data:months.map(function(m,i){return i>cm?projected*((i+1)/12):null}),borderColor:'#F59E0B',borderDash:[4,4],borderWidth:2,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:11}}}},scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,.04)'},ticks:{callback:function(v){return '$'+(v/1e6).toFixed(0)+'M'}}},x:{grid:{display:false}}}}});
+
+    var rows='';years.forEach(function(y,i){var vol=byYear[y].vol;var ct=byYear[y].count;var avg=ct>0?vol/ct:0;var prev=i>0?byYear[years[i-1]].vol:0;var chg=prev>0?((vol-prev)/prev*100).toFixed(1)+'%':'—';var color=prev>0&&vol>prev?'color:var(--green)':prev>0?'color:var(--red)':'';rows+='<tr><td>'+y+(y===String(yr)?' (YTD)':'')+'</td><td>'+fmt(vol)+'</td><td>'+ct+'</td><td>'+fmt(avg)+'</td><td style="'+color+'">'+chg+'</td></tr>'});
+    document.getElementById('yoyTable').innerHTML=rows;
+  }
+})();
+</script>
+<script src="Assets/capmuse-search.js"></script>
+</body>
+</html>
