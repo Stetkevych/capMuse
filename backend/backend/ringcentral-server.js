@@ -90,8 +90,9 @@ function isRateLimited(err) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 /* ── Global RC API serial queue ─────────────────────────────────────
-   ALL calls to platform.get() go through here — one at a time, 2.5s apart.
-   This means concurrent date-range fetches share one lane and never pile up. */
+   ALL calls to platform.get() go through here — one at a time, 4.5s apart.
+   Gap is 4.5s (not 2.5s) so that Render's rolling deploy (2 overlapping
+   processes) still stays well under RC's 10 calls/10s heavy-group limit. */
 let _rcQueue = Promise.resolve();
 function rcGet(path, params) {
   let resolve, reject;
@@ -99,7 +100,7 @@ function rcGet(path, params) {
   _rcQueue = _rcQueue.then(async () => {
     try   { resolve(await platform.get(path, params)); }
     catch (e) { reject(e); }
-    await sleep(2500);
+    await sleep(4500);
   });
   return result;
 }
@@ -119,7 +120,7 @@ function setCached(key, data) { summaryCache.set(key, { ts: Date.now(), data });
 
 /* ── Batch processing ────────────────────────────────────────────── */
 const BATCH_SIZE    = 1;  // one user at a time
-const BATCH_POST_MS = 0;  // no extra gap — rcGet's 2.5s covers rate limiting globally
+const BATCH_POST_MS = 0;  // no extra gap — rcGet's 4.5s covers rate limiting globally
 
 /* If the same cache key is already being fetched, queue this request to wait for it */
 const inFlightPromises = new Map();
@@ -133,13 +134,15 @@ async function processAllExtensions(extensions, start_date, end_date, days) {
     console.log(`[RC] batch ${batchNum}/${totalBatches}: ${batch.map(u => getDisplayName(u)).join(', ')}`);
 
     const results = await Promise.all(batch.map(async u => {
-      for (let attempt = 1; attempt <= 2; attempt++) {
+      const backoffs = [20000, 40000, 60000];
+      for (let attempt = 1; attempt <= 4; attempt++) {
         try {
           return await processExt(u, start_date, end_date, days);
         } catch (err) {
-          if (isRateLimited(err) && attempt === 1) {
-            console.warn(`[RC] rate-limited for "${getDisplayName(u)}", retry in 20s`);
-            await sleep(20000);
+          if (isRateLimited(err) && attempt <= 3) {
+            const wait = backoffs[attempt - 1];
+            console.warn(`[RC] rate-limited for "${getDisplayName(u)}", retry ${attempt}/3 in ${wait/1000}s`);
+            await sleep(wait);
           } else {
             console.error(`[RC] error for "${getDisplayName(u)}":`, err.message);
             return zeroRow(u);
@@ -460,11 +463,14 @@ function getPreFetchRanges() {
 
   const monthStart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
 
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+
   return [
-    [today,        today],   // today
-    [fmt(d7),      today],   // last 7 days
-    [fmt(mon),     today],   // this week (Mon–today)
-    [monthStart,   today],   // this month
+    [today,          today],        // today
+    [fmt(yesterday), fmt(yesterday)], // yesterday
+    [fmt(d7),        today],        // last 7 days
+    [fmt(mon),       today],        // this week (Mon–today)
+    [monthStart,     today],        // this month
   ];
 }
 
