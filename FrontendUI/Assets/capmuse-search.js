@@ -5,7 +5,10 @@
 (function () {
   'use strict';
 
-  let BUCKET = 'https://capmuse-data-882611632216.s3.amazonaws.com';
+  let BUCKET    = 'https://capmuse-data-882611632216.s3.amazonaws.com';
+  let CONVOSO   = 'https://capmuse.onrender.com';
+  let RC_SERVER = 'https://capmuse-ringcentral.onrender.com';
+
   let _deals           = [];
   let _loaded          = false;
   let _loading         = false;
@@ -15,6 +18,8 @@
   let _pipelineLoading = false;
   let _pipelineQueue   = [];
   let _currentQuery    = '';
+  let _convosoCache    = {};
+  let _rcCache         = {};
 
   let NOW = new Date();
   let FILTER_CHIPS = [
@@ -200,6 +205,72 @@
       .then(function (r) { return r.ok ? r.text() : null; })
       .then(function (text) { finish(text ? parseCSV(text) : []); })
       .catch(function () { finish([]); });
+  }
+
+  function loadConvosoData(start, end, cb) {
+    let key = start + '_' + end;
+    if (_convosoCache[key]) { cb(_convosoCache[key]); return; }
+    fetch(CONVOSO + '/convoso/all-users-summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ start_date: start, end_date: end })
+    })
+      .then(function (r) { return r.ok ? r.json() : { users: [] }; })
+      .then(function (data) {
+        let users = (data.users || []).map(mapConvosoUser).filter(function (u) { return u.name; });
+        _convosoCache[key] = users;
+        cb(users);
+      })
+      .catch(function () { cb([]); });
+  }
+
+  function loadRingCentralData(start, end, cb) {
+    let key = start + '_' + end;
+    if (_rcCache[key]) { cb(_rcCache[key]); return; }
+    fetch(RC_SERVER + '/ringcentral/all-users-summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ start_date: start, end_date: end })
+    })
+      .then(function (r) { return r.ok ? r.json() : { users: [] }; })
+      .then(function (data) {
+        let users = (data.users || []).map(mapRCUser).filter(function (u) { return u.name; });
+        _rcCache[key] = users;
+        cb(users);
+      })
+      .catch(function () { cb([]); });
+  }
+
+  function mapConvosoUser(u) {
+    let totalCalls   = (u.inst || 0) + (u.ni || 0) + (u.nc || 0);
+    let totalContacts = (u.inst_con || 0) + (u.ni_con || 0) + (u.nc_con || 0);
+    let talkTimeSec  = (u.inst_tt || 0) + (u.ni_tt || 0) + (u.nc_tt || 0);
+    return {
+      name:          (u.user || '').trim(),
+      interested:    u.inst    || 0,
+      not_interested: u.ni     || 0,
+      no_contact:    u.nc      || 0,
+      total_calls:   totalCalls,
+      contacts:      totalContacts,
+      talk_time_sec: talkTimeSec,
+      inbound_calls: u.inbound_calls || 0,
+      total_time:    u.total_time    || 0,
+      connect_rate:  totalCalls > 0 ? +(totalContacts / totalCalls * 100).toFixed(1) : 0,
+      calls_per_int: (u.inst || 0) > 0 ? +(totalCalls / u.inst).toFixed(1) : 0,
+    };
+  }
+
+  function mapRCUser(u) {
+    let calls = u.outbound_calls || 0;
+    let cnx   = u.connects || 0;
+    return {
+      name:          (u.name || u.user || '').trim(),
+      outbound_calls: calls,
+      connects:      cnx,
+      pitch:         u.pitch    || 0,
+      messages:      u.outbound_messages || 0,
+      connect_rate:  calls > 0 ? +(cnx / calls * 100).toFixed(1) : 0,
+    };
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -404,6 +475,94 @@
     });
   }
 
+  function fmtSeconds(s) {
+    if (!s) return '0m';
+    let h = Math.floor(s / 3600);
+    let m = Math.floor((s % 3600) / 60);
+    if (h > 0) return h + 'h ' + m + 'm';
+    return m + 'm';
+  }
+
+  function isConvosoQuery(q) {
+    if (/\bconvoso\b/i.test(q)) return true;
+    if (/\binterested\b/i.test(q)) return true;
+    if (/\bnot\s+interested\b|\bni\s+count\b|\bnc\s+count\b/i.test(q)) return true;
+    if (/\bdisposition\b/i.test(q)) return true;
+    if (/\bconnect\s+rate\b|\bcontact\s+rate\b/i.test(q)) return true;
+    if (/\btalk\s+time\b/i.test(q)) return true;
+    if (/\bcalls\s+per\s+int\b|\bcalls\s+per\s+interested\b/i.test(q)) return true;
+    return false;
+  }
+
+  function isRingCentralQuery(q) {
+    if (/\bring\s*central\b/i.test(q)) return true;
+    if (/\boutbound\s+calls?\b/i.test(q)) return true;
+    if (/\bpitch\s+count\b|\bpitches?\b.*\brc\b|\brc\b.*\bpitch/i.test(q)) return true;
+    return false;
+  }
+
+  function periodToDates(pf, today, now) {
+    let yr = pf.year || now.getFullYear();
+    if (pf.type === 'year') {
+      return { start: yr + '-01-01', end: yr < now.getFullYear() ? yr + '-12-31' : today };
+    }
+    if (pf.type === 'month') {
+      let mo = String(pf.month).padStart(2, '0');
+      let lastDay = new Date(yr, pf.month, 0).getDate();
+      return { start: yr + '-' + mo + '-01', end: yr + '-' + mo + '-' + lastDay };
+    }
+    if (pf.type === 'quarter') {
+      let sm = String(pf.startMonth).padStart(2, '0');
+      let em = String(pf.endMonth).padStart(2, '0');
+      let lastDay = new Date(yr, pf.endMonth, 0).getDate();
+      return { start: yr + '-' + sm + '-01', end: yr + '-' + em + '-' + lastDay };
+    }
+    if (pf.type === 'date' || pf.type === 'range') {
+      return { start: pf.start.toISOString().split('T')[0], end: pf.end.toISOString().split('T')[0] };
+    }
+    return { start: yr + '-01-01', end: today };
+  }
+
+  function getApiDateRange(query, filterOverride) {
+    let now   = new Date();
+    let today = now.toISOString().split('T')[0];
+    if (filterOverride) {
+      if (filterOverride.allTime) return { start: '2022-01-01', end: today };
+      if (filterOverride.type)    return periodToDates(filterOverride, today, now);
+      if (filterOverride.days) {
+        let cutoff = new Date(Date.now() - filterOverride.days * 86400000);
+        return { start: cutoff.toISOString().split('T')[0], end: today };
+      }
+    }
+    let q  = query.toLowerCase().trim();
+    let pf = detectPeriod(q);
+    if (pf) return periodToDates(pf, today, now);
+    let tf = detectTimeWindow(q);
+    if (tf && tf.days) {
+      let cutoff = new Date(Date.now() - tf.days * 86400000);
+      return { start: cutoff.toISOString().split('T')[0], end: today };
+    }
+    if (tf && !tf.days) return { start: '2022-01-01', end: today };
+    return { start: now.getFullYear() + '-01-01', end: today };
+  }
+
+  function detectConvosoRep(q, users) {
+    if (!users || !users.length) return null;
+    let names = users.map(function (u) { return u.name || ''; }).filter(Boolean).sort(function (a, b) { return b.length - a.length; });
+    for (let i = 0; i < names.length; i++) {
+      if (q.indexOf(names[i].toLowerCase()) > -1) return names[i].toLowerCase();
+    }
+    for (let i = 0; i < names.length; i++) {
+      let first = names[i].split(' ')[0].toLowerCase();
+      if (wordMatch(q, first)) return first;
+    }
+    for (let i = 0; i < names.length; i++) {
+      let last = names[i].split(' ').pop().toLowerCase();
+      if (wordMatch(q, last)) return last;
+    }
+    return null;
+  }
+
   function escapeReg(s) {
     return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
@@ -526,8 +685,48 @@
   }
 
   // ── Query router ───────────────────────────────────────────────────────────
-  function processQuery(query, deals, filterOverride) {
+  function processQuery(query, deals, filterOverride, convosoUsers, rcUsers) {
     let q = query.toLowerCase().trim();
+
+    // ── Convoso intent ───────────────────────────────────────────────────────
+    if (convosoUsers && convosoUsers.length) {
+      let cvRep = detectConvosoRep(q, convosoUsers);
+      if (cvRep) {
+        let timeLabel = filterOverride ? (filterOverride.label || 'Selected Period') : (detectPeriod(q) || detectTimeWindow(q) || { label: 'All Time' }).label;
+        return convosoRepOverview(convosoUsers, cvRep, timeLabel);
+      }
+      let timeLabel2 = filterOverride ? (filterOverride.label || 'Selected Period') : (detectPeriod(q) || detectTimeWindow(q) || { label: 'All Time' }).label;
+      if (/\bnot\s+interested\b|\bni\b/i.test(q))                    return convosoLeaderboard(convosoUsers, timeLabel2, 'not_interested');
+      if (/\bno\s+contact\b|\bnc\b/i.test(q))                        return convosoLeaderboard(convosoUsers, timeLabel2, 'no_contact');
+      if (/\btalk\s+time\b/i.test(q))                                 return convosoLeaderboard(convosoUsers, timeLabel2, 'talk_time_sec');
+      if (/\bconnect\s+rate\b|\bcontact\s+rate\b/i.test(q))          return convosoLeaderboard(convosoUsers, timeLabel2, 'connect_rate');
+      if (/\bcalls\s+per\s+int\b|\bcalls\s+per\s+interested\b/i.test(q)) return convosoLeaderboard(convosoUsers, timeLabel2, 'calls_per_int');
+      if (/\btotal\s+calls?\b|\bmost\s+calls?\b/i.test(q))           return convosoLeaderboard(convosoUsers, timeLabel2, 'total_calls');
+      return convosoLeaderboard(convosoUsers, timeLabel2, 'interested');
+    }
+
+    // ── Convoso query with no data (API failure) ────────────────────────────
+    if (isConvosoQuery(q)) {
+      let tl = filterOverride ? (filterOverride.label || 'Selected Period') : (detectPeriod(q) || detectTimeWindow(q) || { label: 'All Time' }).label;
+      return {
+        title: 'Convoso — ' + tl,
+        answer: 'Unable to load Convoso data for this period. The server may be unavailable — try again in a moment.',
+        insight: null, chart: null, table: null,
+      };
+    }
+
+    // ── RingCentral intent ───────────────────────────────────────────────────
+    if (isRingCentralQuery(q)) {
+      let timeLabel3 = filterOverride ? (filterOverride.label || 'Selected Period') : (detectPeriod(q) || detectTimeWindow(q) || { label: 'All Time' }).label;
+      let rcRep = rcUsers && rcUsers.length ? detectConvosoRep(q, rcUsers) : null;
+      if (rcRep)                                                       return rcRepOverview(rcUsers, rcRep, timeLabel3);
+      if (/\bconnect\b/i.test(q))                                      return rcLeaderboard(rcUsers || [], timeLabel3, 'connects');
+      if (/\bpitch\b/i.test(q))                                        return rcLeaderboard(rcUsers || [], timeLabel3, 'pitch');
+      if (/\bmessage\b|\bsms\b|\btext\b/i.test(q))                    return rcLeaderboard(rcUsers || [], timeLabel3, 'messages');
+      if (/\bconnect\s+rate\b/i.test(q))                               return rcLeaderboard(rcUsers || [], timeLabel3, 'connect_rate');
+      return rcLeaderboard(rcUsers || [], timeLabel3, 'outbound_calls');
+    }
+
     let repMatch    = detectRep(q, deals);
     let lenderMatch = detectLender(q, deals);
     let stateMatch  = detectState(q);
@@ -624,6 +823,194 @@
 
     // Default: rep leaderboard, direction-aware
     return intent.direction === 'bottom' ? bottomFunders(filtered, timeLabel) : topFunders(filtered, timeLabel);
+  }
+
+  // ── Convoso result builders ─────────────────────────────────────────────────
+
+  let CONVOSO_FIELD_LABELS = {
+    interested:     'Interested',
+    not_interested: 'Not Interested',
+    no_contact:     'No Contact',
+    total_calls:    'Total Calls',
+    contacts:       'Contacts',
+    talk_time_sec:  'Talk Time',
+    connect_rate:   'Connect Rate',
+    calls_per_int:  'Calls / INT',
+  };
+
+  function convosoFmtVal(field, v) {
+    if (field === 'talk_time_sec') return fmtSeconds(v);
+    if (field === 'connect_rate' || field === 'calls_per_int') return v;
+    return v;
+  }
+
+  function convosoLeaderboard(users, timeLabel, field) {
+    field = field || 'interested';
+    let label  = CONVOSO_FIELD_LABELS[field] || field;
+    let sorted = users.slice().sort(function (a, b) { return (b[field] || 0) - (a[field] || 0); });
+    let top    = sorted[0];
+    let suffix = field === 'connect_rate' ? '%' : (field === 'talk_time_sec' ? '' : '');
+    let topVal = top ? convosoFmtVal(field, top[field] || 0) + suffix : '—';
+    return {
+      title: 'Convoso — ' + label + ' — ' + timeLabel,
+      answer: top
+        ? top.name + ' leads with ' + topVal + ' ' + label.toLowerCase() + '.'
+        : 'No Convoso data for this period.',
+      insight: sorted[1]
+        ? 'Runner-up: ' + sorted[1].name + ' — ' + convosoFmtVal(field, sorted[1][field] || 0) + suffix + '.'
+        : null,
+      chart: {
+        data: sorted.slice(0, 8).map(function (u) {
+          return {
+            name:  u.name.split(' ')[0],
+            value: field === 'talk_time_sec' ? Math.round((u[field] || 0) / 60) : (u[field] || 0),
+          };
+        }),
+        label: label + (field === 'talk_time_sec' ? ' (mins)' : ''),
+      },
+      table: {
+        cols: ['Rank', 'Rep', 'INT', 'NI', 'NC', 'Total Calls', 'Talk Time', 'Connect %'],
+        rows: sorted.slice(0, 20).map(function (u, i) {
+          return [i + 1, u.name, u.interested, u.not_interested, u.no_contact, u.total_calls, fmtSeconds(u.talk_time_sec), u.connect_rate + '%'];
+        }),
+      },
+    };
+  }
+
+  function convosoRepOverview(users, repMatch, timeLabel) {
+    let u = null;
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].name.toLowerCase().indexOf(repMatch) > -1) { u = users[i]; break; }
+    }
+    let dispName = cap(repMatch);
+    if (!u) {
+      return {
+        title: dispName + ' — Convoso — ' + timeLabel,
+        answer: 'No Convoso data found for ' + dispName + ' in this period.',
+        insight: null, chart: null, table: null,
+      };
+    }
+    return {
+      title: u.name + ' — Convoso — ' + timeLabel,
+      answer: u.name + ' had ' + u.interested + ' interested, ' + u.not_interested + ' not interested, and ' + u.no_contact + ' no contacts.' +
+        ' Total talk time: ' + fmtSeconds(u.talk_time_sec) + '.',
+      insight: u.total_calls > 0
+        ? 'Connect rate: ' + u.connect_rate + '%. Calls per INT: ' + (u.interested > 0 ? u.calls_per_int : '—') + '.'
+        : null,
+      chart: {
+        data: [
+          { name: 'INT', value: u.interested },
+          { name: 'NI',  value: u.not_interested },
+          { name: 'NC',  value: u.no_contact },
+        ],
+        label: 'Call Dispositions',
+      },
+      table: {
+        cols: ['Metric', 'Value'],
+        rows: [
+          ['Interested',    u.interested],
+          ['Not Interested', u.not_interested],
+          ['No Contact',    u.no_contact],
+          ['Total Calls',   u.total_calls],
+          ['Contacts',      u.contacts],
+          ['Talk Time',     fmtSeconds(u.talk_time_sec)],
+          ['Connect Rate',  u.connect_rate + '%'],
+          ['Calls / INT',   u.interested > 0 ? u.calls_per_int : '—'],
+          ['Inbound Calls', u.inbound_calls],
+        ],
+      },
+    };
+  }
+
+  // ── RingCentral result builders ─────────────────────────────────────────────
+
+  let RC_FIELD_LABELS = {
+    outbound_calls: 'Outbound Calls',
+    connects:       'Connects',
+    pitch:          'Pitch Count',
+    messages:       'Messages',
+    connect_rate:   'Connect Rate',
+  };
+
+  function rcLeaderboard(users, timeLabel, field) {
+    field = field || 'outbound_calls';
+    let label  = RC_FIELD_LABELS[field] || field;
+    if (!users || !users.length) {
+      return {
+        title: 'RingCentral — ' + label + ' — ' + timeLabel,
+        answer: 'RingCentral data is currently unavailable (server auth issue). Please check back later.',
+        insight: null, chart: null, table: null,
+      };
+    }
+    let sorted = users.slice().sort(function (a, b) { return (b[field] || 0) - (a[field] || 0); });
+    let top    = sorted[0];
+    let suffix = field === 'connect_rate' ? '%' : '';
+    return {
+      title: 'RingCentral — ' + label + ' — ' + timeLabel,
+      answer: top
+        ? top.name + ' leads with ' + (top[field] || 0) + suffix + ' ' + label.toLowerCase() + '.'
+        : 'No RingCentral data for this period.',
+      insight: sorted[1] ? 'Runner-up: ' + sorted[1].name + ' — ' + (sorted[1][field] || 0) + suffix + '.' : null,
+      chart: {
+        data: sorted.slice(0, 8).map(function (u) {
+          return { name: u.name.split(' ')[0], value: u[field] || 0 };
+        }),
+        label: label,
+      },
+      table: {
+        cols: ['Rank', 'Rep', 'Outbound Calls', 'Connects', 'Connect %', 'Pitch', 'Messages'],
+        rows: sorted.slice(0, 20).map(function (u, i) {
+          return [i + 1, u.name, u.outbound_calls, u.connects, u.connect_rate + '%', u.pitch, u.messages];
+        }),
+      },
+    };
+  }
+
+  function rcRepOverview(users, repMatch, timeLabel) {
+    let u = null;
+    for (let i = 0; i < users.length; i++) {
+      if (users[i].name.toLowerCase().indexOf(repMatch) > -1) { u = users[i]; break; }
+    }
+    let dispName = cap(repMatch);
+    if (!users || !users.length) {
+      return {
+        title: dispName + ' — RingCentral — ' + timeLabel,
+        answer: 'RingCentral data is currently unavailable (server auth issue).',
+        insight: null, chart: null, table: null,
+      };
+    }
+    if (!u) {
+      return {
+        title: dispName + ' — RingCentral — ' + timeLabel,
+        answer: 'No RingCentral data found for ' + dispName + ' in this period.',
+        insight: null, chart: null, table: null,
+      };
+    }
+    return {
+      title: u.name + ' — RingCentral — ' + timeLabel,
+      answer: u.name + ' made ' + u.outbound_calls + ' outbound calls with ' + u.connects + ' connects (' + u.connect_rate + '% connect rate)' +
+        ' and ' + u.pitch + ' pitches.',
+      insight: u.messages > 0 ? 'Also sent ' + u.messages + ' outbound messages.' : null,
+      chart: {
+        data: [
+          { name: 'Calls',    value: u.outbound_calls },
+          { name: 'Connects', value: u.connects },
+          { name: 'Pitch',    value: u.pitch },
+          { name: 'Messages', value: u.messages },
+        ],
+        label: 'RingCentral Activity',
+      },
+      table: {
+        cols: ['Metric', 'Value'],
+        rows: [
+          ['Outbound Calls', u.outbound_calls],
+          ['Connects',       u.connects],
+          ['Connect Rate',   u.connect_rate + '%'],
+          ['Pitch Count',    u.pitch],
+          ['Messages',       u.messages],
+        ],
+      },
+    };
   }
 
   // ── Result builders ────────────────────────────────────────────────────────
@@ -1397,11 +1784,22 @@
   function renderBody(query, filterOverride) {
     let body = document.getElementById('cms-panel-body');
     body.innerHTML = '<div class="cms-loading"><div class="cms-spinner"></div>Analyzing your query…</div>';
+
+    let q           = query.toLowerCase().trim();
+    let needConvoso = isConvosoQuery(q);
+    let needRC      = isRingCentralQuery(q);
+    let dates       = (needConvoso || needRC) ? getApiDateRange(query, filterOverride) : null;
+
     let dealsReady    = new Promise(function (res) { loadData(res); });
     let pipelineReady = new Promise(function (res) { loadPipelineData(res); });
-    Promise.all([dealsReady, pipelineReady]).then(function (results) {
-      let deals  = results[0];
-      let result = processQuery(query, deals, filterOverride);
+    let convosoReady  = needConvoso ? new Promise(function (res) { loadConvosoData(dates.start, dates.end, res); }) : Promise.resolve([]);
+    let rcReady       = needRC      ? new Promise(function (res) { loadRingCentralData(dates.start, dates.end, res); }) : Promise.resolve([]);
+
+    Promise.all([dealsReady, pipelineReady, convosoReady, rcReady]).then(function (results) {
+      let deals        = results[0];
+      let convosoUsers = results[2];
+      let rcUsers      = results[3];
+      let result = processQuery(query, deals, filterOverride, convosoUsers, rcUsers);
       body.innerHTML = renderResult(result, query);
       setTimeout(function () {
         body.querySelectorAll('.cms-bar-fill').forEach(function (bar) {
