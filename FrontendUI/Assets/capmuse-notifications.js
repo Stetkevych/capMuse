@@ -395,12 +395,26 @@
       if (!presentShowing) {
         presentOverlay.hidden = true;
         resetPresentVisual();
+        maybeFinishLoginPresents();
       }
     }, 260);
   }
 
+  let loginSessionCompleteCallback = null;
+
+  function maybeFinishLoginPresents() {
+    if (!loginSessionCompleteCallback) return;
+    if (presentShowing || presentQueue.length) return;
+    let cb = loginSessionCompleteCallback;
+    loginSessionCompleteCallback = null;
+    cb();
+  }
+
   function processPresentQueue() {
-    if (presentShowing || !presentQueue.length) return;
+    if (presentShowing || !presentQueue.length) {
+      maybeFinishLoginPresents();
+      return;
+    }
     let next = presentQueue.shift();
     showPresentModal(next);
   }
@@ -441,10 +455,10 @@
     return uid ? SESSION_KEY + ':' + uid : SESSION_KEY;
   }
 
-  function isHomePage() {
-    if (document.body && document.body.classList.contains('home-page')) return true;
-    let page = (window.location.pathname.split('/').pop() || 'home.html').toLowerCase();
-    return page === 'home.html' || page === '' || page === 'index.html';
+  function isLoginPage() {
+    if (document.body && document.body.classList.contains('login-page')) return true;
+    let page = (window.location.pathname.split('/').pop() || '').toLowerCase();
+    return page === 'login.html';
   }
 
   function shouldShowLoginPresents() {
@@ -456,7 +470,7 @@
   }
 
   function loginPresentOptions() {
-    let eligible = isHomePage() && shouldShowLoginPresents();
+    let eligible = isLoginPage() && shouldShowLoginPresents();
     return {
       showPresent: eligible,
       includeUnpresented: eligible
@@ -474,8 +488,8 @@
     return uid ? SESSION_SCAN_KEY + ':' + uid : SESSION_SCAN_KEY;
   }
 
-  function shouldRunHomeLoginScan() {
-    if (!isHomePage()) return false;
+  function shouldRunLoginPresentScan() {
+    if (!isLoginPage()) return false;
     try {
       return sessionStorage.getItem(sessionScanKey()) !== '1';
     } catch (e) {
@@ -483,16 +497,36 @@
     }
   }
 
-  function markHomeLoginScanDone() {
+  function markLoginPresentScanDone() {
     try {
       sessionStorage.setItem(sessionScanKey(), '1');
     } catch (e) { /* ignore */ }
   }
 
-  function runHomeLoginScanOnce() {
-    if (!shouldRunHomeLoginScan()) return;
+  function runLoginPresentScanOnce() {
+    if (!shouldRunLoginPresentScan()) return;
     scanAndNotify(loginPresentOptions());
-    markHomeLoginScanDone();
+    markLoginPresentScanDone();
+    maybeFinishLoginPresents();
+  }
+
+  function runLoginPresentSession(onComplete) {
+    onComplete = typeof onComplete === 'function' ? onComplete : function () {};
+    loginSessionCompleteCallback = onComplete;
+
+    if (!isLoginPage()) {
+      maybeFinishLoginPresents();
+      return;
+    }
+
+    if (shouldRunLoginPresentScan()) {
+      scanAndNotify(loginPresentOptions());
+      markLoginPresentScanDone();
+    } else if (shouldShowLoginPresents()) {
+      scanAndNotify(loginPresentOptions());
+    }
+
+    maybeFinishLoginPresents();
   }
 
   function scanAndNotify(options) {
@@ -594,10 +628,10 @@
 
   function bindGlobalListeners() {
     window.addEventListener('capmuse:rep-stats-updated', function (e) {
-      if (!isHomePage() || !shouldRunHomeLoginScan()) return;
+      if (!isLoginPage() || !shouldRunLoginPresentScan()) return;
       let uid = getUserId();
       if (uid && e.detail && repIdsMatch(e.detail.userId, uid)) {
-        runHomeLoginScanOnce();
+        runLoginPresentScanOnce();
       }
     });
 
@@ -607,11 +641,11 @@
   }
 
   function runStartupScan() {
-    if (!isHomePage() || !shouldRunHomeLoginScan()) return;
+    if (!isLoginPage() || !shouldRunLoginPresentScan()) return;
     let tryScan = function () {
       let uid = getUserId();
       if (uid && window.REPS && window.REPS[uid] && window.REPS[uid]._liveData) {
-        runHomeLoginScanOnce();
+        runLoginPresentScanOnce();
       }
     };
     if (window.ensureLiveDeps) {
@@ -633,13 +667,16 @@
       wireBell();
       closePanel();
       renderPanel();
-      runStartupScan();
+      if (!isLoginPage()) {
+        runStartupScan();
+      }
     });
   }
 
   window.CapMuseNotifications = {
     init: init,
     scanAndNotify: scanAndNotify,
+    runLoginPresentSession: runLoginPresentSession,
     renderPanel: renderPanel,
     claimAchievement: claimAchievement,
     claimAllAchievements: claimAllAchievements,

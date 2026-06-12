@@ -6,11 +6,51 @@
   if (!listEl) return;
 
   let API_BASE = 'https://capmuse-kyll.onrender.com';
-  let NEWS_LIMIT = 6;
+  let NEWS_DISPLAY_LIMIT = 6;
+  let NEWS_FETCH_LIMIT = 50;
   let _emails = [];
   let _loading = false;
   let _overlay = null;
   let _cardEl = null;
+  let subjectQuery = '';
+  let _searchTimer = null;
+  let _dismissed = loadDismissedIds();
+
+  function dismissStorageKey() {
+    let userId = (window.CapMuseAuth && window.CapMuseAuth.getUserId)
+      ? window.CapMuseAuth.getUserId()
+      : null;
+    return 'capmuse-dash-news-dismissed:' + (userId || 'anonymous');
+  }
+
+  function loadDismissedIds() {
+    try {
+      let raw = localStorage.getItem(dismissStorageKey());
+      if (!raw) return new Set();
+      let arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return new Set();
+      return new Set(arr.map(String));
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveDismissedIds() {
+    try {
+      localStorage.setItem(dismissStorageKey(), JSON.stringify(Array.from(_dismissed)));
+    } catch (e) {}
+  }
+
+  function isDismissed(id) {
+    return _dismissed.has(String(id));
+  }
+
+  function dismissEmail(id) {
+    if (!id) return;
+    _dismissed.add(String(id));
+    saveDismissedIds();
+    renderList();
+  }
 
   let TAG_RULES = [
     { tag: 'Offer', keywords: ['offer', 'factor rate', 'mca offer', 'advance offer'] },
@@ -132,10 +172,23 @@
       });
   }
 
+  function matchesSubject(email) {
+    if (!subjectQuery) return true;
+    return (email.subject || '').toLowerCase().indexOf(subjectQuery.toLowerCase()) > -1;
+  }
+
+  function visibleEmails() {
+    let filtered = _emails.filter(function (e) {
+      return !isDismissed(e.id) && matchesSubject(e);
+    });
+    if (!subjectQuery) return filtered.slice(0, NEWS_DISPLAY_LIMIT);
+    return filtered;
+  }
+
   function renderLoading() {
     let html = '';
     let i;
-    for (i = 0; i < NEWS_LIMIT; i++) {
+    for (i = 0; i < NEWS_DISPLAY_LIMIT; i++) {
       html += '<article class="news-item news-item--empty" aria-hidden="true">' +
         '<time class="news-date"></time>' +
         '<div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div>' +
@@ -147,15 +200,15 @@
   function renderEmpty(message) {
     listEl.innerHTML =
       '<div class="news-empty">' +
-        '<p class="news-empty-title">No news yet</p>' +
+        '<p class="news-empty-title">' + (subjectQuery ? 'No matches' : 'No news yet') + '</p>' +
         '<p class="news-empty-sub">' + esc(message || 'Lender emails will appear here when the inbox is connected.') + '</p>' +
       '</div>';
   }
 
   function renderList() {
-    let items = _emails.slice(0, NEWS_LIMIT);
+    let items = visibleEmails();
     if (!items.length) {
-      renderEmpty('No emails in the inbox right now.');
+      renderEmpty(subjectQuery ? 'No subjects match "' + subjectQuery + '".' : 'No emails in the inbox right now.');
       return;
     }
 
@@ -166,6 +219,7 @@
       let tagSlug = firstTag.toLowerCase().replace(/\s+/g, '-');
       return (
         '<article class="news-item' + unreadCls + '" role="button" tabindex="0" data-email-id="' + esc(e.id) + '" aria-label="Read email: ' + esc(e.subject) + '">' +
+          '<button type="button" class="news-dismiss" data-email-id="' + esc(e.id) + '" aria-label="Remove from Latest News" title="Remove from Latest News">&#10005;</button>' +
           '<time class="news-date" datetime="' + esc(e.date) + '">' + esc(fmtNewsDate(e.date)) + '</time>' +
           '<div class="news-copy">' +
             '<div class="news-meta-row"><span class="news-tag" data-tag="' + esc(tagSlug) + '">' + esc(firstTag) + '</span></div>' +
@@ -175,6 +229,14 @@
         '</article>'
       );
     }).join('');
+
+    listEl.querySelectorAll('.news-dismiss').forEach(function (btn) {
+      btn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        dismissEmail(btn.getAttribute('data-email-id'));
+      });
+    });
 
     listEl.querySelectorAll('.news-item[data-email-id]').forEach(function (item) {
       item.addEventListener('click', function () {
@@ -291,7 +353,10 @@
     _loading = true;
     renderLoading();
 
-    fetch(API_BASE + '/newsletter/emails?limit=' + NEWS_LIMIT)
+    let url = API_BASE + '/newsletter/emails?limit=' + NEWS_FETCH_LIMIT;
+    if (subjectQuery) url += '&subject=' + encodeURIComponent(subjectQuery);
+
+    fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         if (data.error) throw new Error(data.error);
@@ -307,6 +372,20 @@
         _loading = false;
         renderEmpty('Could not load emails. Check the newsletter connection.');
       });
+  }
+
+  let searchEl = document.getElementById('dashNewsSearch');
+  if (searchEl) {
+    searchEl.addEventListener('input', function () {
+      let val = searchEl.value.trim();
+      clearTimeout(_searchTimer);
+      subjectQuery = val;
+      if (!_loading) renderList();
+      _searchTimer = setTimeout(function () {
+        subjectQuery = val;
+        loadEmails();
+      }, 350);
+    });
   }
 
   loadEmails();

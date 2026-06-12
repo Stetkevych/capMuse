@@ -1065,7 +1065,7 @@
     }
   </style>
 </head>
-<body>
+<body class="login-page">
 
   <!-- ═══ INTRO OVERLAY ═══ -->
   <div id="intro" aria-hidden="true" role="presentation">
@@ -1403,22 +1403,43 @@
     })();
 
     /* ─── Login handler ─── */
-    function handleLogin(e) {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const pass = document.getElementById('password').value;
-      if (window.CapMuseAuth && window.CapMuseAuth.login(email, pass)) {
-        window.location.href = 'home.html';
-      } else {
-        const btn = document.querySelector('.btn-primary');
-        btn.style.background = 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)';
-        btn.textContent = 'Invalid Credentials';
-        setTimeout(() => {
-          btn.style.background = 'var(--gradient-btn)';
-          btn.textContent = 'Submit';
-        }, 2000);
-      }
+  const LANDING_HREF = 'dashboard.html';
+
+  function beginPostLoginSession() {
+    function goToLanding() {
+      window.location.href = LANDING_HREF;
     }
+
+    if (!window.CapMuseAuth || !window.CapMuseAuth.initAchievements) {
+      goToLanding();
+      return;
+    }
+
+    window.CapMuseAuth.initAchievements(function () {
+      if (window.CapMuseNotifications && window.CapMuseNotifications.runLoginPresentSession) {
+        window.CapMuseNotifications.runLoginPresentSession(goToLanding);
+      } else {
+        goToLanding();
+      }
+    });
+  }
+
+  function handleLogin(e) {
+    e.preventDefault();
+    let email = document.getElementById('email').value;
+    let pass = document.getElementById('password').value;
+    if (window.CapMuseAuth && window.CapMuseAuth.login(email, pass)) {
+      beginPostLoginSession();
+    } else {
+      let btn = document.querySelector('.btn-primary');
+      btn.style.background = 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)';
+      btn.textContent = 'Invalid Credentials';
+      setTimeout(function () {
+        btn.style.background = 'var(--gradient-btn)';
+        btn.textContent = 'Submit';
+      }, 2000);
+    }
+  }
 
     /* ─── Theme toggle ─── */
     (function () {

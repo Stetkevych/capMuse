@@ -11,7 +11,7 @@
 
   // Demo mode — set false after exec demo to restore full sidebar.
   let DEMO_MODE = true;
-  let DEMO_HOME_HREF = 'home.html';
+  let DEMO_HOME_HREF = 'dashboard.html';
   let DEMO_DISABLED_PAGES = [
     'lead.html',
     'lender_recommendation.html'
@@ -301,13 +301,17 @@
     });
   }
 
-  function initAchievements() {
-    if (!localStorage.getItem(USER_KEY)) return;
+  function initAchievements(onReady) {
+    if (!localStorage.getItem(USER_KEY)) {
+      if (onReady) onReady();
+      return;
+    }
     let base = authScriptBase();
     loadAuthScriptOnce(base + 'capmuse-achievements.js').then(function () {
       return loadAuthScriptOnce(base + 'capmuse-notifications.js');
     }).then(function () {
       if (window.CapMuseNotifications) window.CapMuseNotifications.init();
+      if (onReady) onReady();
     });
   }
 
@@ -524,9 +528,35 @@
     column.appendChild(sidebar);
   }
 
+  function wireSidebarLogo() {
+    let logo = document.querySelector(
+      '.sidebar-column > .sidebar-logo, .sidebar-column > .sidebar-brand, #sidebar > .sidebar-logo, aside .sidebar-logo'
+    );
+    if (!logo || logo.dataset.homeLinked === '1') return;
+
+    let href = 'dashboard.html';
+    let label = 'Go to CapMuse dashboard';
+
+    if (logo.tagName === 'A') {
+      logo.href = href;
+      logo.setAttribute('aria-label', label);
+      logo.dataset.homeLinked = '1';
+      return;
+    }
+
+    let link = document.createElement('a');
+    link.className = logo.className;
+    link.href = href;
+    link.setAttribute('aria-label', label);
+    link.innerHTML = logo.innerHTML;
+    logo.replaceWith(link);
+    link.dataset.homeLinked = '1';
+  }
+
   function bootPageChrome() {
     injectLayoutStyles();
     restructureSidebarColumn();
+    wireSidebarLogo();
     initNav();
   }
   if (document.readyState === 'loading') {

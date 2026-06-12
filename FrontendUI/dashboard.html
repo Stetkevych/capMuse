@@ -54,7 +54,11 @@
       --card-plum-bg:       #3D1570;
       --card-navy-bg:       #132238;
       --card-teal-bg:       #0A6B60;
+      --card-streak-bg:     #1E293B;
+      --card-convoso-bg:    #4C1D95;
+      --card-trending-bg:   #422006;
       --card-crimson-bg:    #6B1515;
+      --card-approvals-bg:  #064E3B;
       --card-indigo-bg:     #3730A3;
       --card-blue-bg:       #1D4ED8;
     }
@@ -98,7 +102,11 @@
       --card-plum-bg:       #7C3AED;
       --card-navy-bg:       #1E40AF;
       --card-teal-bg:       #0D9488;
+      --card-streak-bg:     #0F172A;
+      --card-convoso-bg:    #6D28D9;
+      --card-trending-bg:   #92400E;
       --card-crimson-bg:    #DC2626;
+      --card-approvals-bg:  #047857;
       --card-indigo-bg:     #4F46E5;
       --card-blue-bg:       #2563EB;
     }
@@ -560,41 +568,6 @@
       gap: 16px;
     }
 
-    /* ── Ticker bar (StatMuse score ticker equivalent) ── */
-    .ticker-bar {
-      background: var(--ticker-bg);
-      border: 1px solid var(--ticker-border);
-      border-radius: 14px;
-      height: 46px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 18px;
-      box-shadow: var(--card-shadow);
-      flex-shrink: 0;
-    }
-
-    .ticker-msg {
-      font-size: 13.5px;
-      color: var(--text-secondary);
-      font-weight: 400;
-    }
-
-    .ticker-link {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 13.5px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      cursor: pointer;
-      text-decoration: none;
-      transition: color 0.15s ease;
-    }
-
-    .ticker-link:hover { color: var(--text-primary); }
-    .ticker-link svg { width: 14px; height: 14px; }
-
     /* ── Main content grid ── */
     .content-grid {
       display: grid;
@@ -653,12 +626,12 @@
       min-width: 0;
     }
 
-    .dash-mid-stat-col .stat-card.plum {
+    .dash-mid-stat-col .stat-card.convoso-card {
       grid-column: 1;
       grid-row: 1;
     }
 
-    .dash-mid-stat-col .stat-card.teal {
+    .dash-mid-stat-col .stat-card.streak-card {
       grid-column: 1;
       grid-row: 2;
     }
@@ -672,6 +645,107 @@
     .dash-mid-stat-col .card-name { font-size: 12px; }
     .dash-mid-stat-col .card-icon-decor { width: 40px; height: 40px; opacity: 0.75; }
     .dash-mid-stat-col .card-rep-photo-wrap { width: 56px; height: 56px; }
+
+    .dash-mid-stat-col .stat-card.convoso-card[data-person-id] { cursor: pointer; }
+
+    .stat-card.convoso-card {
+      background: var(--card-convoso-bg);
+    }
+
+    .dash-mid-stat-col .stat-card.convoso-card .card-headline {
+      color: rgba(221, 214, 254, 0.82);
+    }
+
+    .dash-mid-stat-col .stat-card.convoso-card .card-name {
+      color: #EDE9FE;
+      font-weight: 600;
+    }
+
+    .dash-mid-stat-col .stat-card.convoso-card .convoso-count {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #F5F3FF, #C4B5FD, #A78BFA);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.45));
+    }
+
+    .dash-mid-stat-col .stat-card.convoso-card .card-rep-photo-wrap {
+      background: linear-gradient(135deg, #DDD6FE, #8B5CF6, #6D28D9);
+      box-shadow:
+        0 0 0 1px rgba(196, 181, 253, 0.3),
+        0 0 16px rgba(139, 92, 246, 0.45),
+        0 0 32px rgba(109, 40, 217, 0.28),
+        0 4px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    .dash-mid-stat-col .stat-card.streak-card[data-person-id] { cursor: pointer; }
+
+    .dash-mid-stat-col .stat-card.streak-card {
+      align-items: center;
+    }
+
+    .dash-mid-stat-col .stat-card.streak-card .card-headline {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.62);
+      margin-bottom: 6px;
+    }
+
+    .dash-mid-stat-col .stat-card.streak-card .card-name {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.92);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .dash-mid-stat-col .stat-card.streak-card .streak-value {
+      display: block;
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+
+    .dash-mid-stat-col .stat-card.streak-card .streak-unit {
+      font-size: 17px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: 0;
+    }
+
+    .dash-mid-stat-col .stat-card.streak-card .streak-empty {
+      font-size: 15px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    .dash-mid-stat-col .stat-card.streak-card .streak-card-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .dash-mid-stat-col .stat-card.streak-card .streak-fire {
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 0.06em;
+    }
+
+    .dash-mid-stat-col .stat-card.streak-card .card-rep-photo-wrap {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #FDE68A, #F97316, #DC2626);
+      box-shadow:
+        0 0 0 1px rgba(253, 186, 116, 0.3),
+        0 0 16px rgba(249, 115, 22, 0.45),
+        0 0 32px rgba(220, 38, 38, 0.25),
+        0 4px 14px rgba(0, 0, 0, 0.45);
+    }
 
     .dash-mid-stat-col .stat-card.yesterday-top-card {
       grid-column: 2;
@@ -747,13 +821,69 @@
       height: 90px;
     }
 
-    /* Wide spotlight card */
-    .cards-col > .stat-card.crimson {
+    /* Compact approvals spotlight */
+    .cards-col > .stat-card.approvals-card {
       grid-column: span 12;
       grid-row: span 1;
-      padding: 22px 28px;
-      align-items: flex-start;
-      min-height: 160px;
+      width: fit-content;
+      max-width: 100%;
+      padding: 16px 20px;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 18px;
+      min-height: 0;
+      cursor: default;
+    }
+
+    .cards-col > .stat-card.approvals-card[data-person-id] {
+      cursor: pointer;
+    }
+
+    .stat-card.approvals-card {
+      background: var(--card-approvals-bg);
+    }
+
+    .stat-card.approvals-card .card-left {
+      flex: 0 1 auto;
+    }
+
+    .stat-card.approvals-card .card-right {
+      flex: 0 0 auto;
+    }
+
+    .stat-card.approvals-card .card-headline {
+      color: rgba(167, 243, 208, 0.88);
+      font-size: 12px;
+      margin-bottom: 6px;
+      max-width: none;
+    }
+
+    .stat-card.approvals-card .card-name {
+      color: #A7F3D0;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .stat-card.approvals-card .approvals-count {
+      font-size: 34px;
+      line-height: 1;
+      background: linear-gradient(135deg, #D1FAE5, #34D399, #10B981);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.45));
+      letter-spacing: -0.03em;
+    }
+
+    .stat-card.approvals-card .approvals-photo-wrap {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #6EE7B7, #10B981, #047857);
+      box-shadow:
+        0 0 0 1px rgba(110, 231, 183, 0.28),
+        0 0 16px rgba(16, 185, 129, 0.4),
+        0 4px 14px rgba(0, 0, 0, 0.4);
     }
 
     .stat-card:hover {
@@ -775,6 +905,10 @@
 
     .stat-card.teal {
       background: var(--card-teal-bg);
+    }
+
+    .stat-card.streak-card {
+      background: var(--card-streak-bg);
     }
 
     .stat-card.plum {
@@ -1024,6 +1158,51 @@
       letter-spacing: 0.07em;
     }
 
+    .news-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      min-width: 0;
+    }
+
+    .news-search-wrap {
+      position: relative;
+      width: 132px;
+      flex-shrink: 0;
+    }
+
+    .news-search-wrap svg {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .news-search {
+      width: 100%;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 0 10px 0 26px;
+      font-size: 11px;
+      font-family: inherit;
+      background: var(--right-card-bg);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.15s ease, width 0.2s ease;
+    }
+
+    .news-search::placeholder { color: var(--text-muted); }
+    .news-search:focus {
+      border-color: var(--blue);
+      width: 156px;
+    }
+
     .news-unread-badge {
       font-size: 10px;
       font-weight: 700;
@@ -1103,11 +1282,49 @@
       max-width: 210px;
     }
 
+    .news-dismiss {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 2;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      opacity: 0;
+      transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    }
+
+    .news-item:hover .news-dismiss,
+    .news-item:focus-within .news-dismiss,
+    .news-dismiss:focus-visible {
+      opacity: 1;
+    }
+
+    .news-dismiss:hover {
+      background: rgba(220, 38, 38, 0.1);
+      border-color: rgba(220, 38, 38, 0.25);
+      color: #DC2626;
+    }
+
+    html[data-theme="dark"] .news-dismiss:hover {
+      color: #FCA5A5;
+    }
+
     /* ─ Date chip (absolute top-right) ─ */
     .news-date {
       position: absolute;
       top: 12px;
-      right: 13px;
+      right: 38px;
       font-size: 9px;
       font-weight: 700;
       color: var(--text-muted);
@@ -1158,8 +1375,8 @@
     .news-tag[data-tag="rate-sheet"] { color: #DB2777; background: rgba(219,39,119,0.08);  border-color: rgba(219,39,119,0.2); }
     .news-tag[data-tag="general"]    { color: var(--text-muted); background: var(--surface-2); border-color: var(--border); }
 
-    /* ─ Copy area (right-pad clears the date chip) ─ */
-    .news-copy { min-width: 0; padding-right: 48px; }
+    /* ─ Copy area (right-pad clears the date chip + dismiss) ─ */
+    .news-copy { min-width: 0; padding-right: 72px; }
 
     .news-headline {
       font-size: 12.5px;
@@ -1491,6 +1708,136 @@
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { transition-duration: 0ms !important; }
+    }
+
+    /* ── Trending Performance (company MTD vs goal) ── */
+    .stat-card.trending-card {
+      grid-column: span 12;
+      background: linear-gradient(135deg, var(--card-trending-bg) 0%, #78350F 52%, #451a03 100%);
+      padding: 20px 24px;
+      align-items: stretch;
+      cursor: default;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow:
+        var(--card-shadow),
+        inset 0 1px 0 rgba(253, 224, 71, 0.12);
+    }
+
+    .stat-card.trending-card:hover {
+      transform: none;
+      box-shadow: var(--card-shadow);
+    }
+
+    .trending-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px 16px;
+    }
+
+    .trending-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #FEF3C7;
+      letter-spacing: -0.02em;
+    }
+
+    .trending-sub {
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(253, 230, 138, 0.82);
+    }
+
+    .trending-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 20px 28px;
+    }
+
+    .trending-mtd {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 120px;
+    }
+
+    .trending-mtd-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: rgba(252, 211, 77, 0.72);
+    }
+
+    .trending-mtd-value {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      color: #FCD34D;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 18px rgba(245, 158, 11, 0.35);
+    }
+
+    .trending-progress-wrap {
+      flex: 1;
+      min-width: min(100%, 420px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .trending-progress-meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .trending-progress-meta #dashTrendingPct {
+      font-size: 22px;
+      font-weight: 800;
+      color: #FBBF24;
+      letter-spacing: -0.02em;
+      text-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    }
+
+    .trending-progress-meta #dashTrendingGoal {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(253, 230, 138, 0.88);
+    }
+
+    .trending-progress-track {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+
+    .trending-progress-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #FDE68A, #F59E0B, #D97706);
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.55);
+      transition: width 0.5s ease;
+    }
+
+    .trending-pace {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(254, 243, 199, 0.92);
+    }
+
+    @media (max-width: 700px) {
+      .trending-mtd-value { font-size: 30px; }
+      .trending-progress-wrap { min-width: 100%; }
     }
 
     /* ── Rep Leaderboard Card ── */
@@ -1831,8 +2178,8 @@
         grid-template-columns: 1fr 1fr;
         grid-template-rows: auto;
       }
-      .dash-mid-stat-col .stat-card.plum,
-      .dash-mid-stat-col .stat-card.teal,
+      .dash-mid-stat-col .stat-card.convoso-card,
+      .dash-mid-stat-col .stat-card.streak-card,
       .dash-mid-stat-col .stat-card.yesterday-top-card {
         grid-column: auto;
         grid-row: auto;
@@ -2064,17 +2411,6 @@
     <!-- Page content -->
     <main class="page-content" role="main">
 
-      <!-- Ticker bar (StatMuse score bar) -->
-      <div class="ticker-bar">
-        <span class="ticker-msg"></span>
-        <a class="ticker-link" href="#" tabindex="0">
-          View Pipeline
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-            <path d="M5 10h10M11 6l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </a>
-      </div>
-
       <!-- Main grid: stat cards (left) + right panel -->
       <div class="content-grid" id="mainContent">
 
@@ -2095,12 +2431,28 @@
 
           </div>
 
-
-
-
-
-
-
+          <div class="stat-card trending-card" id="dashTrendingCard" aria-label="Trending Performance">
+            <div class="trending-head">
+              <div class="trending-title">Trending Performance</div>
+              <div class="trending-sub" id="dashTrendingSub">New deal funding vs. $6M goal</div>
+            </div>
+            <div class="trending-metrics">
+              <div class="trending-mtd">
+                <span class="trending-mtd-label">New deals funded</span>
+                <span class="trending-mtd-value" id="dashTrendingMtd">…</span>
+              </div>
+              <div class="trending-progress-wrap">
+                <div class="trending-progress-meta">
+                  <span id="dashTrendingPct">—</span>
+                  <span id="dashTrendingGoal">$6.0M goal</span>
+                </div>
+                <div class="trending-progress-track" aria-hidden="true">
+                  <div class="trending-progress-fill" id="dashTrendingBar"></div>
+                </div>
+                <div class="trending-pace" id="dashTrendingPace">Loading…</div>
+              </div>
+            </div>
+          </div>
 
           <div class="dash-mid-row">
             <section class="stat-card rep-vs-card" id="dashRepVsCard" aria-label="Rep vs Rep matchups">
@@ -2111,16 +2463,14 @@
             </section>
 
             <div class="dash-mid-stat-col">
-              <div class="stat-card plum">
+              <div class="stat-card convoso-card" id="dashConvosoTopCard" aria-label="Most interested Convoso calls">
                 <div class="card-left">
-                  <p class="card-headline">Biggest avg deal<br />size this month:</p>
-                  <div class="card-names">
-                    <span class="card-name" style="color:#C084FC"></span>
-                  </div>
-                  <span class="card-big-single" style="font-size:22px;background:linear-gradient(135deg,#F0ABFC,#C084FC,#A855F7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 8px rgba(232,121,249,0.55));letter-spacing:-0.02em"></span>
+                  <p class="card-headline">Most interested calls<br />this week:</p>
+                  <span class="card-name" id="dashConvosoName">Loading…</span>
+                  <span class="card-big-single convoso-count" id="dashConvosoCount">…</span>
                 </div>
                 <div class="card-right">
-                  <div class="card-rep-photo-wrap"></div>
+                  <div class="card-rep-photo-wrap" id="dashConvosoPhoto"></div>
                 </div>
               </div>
 
@@ -2131,38 +2481,29 @@
                 <span class="card-big-single" id="dashYesterdayTopAmount"></span>
               </div>
 
-              <div class="stat-card teal">
+              <div class="stat-card streak-card" id="dashStreakCard" aria-label="Longest funding streak">
                 <div class="card-left">
-                  <p class="card-headline">Average deal size<br />funded this year:</p>
-                  <span class="card-big-single"></span>
+                  <p class="card-headline">Funding streak</p>
+                  <span class="card-name" id="dashStreakName"></span>
+                  <span class="streak-value" id="dashStreakValue">…</span>
                 </div>
-                <div class="card-right">
-                  <div class="card-icon-decor" style="background:rgba(255,255,255,0.08)">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" style="color:rgba(255,255,255,0.3)" aria-hidden="true">
-                      <path d="M10 2v2M10 16v2M2 10h2M16 10h2" stroke-linecap="round"/>
-                      <circle cx="10" cy="10" r="4"/>
-                      <path d="M10 8v2l1.5 1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </div>
+                <div class="card-right streak-card-right">
+                  <span class="streak-fire" id="dashStreakFire" aria-hidden="true"></span>
+                  <div class="card-rep-photo-wrap" id="dashStreakPhoto"></div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Wide spotlight -->
-          <div class="stat-card crimson">
+          <div class="stat-card approvals-card" id="dashApprovalsTopCard" aria-label="Most pipeline approvals">
             <div class="card-left">
-              <p class="card-headline" style="color:rgba(252,165,165,0.85);font-size:13.5px;max-width:280px">
-                Highest close rate on the team<br />this quarter:
-              </p>
-              <div class="card-names" style="margin-bottom:10px">
-                <span class="card-name" style="color:#FCA5A5;font-size:18px"></span>
-              </div>
-              <span class="card-big-single" style="font-size:42px;background:linear-gradient(135deg,#FCA5A5,#F87171,#EF4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 10px rgba(239,68,68,0.6));letter-spacing:-0.03em"></span>
-              <p class="card-footer-text" style="color:rgba(252,165,165,0.75);font-size:13px;margin-top:6px"></p>
+              <p class="card-headline">Most approvals<br />this month:</p>
+              <span class="card-name" id="dashApprovalsName">Loading…</span>
+              <span class="card-big-single approvals-count" id="dashApprovalsCount">…</span>
             </div>
             <div class="card-right">
-              <div class="ivan-photo-wrap"></div>
+              <div class="card-rep-photo-wrap approvals-photo-wrap" id="dashApprovalsPhoto"></div>
             </div>
           </div>
 
@@ -2187,7 +2528,16 @@
                   </div>
                 </div>
               </div>
-              <span class="news-unread-badge" id="newsUnreadBadge" style="display:none"></span>
+              <div class="news-header-actions">
+                <div class="news-search-wrap">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <circle cx="9" cy="9" r="5.5"/>
+                    <path d="m13.5 13.5 3 3" stroke-linecap="round"/>
+                  </svg>
+                  <input class="news-search" type="search" id="dashNewsSearch" placeholder="Filter subject…" autocomplete="off" aria-label="Filter news by subject" />
+                </div>
+                <span class="news-unread-badge" id="newsUnreadBadge" style="display:none"></span>
+              </div>
             </div>
             <div class="news-list" id="dashNewsList" aria-live="polite">
               <article class="news-item news-item--empty" aria-hidden="true"><time class="news-date"></time><div class="news-copy"><p class="news-headline"></p><p class="news-summary"></p></div></article>
@@ -2271,7 +2621,11 @@
 </script>
 <script src="Assets/profile-stats.js"></script>
 <script src="Assets/capmuse-dashboard-monthly-leader.js"></script>
+<script src="Assets/capmuse-dashboard-trending.js"></script>
 <script src="Assets/capmuse-dashboard-yesterday-top.js"></script>
+<script src="Assets/capmuse-dashboard-funding-streak.js"></script>
+<script src="Assets/capmuse-dashboard-convoso-top.js"></script>
+<script src="Assets/capmuse-dashboard-approvals-top.js"></script>
 <script src="Assets/capmuse-dashboard-rep-vs.js"></script>
 <script src="Assets/capmuse-dashboard-news.js"></script>
 <script>
