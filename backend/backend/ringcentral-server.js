@@ -508,6 +508,15 @@ async function fetchAndCachePeriod(start_date, end_date) {
   const entry    = await getCacheEntry(cacheKey);
 
   if (entry) {
+    // If cached data is missing total_calls (old schema), clear and re-fetch
+    const firstUser = entry.data?.users?.[0];
+    if (firstUser && !('total_calls' in firstUser)) {
+      console.log(`[RC] old schema cache for ${cacheKey}, clearing and re-fetching`);
+      summaryCache.delete(cacheKey);
+      if (redis) redis.del(`rc:${cacheKey}`).catch(() => {});
+      return doFetch(start_date, end_date);
+    }
+
     const age = Date.now() - entry.ts;
     if (age > CACHE_TTL_MS && !inFlightPromises.has(cacheKey)) {
       console.log(`[RC] SWR: ${Math.round(age / 60000)}min-old cache for ${cacheKey}, refreshing in background`);
