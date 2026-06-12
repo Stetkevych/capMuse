@@ -179,6 +179,20 @@
     return isNaN(d.getTime()) ? null : d;
   }
 
+  function localDateKey(date) {
+    if (!date) return '';
+    return date.getFullYear() + '-' +
+      String(date.getMonth() + 1).padStart(2, '0') + '-' +
+      String(date.getDate()).padStart(2, '0');
+  }
+
+  function fundedDateKey(raw, parsedDate) {
+    let m = String(raw || '').trim().match(/^(\d{4}-\d{2}-\d{2})/);
+    if (m) return m[1];
+    if (parsedDate) return localDateKey(parsedDate);
+    return '';
+  }
+
   function normalizeDateRangeId(value) {
     let id = typeof value === 'string' ? value.trim() : '';
     let i;
@@ -342,6 +356,8 @@
     let leadSource = (r.lead_source || r.Lead_Source2 || '').trim();
     let funding = nn(r.funding || r.Funded_Amount);
     let revenue = nn(r.revenue || r.Total_rev);
+    let dateFundedRaw = (r.date_funded || r.Date_Funded || '').trim();
+    let date = parseDate(dateFundedRaw);
     return {
       recordId: String(r.record_id || r.id || ''),
       company: r.company || r.Deal_Name || '',
@@ -359,7 +375,9 @@
         r.deal_type || r.Deal_Type || ''
       ),
       marketingAssist: extra.marketingAssist || (r.marketing_assist || r.Marketing_Master || '').trim(),
-      date: parseDate(r.date_funded || r.Date_Funded || '')
+      dateFundedRaw: dateFundedRaw,
+      date: date,
+      dateKey: fundedDateKey(dateFundedRaw, date)
     };
   }
 
@@ -537,9 +555,12 @@
   function inDateRange(d) {
     let bounds = dateRangeBounds();
     if (!bounds) return true;
-    if (!d.date) return false;
-    if (bounds.start && d.date < bounds.start) return false;
-    if (bounds.end && d.date > bounds.end) return false;
+    let dealKey = d.dateKey || fundedDateKey(d.dateFundedRaw, d.date);
+    if (!dealKey) return false;
+    let startKey = bounds.start ? localDateKey(bounds.start) : '';
+    let endKey = bounds.end ? localDateKey(bounds.end) : '9999-99-99';
+    if (startKey && dealKey < startKey) return false;
+    if (endKey && dealKey > endKey) return false;
     return true;
   }
 
